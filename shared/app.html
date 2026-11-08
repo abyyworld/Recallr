@@ -9,6 +9,7 @@
   --accent:#2c7a57; --accent-ink:#ffffff; --accent-soft:#e3f1ea;
   --good:#2c7a57; --good-soft:#e3f1ea; --bad:#b4442c; --bad-soft:#f8e6e1; --warn:#9a6a12; --warn-soft:#f6eedb;
   --code-bg:#f0f2ed; --code-ink:#1d2421; --kw:#7b3fa0; --str:#2c6a8a;
+  --term-bg:#18201c; --term-ink:#d6e6dc; --term-ok:#7fd8a6; --term-bad:#ff9b85;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
   --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -76,6 +77,17 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .done h2{font-size:26px}
 .note{font-size:13px;color:var(--muted)}
 .src{font-size:12px;color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+.term{background:var(--term-bg);color:var(--term-ink);font-family:var(--mono);font-size:13px;line-height:1.6;border-radius:10px;padding:14px;margin:0;overflow-x:auto;white-space:pre;font-variant-ligatures:none}
+.term .p{color:var(--accent)}.term .ok{color:var(--term-ok)}.term .no{color:var(--term-bad)}
+.timer{font-family:var(--mono);font-size:22px;font-variant-numeric:tabular-nums}
+.timer.over{color:var(--bad)}
+#tfile{min-height:520px}
+.marks{width:100%;border-collapse:collapse;font-size:14px}
+.marks th,.marks td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.marks td.n{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+.tablewrap{overflow-x:auto}
+.rules{margin:0;padding-left:20px;color:var(--muted);font-size:14px}
 @media (prefers-reduced-motion:no-preference){.card{animation:in .18s ease-out}@keyframes in{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}}
 </style>
 
@@ -92,6 +104,12 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
     </div>
   </header>
 
+  <div class="chips" role="group" aria-label="Mode">
+    <button class="chip view" data-view="practice" aria-pressed="true">Practice</button>
+    <button class="chip view" data-view="test" aria-pressed="false">Mock test (vLab style)</button>
+  </div>
+
+  <div id="practiceView" class="stack">
   <div class="chips" role="group" aria-label="Which weeks">
     <button class="chip" data-week="all" aria-pressed="true">All weeks</button>
 __WEEK_CHIPS__
@@ -113,6 +131,37 @@ __WEEK_CHIPS__
     <button class="btn" id="reset">Reset all progress</button>
   </div>
   <div id="resetConfirm" hidden class="result bad"><p>Reset every skill back to new? This can't be undone.</p><div class="actions"><button class="btn primary" id="resetYes">Yes, reset</button><button class="btn" id="resetNo">Cancel</button></div></div>
+  </div>
+
+  <section id="testView" class="stack" hidden>
+    <div class="card">
+      <div class="eyebrow"><span id="tScope"></span><span class="timer" id="tTimer">60:00</span></div>
+      <h2 id="tTitle">Mock test</h2>
+      <ul class="rules">
+        <li>Replace each <code>undefined</code> with your own code. Don't change any name or type.</li>
+        <li>No <code>main</code>. Press <b>Run checks</b> as you go, like typing <code>checks</code> in ghci.</li>
+        <li>Unfinished? Leave it as <code>undefined</code>: a file that doesn't compile scores zero.</li>
+        <li>Open book (your notes, course PDFs, Hoogle). No Google or AI, and that includes the Explain button.</li>
+      </ul>
+      <div class="actions">
+        <button class="btn primary" id="tStart">Start the timer</button>
+        <button class="btn" id="tCopy">Copy file for vLab or laptop</button>
+        <button class="btn" id="tReset">Start again with a blank file</button>
+      </div>
+      <div id="tResetConfirm" hidden class="result bad"><p>Clear your answers and your mark for this test?</p><div class="actions"><button class="btn primary" id="tResetYes">Yes, clear it</button><button class="btn" id="tResetNo">Cancel</button></div></div>
+      <label class="label" for="tfile" id="tFileLabel">PracticeTest1.hs</label>
+      <textarea id="tfile" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+      <div class="actions">
+        <button class="btn primary" id="tRun">Run checks</button>
+        <button class="btn" id="tSubmit">Submit for marking</button>
+      </div>
+      <div id="tSubmitConfirm" hidden class="result meh"><p>Submit for marking? You can keep editing and submit again afterwards.</p><div class="actions"><button class="btn primary" id="tSubmitYes">Submit</button><button class="btn" id="tSubmitNo">Not yet</button></div></div>
+      <pre class="term" id="tOut">ghci&gt; checks
+(press Run checks)</pre>
+      <div id="tMark"></div>
+    </div>
+  </section>
+
   <p class="note" id="saveNote">Progress is saved in this browser.</p>
   __SUPPORT__
 </div>
@@ -121,6 +170,7 @@ __WEEK_CHIPS__
 const DECK = __DECK__;
 const TWINS = __TWINS__;
 const SRC = __SRC__;
+const TESTS = __TESTS__;
 const LEVELS = {3:"Write it", 2:"Fill the gaps", 1:"Predict"};
 const INTERVALS = [10*60e3, 864e5, 3*864e5, 7*864e5, 16*864e5, 35*864e5];
 const MASTER_BOX = 3;
@@ -174,6 +224,7 @@ async function connect(){
           state = Object.assign(state, JSON.parse(remote.json));
           try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
           if (!checked) pickAndRender(); else renderStats();
+          if (view === "test") renderTest();
         } else if (state.updated) saveRemote();
         $("saveNote").textContent = "Progress is saved to your account, so it follows you across devices.";
       }
@@ -476,6 +527,172 @@ document.querySelectorAll(".chip.mode").forEach(c => c.onclick = () => {
   try { localStorage.setItem(LS_KEY + "-mode", mode); } catch(e) {}
   if (current && !checked) renderCard();
 });
+// ---------- mock test ----------
+let view = "practice", T = TESTS[0] || null, tickTimer = null, saveTimer = null, tBusy = false;
+function ts(){ state.tests = state.tests || {}; return state.tests[T.id] || (state.tests[T.id] = { file: T.template, start: 0, result: null }); }
+function setView(v){
+  view = v;
+  document.querySelectorAll(".chip.view").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.view === v)));
+  $("practiceView").hidden = v !== "practice";
+  $("testView").hidden = v !== "test";
+  try { localStorage.setItem(LS_KEY + "-view", v); } catch(e) {}
+  if (v === "test") renderTest();
+}
+function renderTest(){
+  if (!T) { $("testView").innerHTML = '<div class="card"><p>No mock test for this module yet.</p></div>'; return; }
+  const s = ts();
+  $("tTitle").textContent = T.title;
+  $("tScope").textContent = `${T.scope} · ${T.questions.length} parts · ${T.questions.reduce((a,q)=>a+q.marks,0)} marks · ${T.minutes} minutes`;
+  $("tFileLabel").textContent = T.file;
+  if ($("tfile").value !== s.file) $("tfile").value = s.file;
+  $("tStart").hidden = !!s.start;
+  tick(); clearInterval(tickTimer); tickTimer = setInterval(tick, 1000);
+  renderMark();
+}
+function tick(){
+  const s = ts(), el = $("tTimer");
+  if (!s.start) { el.textContent = `${String(T.minutes).padStart(2,"0")}:00`; el.classList.remove("over"); return; }
+  const left = T.minutes * 60e3 - (Date.now() - s.start);
+  if (left <= 0) { el.textContent = "Time's up"; el.classList.add("over"); return; }
+  const m = Math.floor(left / 60e3), sec = Math.floor(left % 60e3 / 1000);
+  el.textContent = `${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+}
+function undoneLocally(file){
+  // a function still defined as `undefined` can be spotted without compiling
+  const out = {};
+  for (const q of T.questions) out[q.id] = new RegExp("^" + q.fn + "\\b[^\\n]*=\\s*undefined\\s*$", "m").test(file);
+  return out;
+}
+function fullFile(file){
+  const checks = T.questions.map((q, i) => `  ${i ? "," : "["} ("${q.id} ${q.fn}", ${q.checks.map(c => `(${c[0]}) == (${c[1]})`).join(" && ")})`).join("\n");
+  return file.replace(/^(module [^\n]*where)\s*$/m, "$1\n\nimport Control.Exception (SomeException, evaluate, try)   -- only for checks") + `
+
+-- ============================================================
+-- Self-test (do not change). Run in ghci:  checks
+-- ============================================================
+
+checks :: IO ()
+checks = mapM_ check
+${checks}
+  ]
+  where
+    check (n, ok) = do
+      r <- try (evaluate ok) :: IO (Either SomeException Bool)
+      putStrLn (n ++ ": " ++ case r of
+                               Right True  -> "ok"
+                               Right False -> "FAILED"
+                               Left _      -> "not done yet (or crashed)")
+`;
+}
+function termLines(header, lines){
+  $("tOut").innerHTML = `<span class="p">ghci&gt;</span> :load ${esc(T.file)}\n${header}\n<span class="p">ghci&gt;</span> checks\n` + lines.join("\n");
+}
+function testPrompt(file, task){
+  return `You are GHC 9 and ghci checking a student's Haskell test file. Be exact: read every line before deciding and never invent code that isn't there.
+
+STUDENT FILE (${T.file}):
+-----
+${file}
+-----
+
+TESTS (part id, function, expressions => expected ghci output):
+${T.questions.map(q => `${q.id} ${q.fn} [${q.marks} marks]: ` + q.checks.map(c => `${c[0]} => ${c[1]}`).join("; ")).join("\n")}
+
+MODEL ANSWER (one correct solution; others can be fine):
+${T.solution}
+
+${task}`;
+}
+async function runChecks(){
+  if (tBusy) return;
+  const file = $("tfile").value, und = undoneLocally(file);
+  if (T.questions.every(q => und[q.id])) return termLines("Ok, one module loaded.", T.questions.map(q => `${q.id} ${q.fn}: <span class="no">not done yet (or crashed)</span>`));
+  if (!sample) return termLines("(Run checks needs Recallr inside Claude.)", ["Use \"Copy file for vLab or laptop\", then in a terminal:", "  ghci " + esc(T.file), "  checks"]);
+  tBusy = true; $("tRun").disabled = true;
+  termLines("Compiling…", []);
+  try {
+    const r = await sample.json(testPrompt(file, `Do what ghci would do for ":load" then "checks":
+1. Would the whole file compile? If not, give the FIRST error the way GHC would: "${T.file}:LINE:COL: error: short message".
+2. If it compiles, for each part: "ok" if every expression gives exactly the expected output with the student's code, "FAILED" if any gives something else, "not done yet (or crashed)" if it is still undefined or crashes.
+Reply with only JSON: {"compiles": true/false, "error": "...", "results": {"Q1a": "ok", ...}}`), { modelTier: "default" });
+    if (r && r.compiles === false) termLines(`<span class="no">${esc(String(r.error || "error"))}</span>\nFailed, no modules loaded.`, []);
+    else termLines("Ok, one module loaded.", T.questions.map(q => {
+      const v = und[q.id] ? "not done yet (or crashed)" : String((r && r.results && r.results[q.id]) || "not done yet (or crashed)");
+      return `${q.id} ${q.fn}: <span class="${v === "ok" ? "ok" : "no"}">${esc(v)}</span>`;
+    }).concat(["", "(Checked by Recallr's checker, which can make mistakes. Run the file on vLab for the real result.)"]));
+  } catch(e) {
+    termLines("Couldn't run the checks just now.", [e && e.code === "rate_limited" ? "Too many checks in a short time. Wait a minute." : "Try again, or copy the file and run it on vLab."]);
+  }
+  tBusy = false; $("tRun").disabled = false;
+}
+async function submitTest(){
+  $("tSubmitConfirm").hidden = true;
+  const file = $("tfile").value, und = undoneLocally(file), s = ts();
+  s.file = file;
+  if (!sample) { s.result = { self: true, at: Date.now() }; persist(); return renderMark(); }
+  tBusy = true; $("tSubmit").disabled = true; $("tRun").disabled = true;
+  $("tMark").innerHTML = `<div class="result meh"><h3>Marking…</h3><p class="hint">This takes up to a minute.</p></div>`;
+  try {
+    const r = await sample.json(testPrompt(file, `Mark this test like a fair university examiner.
+- First decide whether the whole file compiles ("compiles", and "error" with the first GHC error if not).
+- Then mark EACH part out of its marks as if that part compiled on its own: full marks if correct for the tests and for other reasonable inputs; partial credit for the right idea with a small mistake; 0 if still undefined or wrong.
+- "feedback": one or two short plain sentences per part for a beginner. Say what is wrong and where; don't paste the full answer.
+Reply with only JSON: {"compiles": true/false, "error": "...", "parts": [{"id": "Q1a", "awarded": 5, "feedback": "..."}, ...]}`), { modelTier: "default" });
+    const items = T.questions.map(q => {
+      const p = (r && Array.isArray(r.parts) ? r.parts : []).find(x => x && x.id === q.id) || {};
+      let a = Math.round(Number(p.awarded)); if (!isFinite(a)) a = 0; a = Math.max(0, Math.min(q.marks, a));
+      if (und[q.id]) a = 0;
+      return { id: q.id, fn: q.fn, marks: q.marks, awarded: a, feedback: und[q.id] ? "Not attempted." : String(p.feedback || "") };
+    });
+    s.result = { compiles: !(r && r.compiles === false), error: r && r.error ? String(r.error) : "", items, at: Date.now() };
+    persist();
+  } catch(e) {
+    $("tMark").innerHTML = `<div class="result meh"><h3>Couldn't mark it just now</h3><p>${e && e.code === "rate_limited" ? "Too many requests. Wait a minute and submit again." : "Try submitting again in a moment."}</p></div>`;
+    tBusy = false; $("tSubmit").disabled = false; $("tRun").disabled = false; return;
+  }
+  tBusy = false; $("tSubmit").disabled = false; $("tRun").disabled = false;
+  renderMark();
+}
+function renderMark(){
+  const s = ts(), r = s.result;
+  if (!r) { $("tMark").innerHTML = ""; return; }
+  const total = T.questions.reduce((a,q)=>a+q.marks,0);
+  const answers = `<div class="actions"><button class="btn" id="tShowSol">Show model answers</button></div><pre class="code" id="tSol" hidden>${hl(T.solution)}</pre>`;
+  if (r.self) {
+    $("tMark").innerHTML = `<div class="result meh"><h3>Mark it yourself</h3><p>Compare each part with the model answers, or run the copied file on vLab: each <code>ok</code> from <code>checks</code> is worth that part's marks (out of ${total}).</p>${answers}</div>`;
+  } else {
+    const got = r.items.reduce((a,i)=>a+i.awarded,0);
+    const rows = r.items.map(i => `<tr><td><code>${esc(i.id)}</code> ${esc(i.fn)}</td><td class="n">${i.awarded} / ${i.marks}</td><td>${md(i.feedback)}</td></tr>`).join("");
+    const pct = Math.round(got / total * 100);
+    const band = pct >= 70 ? "First" : pct >= 60 ? "2:1" : pct >= 50 ? "2:2" : pct >= 40 ? "Third" : "Below a pass";
+    $("tMark").innerHTML = `<div class="result ${r.compiles ? (pct >= 40 ? "good" : "bad") : "bad"}">
+      <h3>${got} / ${total} (${pct}%, ${band})</h3>
+      ${r.compiles ? "" : `<p><b>Your file doesn't compile</b>, so on the real test it would score 0. Fix this first: <code>${esc(r.error || "compile error")}</code>. The marks below are what each part would get once it compiles.</p>`}
+      <div class="tablewrap"><table class="marks"><thead><tr><th>Part</th><th>Mark</th><th>Feedback</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <p class="hint">Marked by Recallr's checker, which can make mistakes.</p>
+      ${answers}</div>`;
+  }
+  $("tShowSol").onclick = () => { const el = $("tSol"); el.hidden = !el.hidden; $("tShowSol").textContent = el.hidden ? "Show model answers" : "Hide model answers"; };
+}
+if (T) {
+  $("tfile").addEventListener("input", () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { ts().file = $("tfile").value; persist(); }, 1200); });
+  $("tfile").addEventListener("keydown", e => { if (e.key === "Tab") { e.preventDefault(); const ta = $("tfile"), p = ta.selectionStart; ta.setRangeText("  ", p, ta.selectionEnd, "end"); } });
+  $("tStart").onclick = () => { ts().start = Date.now(); persist(); renderTest(); };
+  $("tRun").onclick = runChecks;
+  $("tSubmit").onclick = () => { $("tSubmitConfirm").hidden = false; $("tSubmitYes").focus(); };
+  $("tSubmitNo").onclick = () => { $("tSubmitConfirm").hidden = true; };
+  $("tSubmitYes").onclick = submitTest;
+  $("tReset").onclick = () => { $("tResetConfirm").hidden = false; };
+  $("tResetNo").onclick = () => { $("tResetConfirm").hidden = true; };
+  $("tResetYes").onclick = () => { state.tests[T.id] = { file: T.template, start: 0, result: null }; $("tResetConfirm").hidden = true; persist(); $("tOut").textContent = "ghci> checks\n(press Run checks)"; renderTest(); };
+  $("tCopy").onclick = () => {
+    const text = fullFile($("tfile").value);
+    const done = () => { $("tCopy").textContent = "Copied. Paste into " + T.file; };
+    try { navigator.clipboard.writeText(text).then(done, () => { fallbackCopy(text); done(); }); } catch(e) { fallbackCopy(text); done(); }
+  };
+}
+document.querySelectorAll(".chip.view").forEach(c => c.onclick = () => setView(c.dataset.view));
+
 $("undo").onclick = () => {
   if (!lastUndo) return;
   state.skills[lastUndo.id] = lastUndo.prev; state.today = lastUndo.today; state.todayKey = lastUndo.todayKey;
@@ -487,15 +704,16 @@ $("undo").onclick = () => {
 $("reset").onclick = () => { $("resetConfirm").hidden = false; $("resetYes").focus(); };
 $("resetNo").onclick = () => { $("resetConfirm").hidden = true; };
 $("resetYes").onclick = () => { state = { skills:{}, shown:0, todayKey:"", today:0, updated:0 }; lastUndo = null; $("undo").disabled = true; $("resetConfirm").hidden = true; persist(); pickAndRender(); };
-document.querySelectorAll(".chip:not(.mode)").forEach(c => c.onclick = () => {
+document.querySelectorAll(".chip[data-week]").forEach(c => c.onclick = () => {
   week = c.dataset.week;
-  document.querySelectorAll(".chip:not(.mode)").forEach(o => o.setAttribute("aria-pressed", String(o === c)));
+  document.querySelectorAll(".chip[data-week]").forEach(o => o.setAttribute("aria-pressed", String(o === c)));
   try { localStorage.setItem(LS_KEY + "-week", week); } catch(e) {}
   pickAndRender();
 });
 load();
-try { const w = localStorage.getItem(LS_KEY + "-week"); if (w) { week = w; document.querySelectorAll(".chip:not(.mode)").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.week === w))); } } catch(e) {}
+try { const w = localStorage.getItem(LS_KEY + "-week"); if (w) { week = w; document.querySelectorAll(".chip[data-week]").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.week === w))); } } catch(e) {}
 try { const m = localStorage.getItem(LS_KEY + "-mode"); if (m) { mode = m; document.querySelectorAll(".chip.mode").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.mode === m))); } } catch(e) {}
 pickAndRender();
+try { const v = localStorage.getItem(LS_KEY + "-view"); if (v === "test" && T) setView("test"); } catch(e) {}
 connect();
 </script>

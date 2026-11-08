@@ -36,6 +36,22 @@ function test(kind, id, s) {
 }
 for (const s of DECK) test("course", s.id, s);
 for (const [id, s] of Object.entries(TWINS)) test("variation", id, s);
+// mock tests: the blank file must compile, and the model answer must pass every check
+const testsFile = path.join(dir, "tests.js");
+if (fs.existsSync(testsFile)) {
+  for (const T of require(testsFile)) {
+    const blank = path.join(path.dirname(tmp), "Blank.hs");
+    fs.writeFileSync(blank, T.template.replace(/^module .*$/m, "module Blank where"));
+    try { cp.execFileSync("ghc", ["-fno-code", blank], { stdio: ["ignore", "pipe", "pipe"] }); }
+    catch (e) { console.log(`FAIL test ${T.id}: blank file doesn't compile\n${e.stderr}`); problems++; }
+    const exprs = T.questions.flatMap(q => q.checks.map(c => c[0]));
+    const expected = T.questions.flatMap(q => q.checks.map(c => c[1]));
+    try {
+      const out = run(T.solution, exprs);
+      expected.forEach((v, i) => { if (out[i] !== v) { console.log(`MISMATCH test ${T.id}: ${exprs[i]} gave ${out[i]}, expected ${v}`); problems++; } });
+    } catch (e) { console.log(`FAIL test ${T.id}: model answer\n${e.stderr}`); problems++; }
+  }
+}
 fs.writeFileSync(path.join(dir, "answers.json"), JSON.stringify(answers, null, 2) + "\n");
 console.log(problems ? `${problems} problem(s)` : `all ${DECK.length} exercises and ${Object.keys(TWINS).length} variations pass`);
 process.exit(problems ? 1 : 0);

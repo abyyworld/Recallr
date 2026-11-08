@@ -18,6 +18,8 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
   const mod = JSON.parse(fs.readFileSync(path.join(dir, "module.json"), "utf8"));
   const DECK = require(path.join(dir, "deck.js"));
   const { SRC, TWINS } = require(path.join(dir, "variations.js"));
+  const testsFile = path.join(dir, "tests.js");
+  const TESTS = fs.existsSync(testsFile) ? require(testsFile) : [];
   const answersFile = path.join(dir, "answers.json");
   if (!fs.existsSync(answersFile)) { console.error(`${name}: no answers.json, run its test script first`); process.exit(1); }
   const answers = JSON.parse(fs.readFileSync(answersFile, "utf8"));
@@ -39,7 +41,8 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
     .replace("__SUPPORT__", support)
     .replace("__DECK__", json(DECK))
     .replace("__TWINS__", json(TWINS))
-    .replace("__SRC__", json(SRC));
+    .replace("__SRC__", json(SRC))
+    .replace("__TESTS__", json(TESTS));
   fs.mkdirSync(path.join(root, "docs", mod.id), { recursive: true });
   fs.writeFileSync(path.join(root, "docs", mod.id, "index.html"),
     `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>\n${html}\n</body></html>\n`);
