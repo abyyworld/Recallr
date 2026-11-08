@@ -4,6 +4,7 @@
 const fs = require("fs"), path = require("path");
 const root = path.resolve(__dirname, "..");
 const template = fs.readFileSync(path.join(root, "shared/app.html"), "utf8");
+const rows = fs.readFileSync(path.join(root, "shared/rows.js"), "utf8");
 const site = JSON.parse(fs.readFileSync(path.join(root, "site.json"), "utf8"));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -35,11 +36,14 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
     .split("__MODULE_ID__").join(mod.id)
     .split("__LANG__").join(mod.language)
     .split("__COMPILER__").join(mod.compiler)
-    .replace("__WEEK_CHIPS__", chips)
-    .replace("__SUPPORT__", support)
-    .replace("__DECK__", json(DECK))
-    .replace("__TWINS__", json(TWINS))
-    .replace("__SRC__", json(SRC));
+    .split("__DEFAULT_LANG__").join(mod.lang || "haskell")
+    .replace("__ROWS_JS__", () => rows)
+    // functions, so a "$$" or "$1" in the content is not read as a replacement pattern
+    .replace("__WEEK_CHIPS__", () => chips)
+    .replace("__SUPPORT__", () => support)
+    .replace("__DECK__", () => json(DECK))
+    .replace("__TWINS__", () => json(TWINS))
+    .replace("__SRC__", () => json(SRC));
   fs.mkdirSync(path.join(root, "docs", mod.id), { recursive: true });
   fs.writeFileSync(path.join(root, "docs", mod.id, "index.html"),
     `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>\n${html}\n</body></html>\n`);

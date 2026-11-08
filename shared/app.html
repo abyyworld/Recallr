@@ -24,6 +24,7 @@
   --good:#5cc492; --good-soft:#1f3a2d; --bad:#ef8a72; --bad-soft:#3d2520; --warn:#e2b45a; --warn-soft:#3a3020;
   --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
 .wrap{max-width:760px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
 header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
@@ -76,6 +77,9 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .done h2{font-size:26px}
 .note{font-size:13px;color:var(--muted)}
 .src{font-size:12px;color:var(--muted)}
+.card details.setup{background:var(--code-bg);border:none;border-radius:10px;padding:0 14px}
+.card details.setup summary{font-size:13px;color:var(--muted);padding:8px 0}
+.card details.setup pre.code{padding:0 0 12px;background:none}
 @media (prefers-reduced-motion:no-preference){.card{animation:in .18s ease-out}@keyframes in{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}}
 </style>
 
@@ -121,6 +125,30 @@ __WEEK_CHIPS__
 const DECK = __DECK__;
 const TWINS = __TWINS__;
 const SRC = __SRC__;
+const DEFAULT_LANG = "__DEFAULT_LANG__";
+const SQL_KW = "SELECT|FROM|WHERE|GROUP|BY|HAVING|ORDER|JOIN|LEFT|RIGHT|FULL|INNER|OUTER|NATURAL|ON|AS|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|VIEW|ALTER|ADD|DROP|TRUNCATE|PRIMARY|KEY|FOREIGN|REFERENCES|NOT|NULL|UNIQUE|CHECK|DEFAULT|AND|OR|IN|IS|LIKE|ILIKE|BETWEEN|DISTINCT|LIMIT|OFFSET|PREPARE|EXECUTE|DO|DECLARE|BEGIN|END|IF|THEN|ELSE|ELSIF|LOOP|FOR|WHILE|RAISE|NOTICE|CONSTRAINT|COLUMN|DESC|ASC|CASCADE|WITH|COPY|INDEX|RETURNING|FORMAT|USING|RENAME|TO|TYPE";
+// Per-language wording and highlighting. An exercise's `lang` picks one; the module sets the default.
+const LANG = {
+  haskell: { name: "Haskell", judge: "GHC 9", kw: "where|case|of|if|then|else|let|in|data|type|instance|class|deriving|otherwise", quotes: false,
+    write: "Write only the function (no <code>main</code> needed).", predict: "type what ghci would print",
+    copy: "Copy mine for jdoodle", copyHint: "Test yours on jdoodle with the copy button, or compare line by line." },
+  sql: { name: "SQL", judge: "PostgreSQL 16", kw: SQL_KW, ci: true, rows: true, setup: "Tables",
+    write: "Write the SQL. The tables are above.", predict: "rows like: Ann, 3; Bo, 5",
+    copy: "Copy mine with the tables", copyHint: "Paste it into instate or psql to run it, or compare line by line." },
+  cypher: { name: "Cypher", judge: "Neo4j 5", kw: "MATCH|OPTIONAL|WHERE|RETURN|CREATE|MERGE|ON|SET|DELETE|DETACH|REMOVE|WITH|ORDER|BY|LIMIT|SKIP|UNION|ALL|AS|AND|OR|NOT|IS|NULL|DISTINCT|DESC|ASC|UNWIND|IN|CONTAINS|STARTS|ENDS|count|collect", rows: true, setup: "Graph",
+    write: "Write the Cypher. The graph is above.", predict: "rows like: Ann, Golf; Bo, null",
+    copy: "Copy mine with the graph", copyHint: "Paste it into the Neo4j browser in vLab to run it, or compare line by line." },
+  jpa: { name: "Java (JPA)", judge: "javac and Hibernate 6", kw: "@\\w+|public|private|class|enum|new|return|import|static|final|void", setup: "Rows",
+    write: "Write the entity classes. <code>jakarta.persistence.*</code> and <code>java.util.*</code> are already imported.", predict: "your answer",
+    copy: "Copy mine", copyHint: "Compare yours line by line with the answer." },
+  jpql: { name: "JPQL", judge: "Hibernate 6", kw: SQL_KW + "|COUNT|SUM|AVG|MIN|MAX|@\\w+|public|private|class", ci: true, rows: true, setup: "Entities and rows",
+    write: "Write one JPQL query. The entities are above.", predict: "rows like: Emma; Dune",
+    copy: "Copy mine", copyHint: "Compare yours line by line with the answer." },
+  jdl: { name: "JDL", judge: "the JHipster JDL parser", kw: "entity|relationship|OneToMany|ManyToOne|OneToOne|ManyToMany|enum|required|unique|min|max|minlength|maxlength|pattern|to|with|builtInEntity", setup: "JDL",
+    write: "Write the JDL.", predict: "your answer",
+    copy: "Copy mine", copyHint: "Paste it into JDL Studio or the instate JDL editor to see the diagram, or compare line by line." },
+};
+function L(s){ return LANG[(s && s.lang) || DEFAULT_LANG] || LANG.haskell; }
 const LEVELS = {3:"Write it", 2:"Fill the gaps", 1:"Predict"};
 const INTERVALS = [10*60e3, 864e5, 3*864e5, 7*864e5, 16*864e5, 35*864e5];
 const MASTER_BOX = 3;
@@ -137,10 +165,17 @@ let sample = null, db = null, uid = null, saving = false, saveAgain = false;
 
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
-function hl(src){
-  return esc(src)
-    .replace(/(&quot;|"[^"\n]*")/g, m => `<span class="st">${m}</span>`)
-    .replace(/\b(where|case|of|if|then|else|let|in|data|type|instance|class|deriving|otherwise)\b/g, '<span class="kw">$1</span>');
+// Highlights strings and keywords in one pass, so a keyword is never matched inside a span tag.
+function hl(src, s){
+  const l = L(s || (current && current.s));
+  const str = l.quotes === false ? '"[^"\\n]*"' : `"[^"\\n]*"|'[^'\\n]*'`;
+  const re = new RegExp(`(${str})|(?<![\\w@])(${l.kw})\\b`, l.ci ? "gi" : "g");
+  let out = "", last = 0;
+  for (const m of src.matchAll(re)) {
+    out += esc(src.slice(last, m.index)) + `<span class="${m[1] ? "st" : "kw"}">${esc(m[0])}</span>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(src.slice(last));
 }
 function md(s){ return esc(s).replace(/`([^`]+)`/g, (_,c)=>`<code>${c}</code>`); }
 
@@ -266,22 +301,27 @@ function renderCard(){
   const { lvl } = current; const s = V(current.s);
   current.tries = 0;
   const ladder = [1,2,3].map(i => `<span class="rung ${i<=lvl?'on':''}"></span>`).join("");
-  let body = "";
+  const l = L(s);
+  let body = setupBox(s);
   if (lvl === 3) {
-    body = `<p class="task">${md(s.write.task)}</p>
+    body += `<p class="task">${md(s.write.task)}</p>
       <label class="label" for="code">Your code</label>
       <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off">${esc(s.write.starter)}</textarea>
-      <p class="hint">Write only the function (no <code>main</code> needed). Ctrl+Enter to check.</p>`;
+      <p class="hint">${l.write} Ctrl+Enter to check.</p>`;
   } else if (lvl === 2) {
     let i = 0;
-    const parts = esc(s.fill.code).split("___").map((p, k, arr) => k < arr.length-1 ? hl(unesc(p)) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" spellcheck="false" size="10">` : hl(unesc(p)));
-    body = `<p class="task">Fill the gap${s.fill.blanks.length>1?'s':''} so the code is correct.</p>
+    const parts = esc(s.fill.code).split("___").map((p, k, arr) => k < arr.length-1 ? hl(unesc(p), s) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" spellcheck="false" size="10">` : hl(unesc(p), s));
+    body += `<p class="task">Fill the gap${s.fill.blanks.length>1?'s':''} so the code is correct.</p>
       <p class="task hint">${md(s.write.task)}</p>
       <pre class="code">${parts.join("")}</pre>`;
   } else {
-    body = `<p class="task">Read the code. What does <code>${esc(s.predict.expr)}</code> give?</p>
-      <pre class="code">${hl(s.predict.code)}</pre>
-      <div class="answer-row"><input id="pred" autocomplete="off" spellcheck="false" placeholder="type what ghci would print" aria-label="Your answer"></div>`;
+    const ask = s.predict.ask ? md(s.predict.ask)
+      : s.predict.expr ? `Read the code. What does <code>${esc(s.predict.expr)}</code> give?`
+      : "Read the code. What does it return?";
+    body += `<p class="task">${ask}</p>
+      <pre class="code">${hl(s.predict.code, s)}</pre>
+      <div class="answer-row"><input id="pred" autocomplete="off" spellcheck="false" placeholder="${esc(l.predict)}" aria-label="Your answer"></div>
+      ${l.rows && !s.predict.ask ? '<p class="hint">Columns separated by commas, rows by semicolons. Write <code>null</code> for NULL and <code>(no rows)</code> if nothing comes back.</p>' : ""}`;
   }
   $("card").innerHTML = `
     <div class="eyebrow"><span>Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${ladder} ${LEVELS[lvl]}</span></div>
@@ -306,11 +346,25 @@ function renderCard(){
   document.querySelectorAll(".blank, #pred").forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } }));
   const first = document.querySelector(".blank, #pred"); if (first) first.focus();
 }
+// The tables, graph or entities an exercise runs against, shown above the task.
+function setupBox(s){
+  const parts = [s.entities, s.setup].filter(Boolean);
+  for (const [name, text] of Object.entries(s.files || {})) parts.push(`-- ${name}\n${text.trim()}`);
+  if (!parts.length) return "";
+  return `<details class="setup" open><summary>${L(s).setup || "Setup"}</summary><pre class="code">${hl(parts.join("\n\n"), s)}</pre></details>`;
+}
 function unesc(s){ return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&"); }
 
 // ---------- checking ----------
 const norm = s => s.replace(/\s+/g, "");
-function predictOk(input, answer){
+function predictOk(input, answer, s){
+  if (L(s) !== LANG.haskell) {
+    const n = x => x.toLowerCase().replace(/['"`]/g, "").replace(/\s+/g, "");
+    const a = n(input), b = n(answer);
+    if (!a) return false;
+    const rows = x => x.split(";").filter(Boolean).sort().join(";");
+    return a === b || (!/\border\s+by\b/i.test(s.predict.code) && rows(a) === rows(b));
+  }
   const a = norm(input), b = norm(answer);
   if (!a) return false;
   if (a === b) return true;
@@ -333,34 +387,82 @@ async function check(){
   if (lvl === 1) {
     const v = $("pred").value;
     if (!v.trim()) return $("pred").focus();
-    const ok = predictOk(v, s.predict.answer);
+    const ok = predictOk(v, s.predict.answer, s);
     return ok ? finish(true, "Right.", null) : retry("That's not what it gives. Trace it again one step at a time.");
   }
   if (lvl === 2) {
     const vals = s.fill.blanks.map((_, i) => $("b"+i).value);
     if (vals.some(v => !v.trim())) return document.querySelector(".blank:placeholder-shown, .blank")?.focus();
-    const exact = s.fill.blanks.every((acc, i) => acc.map(norm).includes(norm(vals[i])));
+    const fold = L(s).ci ? x => norm(x).toLowerCase() : norm;
+    const exact = s.fill.blanks.every((acc, i) => acc.map(fold).includes(fold(vals[i])));
     if (exact) return finish(true, "Right.", null);
-    if (!sample) return retry("That doesn't match the expected answer. Check spelling and brackets.");
     let filled = s.fill.code; vals.forEach(v => filled = filled.replace("___", v));
+    if (s.lang === "sql") {
+      const r = await runCheck(s, filled);
+      if (r) return r.ok ? finish(true, "Right. It gives the same result on PostgreSQL.", null) : retry(r.msg);
+    }
+    if (!sample) return retry("That doesn't match the expected answer. Check spelling and brackets.");
     return aiGrade(filled, true);
   }
   const code = $("code").value;
   if (norm(code) === norm(s.write.starter)) return $("code").focus();
+  if (s.lang === "sql") {
+    const r = await runCheck(s, code);
+    if (r) return r.ok ? finish(true, "Correct. It ran on PostgreSQL and gave the right result.", code, current.tries > 0) : retry(r.msg);
+  }
   if (!sample) return selfGrade();
   return aiGrade(code, false);
 }
+
+// ---------- running SQL in the page ----------
+// PostgreSQL itself (PGlite) loads from a CDN the first time. If it can't load,
+// marking falls back to Claude or to marking it yourself.
+const PGLITE_URL = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.15/dist/index.js";
+let pgLoad = null;
+function loadPg(){ return pgLoad || (pgLoad = import(PGLITE_URL).then(m => m.PGlite).catch(() => null)); }
+async function runCheck(s, code){
+  setBusy(true);
+  $("res").innerHTML = `<div class="result meh"><h3>Running it…</h3><p class="hint">Running your SQL on PostgreSQL in this page. The first run takes a few seconds.</p></div>`;
+  let db = null;
+  try {
+    const PG = await loadPg();
+    if (!PG) return null;
+    try { db = new PG(); await db.waitReady; } catch(e) { return null; }
+    try {
+      if (s.setup) await runSql(db, s.setup, s.files);
+      const res = await runSql(db, code, s.files);
+      const mine = lastResult(res) ?? "(no rows)";
+      for (const [q, want] of s.checks) {
+        const got = q === "@result" ? mine : (lastResult(await runSql(db, q, s.files)) ?? "(no rows)");
+        if (sameRows(got, want, /\border\s+by\b/i.test(q === "@result" ? s.sol : q))) continue;
+        const shown = got.length > 160 ? got.slice(0, 160) + "…" : got;
+        return { ok: false, msg: q === "@result"
+          ? `It runs, but it returns <code>${esc(shown)}</code>, which isn't what the task asks for.`
+          : `It runs, but afterwards <code>${esc(q)}</code> gives <code>${esc(shown)}</code>, which isn't right.` };
+      }
+      return { ok: true };
+    } catch(e) {
+      return { ok: false, msg: `PostgreSQL says: <code>${esc(String(e.message || e))}</code>` };
+    }
+  } finally {
+    if (db) { try { db.close(); } catch(e) {} }
+    setBusy(false);
+  }
+}
+__ROWS_JS__
 function setBusy(b){ ["check","stuck"].forEach(id => { const el = $(id); if (el) el.disabled = b; }); }
 async function aiGrade(code, isFill){
   const s = V(current.s);
   setBusy(true);
   $("res").innerHTML = `<div class="result meh"><h3>Checking…</h3><p class="hint">The checker is reading your code as the compiler would. This takes a few seconds.</p></div>`;
-  const prompt = `You are marking a beginner's __LANG__ exercise for a university __MODULE_NAME__ module. Judge it like __COMPILER__ would.
+  const l = L(s), hs = l === LANG.haskell;
+  const context = [s.entities, s.setup].filter(Boolean).join("\n\n");
+  const prompt = `You are marking a beginner's ${l.name} exercise for a university __MODULE_NAME__ module. Judge it like ${l.judge} would.
 
 TASK: ${s.write.task}
-REFERENCE SOLUTION (one correct answer, others can be fine):
+${context ? `ALREADY SET UP BEFORE THE STUDENT'S CODE RUNS:\n${context}\n` : ""}REFERENCE SOLUTION (one correct answer, others can be fine):
 ${s.sol}
-TESTS IT MUST PASS (expression => expected ghci output):
+TESTS IT MUST PASS (${hs ? "expression => expected ghci output" : 'check => expected output; "@result" is what the student\'s code itself returns; rows are written "a, b; c, d"'}):
 ${s.checks.map(c => c[0] + " => " + c[1]).join("\n")}
 
 STUDENT'S CODE (between the lines):
@@ -368,11 +470,11 @@ STUDENT'S CODE (between the lines):
 ${code}
 -----
 
-The student may add a main (for example main = print (f 6)) or extra helper functions: that is allowed. Judge only what is actually written above; read every line carefully before deciding, and never invent a line that isn't there.
+${hs ? "The student may add a main (for example main = print (f 6)) or extra helper functions: that is allowed." : "Extra whitespace, different letter case in keywords, aliases and other valid ways of writing it are fine."} Judge only what is actually written above; read every line carefully before deciding, and never invent a line that isn't there.
 
 Decide:
-- "compiles": would this compile? Be strict about syntax: missing =, wrong indentation of guards, unbalanced brackets, wrong names, missing type signature pieces, wrong types. Missing imports for Prelude functions are fine.
-- "correct": does it compile AND give the expected output for every test? Different but valid approaches count as correct. Must keep the function name and type from the task.
+- "compiles": ${hs ? "would this compile? Be strict about syntax: missing =, wrong indentation of guards, unbalanced brackets, wrong names, missing type signature pieces, wrong types. Missing imports for Prelude functions are fine." : `would ${l.judge} accept it without an error? Be strict about syntax: missing commas or brackets, misspelt keywords, wrong names of tables, columns, labels or classes.`}
+- "correct": does it ${hs ? "compile" : "run"} AND give the expected output for every test? Different but valid approaches count as correct. ${hs ? "Must keep the function name and type from the task." : "Must do what the task asks, with the names the task uses."}
 - "line": if not correct, the single line of the student's code that is wrong, copied EXACTLY character for character from the code above; "" if correct or if the problem is something missing.
 - "feedback": 1-3 short sentences for a beginner with little coding experience. If wrong, point to the exact line and the exact problem, and how to fix that one thing. Do not paste a full solution. If right, say briefly what they did well. Plain words, no jargon.
 
@@ -399,10 +501,10 @@ function selfGrade(){
   const s = V(current.s);
   setBusy(true);
   $("res").innerHTML = `<div class="result meh"><h3>Compare with this</h3>
-    <pre class="code">${hl(s.sol)}</pre>
-    <p class="hint">Test yours on jdoodle with the copy button, or compare line by line. Be honest: it only helps you.</p>
+    <pre class="code">${hl(s.sol, s)}</pre>
+    <p class="hint">${L(s).copyHint} Be honest: it only helps you.</p>
     <div class="actions">
-      <button class="btn" id="copyRun">Copy mine for jdoodle</button>
+      <button class="btn" id="copyRun">${L(s).copy}</button>
       <button class="btn primary" id="selfYes">Mine works</button>
       <button class="btn" id="selfNo">Mine doesn't</button>
     </div></div>`;
@@ -412,8 +514,11 @@ function selfGrade(){
 }
 function copyForJdoodle(){
   const s = V(current.s);
-  const mine = $("code") ? $("code").value : s.sol;
-  const text = mine.trim() + "\n\nmain :: IO ()\nmain = do\n" + s.checks.map(c => `  print (${c[0]})   -- should be ${c[1]}`).join("\n") + "\n";
+  const mine = ($("code") ? $("code").value : s.sol).trim();
+  const l = L(s);
+  const text = l === LANG.haskell
+    ? mine + "\n\nmain :: IO ()\nmain = do\n" + s.checks.map(c => `  print (${c[0]})   -- should be ${c[1]}`).join("\n") + "\n"
+    : (s.lang === "sql" || s.lang === "cypher") && s.setup ? s.setup.trim() + "\n\n" + mine + "\n" : mine + "\n";
   const done = () => { const b = $("copyRun"); if (b) b.textContent = "Copied"; };
   try { navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text)); } catch(e) { fallbackCopy(text); }
 }
@@ -440,7 +545,7 @@ function finish(ok, msg, attempt, retried){
     <p>${msg}</p>
     <p class="hint">${next}</p>
     <div class="label">Answer</div>
-    <pre class="code">${hl(s.sol)}</pre>
+    <pre class="code">${hl(s.sol, s)}</pre>
     <p>${md(s.explain)}</p>
     <div class="ai" id="aiExplain" hidden></div>
     <div class="actions">
@@ -455,10 +560,10 @@ async function explain(attempt){
   const s = V(current.s);
   const out = $("aiExplain"), btn = $("explain");
   btn.disabled = true; out.hidden = false; out.textContent = "Thinking…";
-  const prompt = `Explain this __LANG__ exercise to a university student who is new to programming and finds syntax hard. Be short and concrete: under 170 words, plain words, no headings. Go through the solution line by line, saying what each symbol does. ${attempt ? "Then say exactly what was different or wrong in the student's attempt, kindly, in 1-2 sentences." : ""}
+  const prompt = `Explain this ${L(s).name} exercise to a university student who is new to programming and finds syntax hard. Be short and concrete: under 170 words, plain words, no headings. Go through the solution line by line, saying what each symbol does. ${attempt ? "Then say exactly what was different or wrong in the student's attempt, kindly, in 1-2 sentences." : ""}
 
 Exercise: ${s.write.task}
-Solution:
+${[s.entities, s.setup].filter(Boolean).length ? "Set up first:\n" + [s.entities, s.setup].filter(Boolean).join("\n\n") + "\n" : ""}Solution:
 ${s.sol}
 ${attempt ? "Student's attempt:\n" + attempt : ""}`;
   try {
