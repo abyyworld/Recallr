@@ -4,7 +4,7 @@
   "icon": "DB",
   "scope": "weeks 1-5",
   "weeks": [1, 2, 3, 4, 5],
-  "language": "SQL",
+  "language": "SQL, Cypher, JPA, JDL",
   "lang": "sql",
   "compiler": "PostgreSQL",
   "test": "databases"
