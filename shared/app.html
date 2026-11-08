@@ -195,39 +195,67 @@ function hl(src){
 function md(s){ return esc(s).replace(/`([^`]+)`/g, (_,c)=>`<code>${c}</code>`); }
 
 // ---------- persistence ----------
-function load(){
-  try { const raw = localStorage.getItem(LS_KEY); if (raw) state = Object.assign(state, JSON.parse(raw)); } catch(e) {}
+// Progress lives in three places, and the newest copy always wins:
+//   1. the page's own memory, handed to the next version when the page is updated (hot snapshot)
+//   2. this browser (localStorage)
+//   3. the viewer's account (db), so it follows them across devices
+// Storage names never change between versions; OLD_* are names used by earlier versions, read once to bring progress across.
+const OLD_LS_KEYS = MODULE_ID === "functional-programming" ? ["haskell-reps-v1"] : [];
+const OLD_DOCS = MODULE_ID === "functional-programming" ? ["reps"] : [];
+function parse(raw){ try { const s = JSON.parse(raw); return s && typeof s === "object" && s.skills ? s : null; } catch(e) { return null; } }
+function adopt(s){
+  // take another copy of the progress if it's newer than what we have
+  if (!s || (s.updated || 0) <= (state.updated || 0)) return false;
+  state = Object.assign({ skills:{}, shown:0, todayKey:"", today:0, updated:0, tests:{} }, s);
+  return true;
 }
+function load(){
+  try {
+    for (const key of [LS_KEY, ...OLD_LS_KEYS]) adopt(parse(localStorage.getItem(key)));
+  } catch(e) {}
+  adopt(window.claude?.hot?.data?.state);
+}
+function saveLocal(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {} }
 function persist(){
   state.updated = Date.now();
-  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
+  saveLocal();
   if (db && uid) saveRemote();
 }
+function note(text){ $("saveNote").textContent = text; }
 async function saveRemote(){
   if (saving) { saveAgain = true; return; }
   saving = true;
-  try { await db.doc(`data/users/${uid}/recallr-${MODULE_ID}`).set({ json: JSON.stringify(state), updated: state.updated }); $("saveNote").textContent = "Progress is saved to your account, so it follows you across devices."; }
-  catch(e) { $("saveNote").textContent = "Progress is saved in this browser (couldn't reach your account just now)."; }
+  try {
+    await db.doc(`data/users/${uid}/recallr-${MODULE_ID}`).set({ json: JSON.stringify(state), updated: state.updated || 0 });
+    note("Progress saved to your account, so it follows you across devices and updates.");
+  } catch(e) {
+    note(`Progress saved in this browser only: your account didn't accept it (${(e && e.code) || "error"}). It'll try again after your next answer.`);
+  }
   saving = false;
   if (saveAgain) { saveAgain = false; saveRemote(); }
+}
+function refreshAfterAdopt(){
+  saveLocal();
+  if (!checked) pickAndRender(); else renderStats();
+  if (view === "test") renderTest();
 }
 async function connect(){
   try {
     const [d, u] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
-    if (d && u) {
-      const id = await u.id();
-      if (id) {
-        db = d; uid = id;
-        const snap = await db.doc(`data/users/${uid}/recallr-${MODULE_ID}`).get();
-        const remote = snap.exists ? snap.data() : null;
-        if (remote && remote.updated > (state.updated||0)) {
-          state = Object.assign(state, JSON.parse(remote.json));
-          try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
-          if (!checked) pickAndRender(); else renderStats();
-          if (view === "test") renderTest();
-        } else if (state.updated) saveRemote();
-        $("saveNote").textContent = "Progress is saved to your account, so it follows you across devices.";
+    if (!d || !u) note("Progress saved in this browser. Sign in to Claude to keep it across devices.");
+    const id = d && u ? await u.id() : null;
+    if (d && u && !id) note("Progress saved in this browser. Sign in to Claude to keep it across devices.");
+    if (id) {
+      db = d; uid = id;
+      let changed = false;
+      for (const name of [`recallr-${MODULE_ID}`, ...OLD_DOCS]) {
+        try {
+          const snap = await db.doc(`data/users/${uid}/${name}`).get();
+          if (snap.exists) changed = adopt(parse(snap.data().json)) || changed;
+        } catch(e) {}
       }
+      if (changed) refreshAfterAdopt();
+      if (state.updated) await saveRemote(); else note("Progress will be saved to your account after your first answer.");
     }
   } catch(e) {}
   try { sample = await window.claude?.use?.("sample"); } catch(e) { sample = null; }
@@ -715,5 +743,11 @@ try { const w = localStorage.getItem(LS_KEY + "-week"); if (w) { week = w; docum
 try { const m = localStorage.getItem(LS_KEY + "-mode"); if (m) { mode = m; document.querySelectorAll(".chip.mode").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.mode === m))); } } catch(e) {}
 pickAndRender();
 try { const v = localStorage.getItem(LS_KEY + "-view"); if (v === "test" && T) setView("test"); } catch(e) {}
+// when the page is updated while open, hand the progress to the new version
+window.claude?.hot?.snapshot?.(() => ({ state }));
+if (window.claude?.hot?.ready) window.claude.hot.ready(data => { if (adopt(data && data.state)) refreshAfterAdopt(); });
+// last chance to keep the newest progress in this browser before the page goes away
+window.addEventListener("pagehide", saveLocal);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveLocal(); });
 connect();
 </script>
