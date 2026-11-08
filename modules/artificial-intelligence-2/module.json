@@ -1,0 +1,10 @@
+{
+  "id": "artificial-intelligence-2",
+  "name": "Artificial Intelligence 2",
+  "icon": "∑",
+  "scope": "weeks 1-5",
+  "weeks": [1, 2, 3, 4, 5],
+  "language": "Maths",
+  "kind": "maths",
+  "test": "maths"
+}

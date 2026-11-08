@@ -4,6 +4,7 @@
 const fs = require("fs"), path = require("path");
 const root = path.resolve(__dirname, "..");
 const template = fs.readFileSync(path.join(root, "shared/app.html"), "utf8");
+const mathsLib = fs.readFileSync(path.join(root, "shared/maths.js"), "utf8");
 const site = JSON.parse(fs.readFileSync(path.join(root, "site.json"), "utf8"));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -21,9 +22,16 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
   const answersFile = path.join(dir, "answers.json");
   if (!fs.existsSync(answersFile)) { console.error(`${name}: no answers.json, run its test script first`); process.exit(1); }
   const answers = JSON.parse(fs.readFileSync(answersFile, "utf8"));
-  for (const s of DECK) s.predict.answer = answers.course[s.id];
-  for (const id in TWINS) TWINS[id].predict.answer = answers.variation[id];
-  const missing = DECK.filter(s => s.predict.answer === undefined).map(s => s.id);
+  const kind = mod.kind || "code";
+  // maths modules also mark the final answer and each gap against values the test script computed
+  const attach = (s, side, id) => {
+    s.predict.answer = answers[side][id];
+    if (kind === "maths") { s.write.answer = answers.write?.[side]?.[id]; s.fill.answers = answers.fill?.[side]?.[id]; }
+  };
+  for (const s of DECK) attach(s, "course", s.id);
+  for (const id in TWINS) attach(TWINS[id], "variation", id);
+  const stale = s => s.predict.answer === undefined || (kind === "maths" && (s.write.answer === undefined || s.fill.answers === undefined));
+  const missing = [...DECK.filter(stale).map(s => s.id), ...Object.keys(TWINS).filter(id => stale(TWINS[id])).map(id => id + " (variation)")];
   if (missing.length) { console.error(`${name}: answers.json is out of date (${missing.join(", ")}), rerun its test script`); process.exit(1); }
 
   const chips = mod.weeks.map(w => `    <button class="chip" data-week="${w}" aria-pressed="false">Week ${w}</button>`).join("\n");
@@ -33,13 +41,17 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
     .split("__MODULE_ICON__").join(esc(mod.icon))
     .split("__MODULE_SCOPE__").join(esc(mod.scope))
     .split("__MODULE_ID__").join(mod.id)
+    .split("__KIND__").join(kind)
+    .split("__TAGLINE__").join(kind === "maths" ? "solve it, or step down until you can" : "write it, or step down until you can")
     .split("__LANG__").join(mod.language)
-    .split("__COMPILER__").join(mod.compiler)
-    .replace("__WEEK_CHIPS__", chips)
-    .replace("__SUPPORT__", support)
-    .replace("__DECK__", json(DECK))
-    .replace("__TWINS__", json(TWINS))
-    .replace("__SRC__", json(SRC));
+    .split("__COMPILER__").join(mod.compiler || "")
+    // functions as replacements, so a "$" in the content is never read as a replacement pattern
+    .replace("__MATHS_LIB__", () => mathsLib.trim())
+    .replace("__WEEK_CHIPS__", () => chips)
+    .replace("__SUPPORT__", () => support)
+    .replace("__DECK__", () => json(DECK))
+    .replace("__TWINS__", () => json(TWINS))
+    .replace("__SRC__", () => json(SRC));
   fs.mkdirSync(path.join(root, "docs", mod.id), { recursive: true });
   fs.writeFileSync(path.join(root, "docs", mod.id, "index.html"),
     `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>\n${html}\n</body></html>\n`);
@@ -59,7 +71,7 @@ main{max-width:640px;margin:0 auto}h1{font-size:40px;margin:0}p{color:var(--mute
 ul{list-style:none;padding:0;display:grid;gap:10px}a{color:var(--accent);font-weight:600;font-size:18px}li span{color:var(--muted);margin-left:8px}
 </style></head><body><main>
 <h1>Recallr</h1>
-<p>Coding practice that adapts to you. Write the function from memory; if you can't, step down to filling the gaps or predicting the output, then climb back up. Skills you know come back on a spaced schedule.</p>
+<p>Practice that adapts to you. Write the function or solve the question from memory; if you can't, step down to filling the gaps or a simpler last step, then climb back up. Skills you know come back on a spaced schedule.</p>
 <ul>
 ${list}
 </ul>
