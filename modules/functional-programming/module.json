@@ -1,0 +1,10 @@
+{
+  "id": "functional-programming",
+  "name": "Functional Programming",
+  "icon": "λ",
+  "scope": "weeks 1-3",
+  "weeks": [1, 2, 3],
+  "language": "Haskell",
+  "compiler": "GHC 9",
+  "test": "haskell"
+}
