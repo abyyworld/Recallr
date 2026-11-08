@@ -1,6 +1,14 @@
-# Recallr
+<h1 align="center">Recallr</h1>
 
-Coding practice that adapts to you.
+<p align="center"><b>Coding practice that adapts to you.</b><br>Write it from memory, or step down until you can.</p>
+
+<p align="center">
+  <a href="https://abyyworld.github.io/Recallr/"><img src="https://img.shields.io/badge/%E2%96%B6%20%20Open%20Recallr-Start%20practising%2C%20free-2c7a57?style=for-the-badge" alt="Open Recallr and start practising"></a>
+</p>
+
+<p align="center">Works in any browser, on any computer or phone. Install it as an app from your browser's menu.</p>
+
+---
 
 Every exercise has three levels:
 
@@ -12,13 +20,17 @@ You start at the top. Get it wrong and you can try again; give up and you see th
 
 There's also a **mock test** mode in the vLab style: one file with every function set to `undefined`, a timer, a "Run checks" button that works like typing `checks` in ghci, and marking with feedback at the end. "Copy file" gives a complete file to run on vLab or a laptop.
 
+Tick the weeks you want questions from. Everything you do, including half-typed answers, saves as you go, and the app opens on the card you left.
+
+**Smart features** (optional): automatic marking, step-by-step explanations, and new questions when the built-in ones run out. Inside Claude they use your own Claude account; anywhere else, add your own Anthropic API key in the app. The key stays in your browser. AI-generated questions are labelled, because no compiler has checked their answers.
+
 Each exercise has a **course** version (labelled with where the idea comes from) and a **variation** that practises the same skill with a different function, for people who'd rather not repeat the course's exact questions.
 
 ## Modules
 
 | Module | Language | Covers |
 |---|---|---|
-| [Functional Programming](modules/functional-programming) | Haskell | weeks 1-3: types, guards, pattern matching, recursion, higher-order functions, type classes |
+| [Functional Programming](https://abyyworld.github.io/Recallr/functional-programming/) | Haskell | weeks 1-5: types, guards, pattern matching, recursion, higher-order functions, type classes, list comprehensions, Maybe and Either, binary trees, search trees, sorting, rose trees, expression trees |
 
 Pages are built into [`docs/`](docs) so they can be served with GitHub Pages.
 
@@ -37,8 +49,10 @@ Pages are built into [`docs/`](docs) so they can be served with GitHub Pages.
 
 Marking and progress:
 
-- Inside a Claude artifact, "Write it" answers are marked by Claude and progress is saved to the viewer's account.
-- Anywhere else (GitHub Pages, a local file) the page falls back to self-marking with a "copy for jdoodle" button, and progress is saved in the browser.
+- Inside a Claude artifact, smart features use the viewer's Claude account and progress is also saved to their account.
+- On GitHub Pages or a local file, smart features need the viewer's own Anthropic API key (loaded through the official `@anthropic-ai/sdk`, pinned to 1.2.0); without one, the page falls back to self-marking with a "copy for jdoodle" button. Progress is saved in the browser.
+- Progress is never lost to an update: storage names don't change between versions, older names are read once and carried over, and the newest copy always wins.
+- `shared/pwa/`: the app manifest, icons and service worker that make the site installable. The service worker fetches from the network first, so updates show up straight away.
 
 ## Building
 

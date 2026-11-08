@@ -324,4 +324,5 @@ const DECK = [
   predict: { code: "next x\n  | x == maxBound = minBound\n  | otherwise     = succ x", expr: "next 'a'" },
   explain: "`maxBound`/`minBound` are the largest/smallest value of a type (needs `Bounded`). `succ` is the next value (needs `Enum`). At the last value, wrap back to the first." },
 ];
+DECK.push(...require("./deck-4-5.js").DECK45);
 if (typeof module !== "undefined") module.exports = DECK;

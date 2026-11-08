@@ -11,6 +11,14 @@ const support = site.supportUrl
   ? `<p class="note"><a href="${esc(site.supportUrl)}" target="_blank" rel="noopener">${esc(site.supportLabel || "Support Recallr")}</a>. Recallr is free; this is optional.</p>`
   : "";
 
+// Lets people install Recallr as an app (Chrome, Edge, Safari "Add to Dock" / "Add to Home Screen")
+// and keeps working offline once loaded.
+function pwaHead(base) {
+  return `<link rel="manifest" href="${base}manifest.webmanifest"><meta name="theme-color" content="#2c7a57">` +
+    `<link rel="icon" href="${base}icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="${base}icon-192.png">` +
+    `<script>if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("${base}sw.js").catch(() => {});</script>`;
+}
+
 const built = [];
 for (const name of fs.readdirSync(path.join(root, "modules"))) {
   const dir = path.join(root, "modules", name);
@@ -28,7 +36,7 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
   const missing = DECK.filter(s => s.predict.answer === undefined).map(s => s.id);
   if (missing.length) { console.error(`${name}: answers.json is out of date (${missing.join(", ")}), rerun its test script`); process.exit(1); }
 
-  const chips = mod.weeks.map(w => `    <button class="chip" data-week="${w}" aria-pressed="false">Week ${w}</button>`).join("\n");
+  const chips = mod.weeks.map(w => `    <label class="tick"><input type="checkbox" data-week="${w}" checked> Week ${w}</label>`).join("\n");
   const json = v => JSON.stringify(v).replace(/</g, "\\u003c");
   const html = template
     .split("__MODULE_NAME__").join(esc(mod.name))
@@ -45,27 +53,58 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
     .replace("__TESTS__", json(TESTS));
   fs.mkdirSync(path.join(root, "docs", mod.id), { recursive: true });
   fs.writeFileSync(path.join(root, "docs", mod.id, "index.html"),
-    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>\n${html}\n</body></html>\n`);
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${pwaHead("../")}</head><body>\n${html}\n</body></html>\n`);
   built.push(mod);
   console.log(`built docs/${mod.id}/index.html (${DECK.length} exercises)`);
 }
 
-const list = built.map(m => `<li><a href="${m.id}/">${esc(m.icon)} ${esc(m.name)}</a> <span>${esc(m.scope)}</span></li>`).join("\n");
+for (const f of fs.readdirSync(path.join(root, "shared/pwa"))) fs.copyFileSync(path.join(root, "shared/pwa", f), path.join(root, "docs", f));
+
+const cards = built.map(m => `      <a class="mod" href="${m.id}/">
+        <span class="icon">${esc(m.icon)}</span>
+        <span class="txt"><b>${esc(m.name)}</b><span>${esc(m.language)} · ${esc(m.scope)}</span></span>
+        <span class="go">Start practising &rarr;</span>
+      </a>`).join("\n");
 fs.writeFileSync(path.join(root, "docs", "index.html"), `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Recallr</title>
+<meta name="description" content="Coding practice that adapts to you: write it from memory, or step down until you can.">
+${pwaHead("")}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
-:root{--bg:#f6f7f3;--ink:#1d2421;--muted:#5f6b66;--accent:#2c7a57}
-@media (prefers-color-scheme:dark){:root{--bg:#121614;--ink:#e7ece9;--muted:#9aa7a1;--accent:#5cc492;color-scheme:dark}}
-body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif;margin:0;padding:40px max(16px,env(safe-area-inset-left))}
-main{max-width:640px;margin:0 auto}h1{font-size:40px;margin:0}p{color:var(--muted)}
-ul{list-style:none;padding:0;display:grid;gap:10px}a{color:var(--accent);font-weight:600;font-size:18px}li span{color:var(--muted);margin-left:8px}
+:root{--bg:#f6f7f3;--surface:#fff;--ink:#1d2421;--muted:#5f6b66;--line:#dfe4de;--accent:#2c7a57;--accent-ink:#fff;--soft:#e3f1ea}
+@media (prefers-color-scheme:dark){:root{--bg:#121614;--surface:#1a201d;--ink:#e7ece9;--muted:#9aa7a1;--line:#2c3531;--accent:#5cc492;--accent-ink:#0d1210;--soft:#1f3a2d;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Source Sans 3",system-ui,sans-serif}
+main{max-width:720px;margin:0 auto;padding:56px max(18px,env(safe-area-inset-right)) 56px max(18px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:28px}
+h1{font:800 clamp(44px,10vw,72px)/1 "Bricolage Grotesque",system-ui,sans-serif;margin:0;letter-spacing:-.03em}
+h1 span{color:var(--accent)}
+.lede{font-size:21px;margin:0;max-width:34ch}
+.ladder{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.ladder li{display:flex;gap:14px;align-items:baseline;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.ladder b{font-family:"Bricolage Grotesque",system-ui,sans-serif;min-width:118px}
+.ladder span{color:var(--muted)}
+.mods{display:grid;gap:12px}
+.mod{display:flex;align-items:center;gap:16px;padding:20px;border-radius:16px;background:var(--accent);color:var(--accent-ink);text-decoration:none;transition:transform .15s}
+.mod:hover{transform:translateY(-2px)}.mod:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.icon{font:800 34px "Bricolage Grotesque",system-ui,sans-serif;width:48px;text-align:center}
+.txt{display:flex;flex-direction:column;flex:1;min-width:0}.txt b{font-size:21px}.txt span{opacity:.85;font-size:15px}
+.go{font-weight:600;white-space:nowrap}
+.note{color:var(--muted);font-size:15px;margin:0}
+@media (max-width:480px){.go{display:none}.ladder li{flex-direction:column;gap:2px}}
+@media (prefers-reduced-motion:reduce){.mod{transition:none}}
 </style></head><body><main>
-<h1>Recallr</h1>
-<p>Coding practice that adapts to you. Write the function from memory; if you can't, step down to filling the gaps or predicting the output, then climb back up. Skills you know come back on a spaced schedule.</p>
-<ul>
-${list}
-</ul>
+<h1>Recall<span>r</span></h1>
+<p class="lede">Coding practice that adapts to you. Write it from memory, or step down until you can.</p>
+<div class="mods">
+${cards}
+</div>
+<ol class="ladder">
+  <li><b>Write it</b><span>Write the function from scratch.</span></li>
+  <li><b>Fill the gaps</b><span>Stuck? Finish code with a few pieces missing.</span></li>
+  <li><b>Predict</b><span>Still stuck? Read code and say what it gives. Then climb back up.</span></li>
+</ol>
+<p class="note">Free. Your progress saves as you go. Install it as an app from your browser's menu ("Install Recallr" or "Add to Dock"). Spaced repetition brings each skill back after 10 minutes, then 1, 3, 7, 16 and 35 days.</p>
 ${support}
 </main></body></html>
 `);

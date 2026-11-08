@@ -23,7 +23,7 @@ let problems = 0;
 function test(kind, id, s) {
   const fillCode = s.fill.blanks.reduce((c, b) => c.replace("___", b[0]), s.fill.code);
   // the gap code sometimes leaves out type synonyms that the solution declares
-  const context = s.sol.split("\n").filter(l => /^(type|data) /.test(l) && !fillCode.includes(l)).join("\n");
+  const context = s.sol.split("\n").filter(l => /^(type|data|import) /.test(l) && !fillCode.includes(l)).join("\n");
   for (const [part, code] of [["solution", s.sol], ["gaps", (context ? context + "\n" : "") + fillCode]]) {
     const exprs = s.checks.map(c => c[0]);
     if (part === "solution") exprs.push(s.predict.expr);

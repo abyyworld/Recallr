@@ -77,6 +77,14 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .done h2{font-size:26px}
 .note{font-size:13px;color:var(--muted)}
 .src{font-size:12px;color:var(--muted)}
+.weeks{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer}
+.tick input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.tick:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.tick:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.settings{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 16px}
+.settings .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-bottom:12px}
+.settings input,.settings select{font:15px var(--body);padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);color:var(--ink);min-width:0;flex:1 1 220px}
 .stack{display:flex;flex-direction:column;gap:18px;min-width:0}
 .term{background:var(--term-bg);color:var(--term-ink);font-family:var(--mono);font-size:13px;line-height:1.6;border-radius:10px;padding:14px;margin:0;overflow-x:auto;white-space:pre;font-variant-ligatures:none}
 .term .p{color:var(--accent)}.term .ok{color:var(--term-ok)}.term .no{color:var(--term-bad)}
@@ -110,9 +118,9 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
   </div>
 
   <div id="practiceView" class="stack">
-  <div class="chips" role="group" aria-label="Which weeks">
-    <button class="chip" data-week="all" aria-pressed="true">All weeks</button>
+  <div class="weeks" role="group" aria-label="Weeks to practise">
 __WEEK_CHIPS__
+    <button class="chip" id="weeksAll">All weeks</button>
   </div>
   <div class="chips" role="group" aria-label="Which questions">
     <button class="chip mode" data-mode="course" aria-pressed="true">Course questions</button>
@@ -125,6 +133,30 @@ __WEEK_CHIPS__
     <summary>All skills and where you are</summary>
     <p class="note">Each skill starts at <b>Write it</b>. Get it wrong and it steps down to <b>Fill the gaps</b>, then <b>Predict</b>. Get it wrong and you can try again as often as you like; the answer only appears when you give up. Get it right first time and it climbs back up. A skill you can write comes back after 10 minutes, then 1, 3, 7, 16 and 35 days. "Mastered" means you wrote it correctly three times in a row, spread over days.</p>
     <div class="skills" id="skills"></div>
+  </details>
+
+  <details class="settings" id="aiBox">
+    <summary>Smart features: marking, explanations, new questions</summary>
+    <p class="note" id="aiStatus">Checking what's available…</p>
+    <div id="keyForm">
+      <p class="note">Use your own Anthropic API key (from console.anthropic.com). It stays in this browser and is only sent to Anthropic. Usage is charged to your key.</p>
+      <div class="row">
+        <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..." aria-label="Anthropic API key">
+        <select id="apiModel" aria-label="Model">
+          <option value="claude-opus-5-5">Claude Opus 5.5 (best)</option>
+          <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (cheaper)</option>
+          <option value="claude-haiku-5-5">Claude Haiku 5.5 (cheapest)</option>
+        </select>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="keySave">Save key</button>
+        <button class="btn" id="keyRemove">Remove key</button>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn" id="genBtn">Generate 5 new questions for the ticked weeks</button>
+    </div>
+    <p class="note" id="genStatus"></p>
   </details>
   <div class="actions">
     <button class="btn" id="undo" disabled>Undo last mark</button>
@@ -178,7 +210,8 @@ const MODULE_ID = "__MODULE_ID__";
 const LS_KEY = "recallr-" + MODULE_ID;
 
 let state = { skills:{}, shown:0, todayKey:"", today:0, updated:0 };
-let week = "all";
+const ALL_WEEKS = [...new Set(DECK.map(s => Number(s.week)))].sort((a,b)=>a-b);
+let weeksSel = new Set(ALL_WEEKS);
 let mode = "course";
 let lastUndo = null;
 let current = null;     // {s, lvl}
@@ -258,22 +291,125 @@ async function connect(){
       if (state.updated) await saveRemote(); else note("Progress will be saved to your account after your first answer.");
     }
   } catch(e) {}
-  try { sample = await window.claude?.use?.("sample"); } catch(e) { sample = null; }
+  try { claudeSample = await window.claude?.use?.("sample"); } catch(e) { claudeSample = null; }
+  setupAI();
   if (current && !checked) renderCard();
 }
+
+// ---------- smart features ----------
+// Inside Claude, the page asks Claude on the viewer's own account. Anywhere else, it can use the
+// viewer's own Anthropic API key, kept in this browser. Without either, everything still works
+// with self-marking and the built-in explanations.
+let claudeSample = null;
+const KEY_STORE = "recallr-api";
+const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.2.0/+esm";
+function keyInfo(){ try { const k = JSON.parse(localStorage.getItem(KEY_STORE) || "null"); return k && k.key ? k : null; } catch(e) { return null; } }
+function parseJsonLoose(text){
+  try { return JSON.parse(text); } catch(e) {}
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/); if (fence) { try { return JSON.parse(fence[1]); } catch(e) {} }
+  const a = Math.min(...["{", "["].map(c => text.indexOf(c)).filter(i => i >= 0)), b = Math.max(text.lastIndexOf("}"), text.lastIndexOf("]"));
+  if (isFinite(a) && b > a) { try { return JSON.parse(text.slice(a, b + 1)); } catch(e) {} }
+  throw { code: "invalid_json", message: "no JSON in the reply", text };
+}
+let sdkPromise = null;
+function keySample(info){
+  async function call(prompt, opts){
+    opts = opts || {};
+    let Anthropic;
+    try { sdkPromise = sdkPromise || import(SDK_URL); const m = await sdkPromise; Anthropic = m.default || m.Anthropic; }
+    catch(e) { sdkPromise = null; throw { code: "upstream_error", message: "couldn't load the Anthropic SDK" }; }
+    const client = new Anthropic({ apiKey: info.key, dangerouslyAllowBrowser: true });
+    const params = { model: info.model, max_tokens: 16000, messages: [{ role: "user", content: prompt }], output_config: { effort: opts.effort || "low" } };
+    let msg;
+    try {
+      // Opus and Sonnet: if a safety check declines, the API retries on a fallback model by itself
+      msg = info.model === "claude-haiku-5-5"
+        ? await client.messages.create(params)
+        : await client.beta.messages.create({ ...params, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" });
+    } catch(e) {
+      const s = e && e.status;
+      throw { code: s === 401 || s === 403 ? "bad_key" : s === 429 ? "rate_limited" : "upstream_error", message: String((e && e.message) || e) };
+    }
+    if (msg.stop_reason === "refusal") throw { code: "refused", message: "declined" };
+    const text = msg.content.filter(b => b.type === "text").map(b => b.text).join("");
+    if (!text.trim()) throw { code: "empty_completion", message: "empty reply" };
+    if (opts.onText) opts.onText({ text, delta: text });
+    return { text, truncated: msg.stop_reason === "max_tokens" };
+  }
+  const f = (prompt, opts) => call(prompt, opts);
+  f.json = async (prompt, opts) => parseJsonLoose((await call(prompt + "\n\nReply with only the JSON value, no other text.", opts)).text);
+  return f;
+}
+function setupAI(){
+  const info = keyInfo();
+  sample = claudeSample || (info ? keySample(info) : null);
+  const status = $("aiStatus");
+  if (claudeSample) {
+    status.textContent = "On: you're using Recallr inside Claude, so marking, explanations and new questions use your own Claude account. No key needed.";
+    $("keyForm").hidden = true;
+  } else if (info) {
+    status.textContent = `On: using your own API key with ${$("apiModel").querySelector(`option[value="${info.model}"]`)?.textContent || info.model}.`;
+    $("keyForm").hidden = false; $("apiModel").value = info.model; $("apiKey").value = ""; $("apiKey").placeholder = "Key saved (enter a new one to replace it)";
+  } else {
+    status.textContent = "Off: you mark your own answers and get the built-in explanations. Add your own Anthropic API key below to turn on automatic marking, step-by-step explanations and new questions.";
+    $("keyForm").hidden = false; $("apiKey").placeholder = "sk-ant-...";
+  }
+  $("genBtn").disabled = !sample;
+  if (current && !checked) renderCard();
+}
+$("keySave").onclick = () => {
+  const key = $("apiKey").value.trim(), old = keyInfo();
+  if (!key && !old) { $("apiKey").focus(); return; }
+  try { localStorage.setItem(KEY_STORE, JSON.stringify({ key: key || old.key, model: $("apiModel").value })); } catch(e) {}
+  setupAI();
+};
+$("keyRemove").onclick = () => { try { localStorage.removeItem(KEY_STORE); } catch(e) {} setupAI(); };
+
+// When the built-in questions run out (or on request), ask for new ones in the same format.
+async function generate(){
+  if (!sample) return;
+  const weeks = [...weeksSel].sort();
+  const pool = allSkills().filter(inWeek);
+  const topics = [...new Set(pool.map(s => `week ${s.week}: ${s.topic}`))].join("; ");
+  const example = DECK.find(s => s.id === "sum") || DECK[0];
+  const ex = { id: example.id, week: example.week, topic: example.topic, title: example.title, sol: example.sol, checks: example.checks, write: example.write, fill: example.fill, predict: { code: example.predict.code, expr: example.predict.expr, answer: example.predict.answer }, explain: example.explain };
+  $("genBtn").disabled = true; $("genStatus").textContent = "Writing new questions… this can take a minute.";
+  const prompt = `Write 5 NEW practice exercises in __LANG__ for a university __MODULE_NAME__ module, for a student who is new to programming.
+Weeks: ${weeks.join(", ")}. Topics covered in those weeks: ${topics}.
+They must be different from these existing ones: ${pool.map(s => s.title).join(", ")}.
+Use the exact JSON shape of this example (one object per exercise):
+${JSON.stringify(ex)}
+Rules: "sol" is a complete correct solution (with type signatures); "checks" are 2 [expression, exact output ghci would print] pairs; "fill.code" is the solution with 1 or 2 parts replaced by ___ and "fill.blanks" lists the accepted answers for each gap; "predict.answer" is exactly what ghci prints for "predict.expr"; "week" is one of ${weeks.join(", ")}; plain words in "task" and "explain". Double-check every expected output.
+Reply with only a JSON array of 5 objects.`;
+  try {
+    const arr = await sample.json(prompt, { modelTier: "default", effort: "medium" });
+    const ok = (Array.isArray(arr) ? arr : []).filter(g => g && g.sol && g.write && g.write.task && g.fill && typeof g.fill.code === "string" && g.fill.code.includes("___") && Array.isArray(g.fill.blanks) && g.predict && g.predict.expr && g.predict.answer != null && Array.isArray(g.checks) && weeksSel.has(Number(g.week)));
+    const stamp = Date.now();
+    const made = ok.map((g, i) => ({ id: `gen-${stamp}-${i}`, gen: true, week: Number(g.week), topic: String(g.topic || "Practice"), title: String(g.title || "new question"), sol: String(g.sol), checks: g.checks, write: { task: String(g.write.task), starter: String(g.write.starter || "") }, fill: { code: g.fill.code, blanks: g.fill.blanks.map(b => (Array.isArray(b) ? b : [b]).map(String)) }, predict: { code: String(g.predict.code || g.sol), expr: String(g.predict.expr), answer: String(g.predict.answer) }, explain: String(g.explain || "") }));
+    state.generated = (state.generated || []).concat(made);
+    persist(); renderStats();
+    $("genStatus").textContent = made.length ? `Added ${made.length} new question${made.length > 1 ? "s" : ""}. They're marked "AI-generated" because a compiler hasn't checked their answers.` : "That didn't produce usable questions. Try again.";
+    if (made.length && (!current || checked)) pickAndRender();
+  } catch(e) {
+    $("genStatus").textContent = e && e.code === "bad_key" ? "Your API key was rejected. Check it and save it again." : e && e.code === "rate_limited" ? "Too many requests just now. Try again in a minute." : "Couldn't generate questions just now. Try again.";
+  }
+  $("genBtn").disabled = !sample;
+}
+$("genBtn").onclick = generate;
 
 // ---------- scheduling ----------
 function V(s){ return mode === "twin" && TWINS[s.id] ? Object.assign({}, s, TWINS[s.id], { id: s.id, week: s.week, topic: s.topic }) : s; }
 function sk(id){ return state.skills[id] || (state.skills[id] = { lvl:3, box:0, due:0, notBefore:0, streak:0, seen:false }); }
-function inWeek(s){ return week === "all" || String(s.week) === week; }
+function allSkills(){ return DECK.concat(state.generated || []); }
+function inWeek(s){ return weeksSel.has(Number(s.week)); }
 function isMastered(s){ const x = state.skills[s.id]; return x && x.box >= MASTER_BOX; }
 function dueList(){
   const now = Date.now();
-  return DECK.filter(inWeek).filter(s => { const x = state.skills[s.id]; return x && x.seen && x.due <= now; });
+  return allSkills().filter(inWeek).filter(s => { const x = state.skills[s.id]; return x && x.seen && x.due <= now; });
 }
 function pick(){
   const now = Date.now();
-  const pool = DECK.filter(inWeek);
+  const pool = allSkills().filter(inWeek);
   const ready = pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.due <= now && x.notBefore <= state.shown; });
   const learning = ready.filter(s => state.skills[s.id].lvl < 3);
   if (learning.length) return learning.sort((a,b)=>state.skills[a.id].due - state.skills[b.id].due)[0];
@@ -310,7 +446,7 @@ function grade(ok, retried){
 
 // ---------- rendering ----------
 function renderStats(){
-  const pool = DECK.filter(inWeek);
+  const pool = allSkills().filter(inWeek);
   $("sDue").textContent = dueList().length;
   const key = new Date().toDateString();
   $("sDone").textContent = state.todayKey === key ? state.today : 0;
@@ -325,17 +461,27 @@ function renderStats(){
 }
 function pickAndRender(){
   const s = pick();
-  if (!s) { current = null; renderDone(); renderStats(); return; }
+  if (!s) { current = null; state.current = null; renderDone(); renderStats(); return; }
   current = { s, lvl: sk(s.id).lvl };
   state.shown++;
+  state.current = { id: s.id, done: false };
+  saveLocal();
   checked = false;
   renderCard(); renderStats();
 }
+// open on the card you were on last time, if you hadn't finished it
+function resumeOrPick(){
+  const c = state.current;
+  const s = c && !c.done && allSkills().find(x => x.id === c.id);
+  if (s && inWeek(s)) { current = { s, lvl: sk(s.id).lvl }; checked = false; renderCard(); renderStats(); }
+  else pickAndRender();
+}
 function renderDone(){
-  const pool = DECK.filter(inWeek);
+  const pool = allSkills().filter(inWeek);
   const next = pool.map(s => state.skills[s.id]).filter(Boolean).map(x=>x.due).sort((a,b)=>a-b)[0];
   const when = next ? new Date(next).toLocaleString(undefined,{weekday:"short",hour:"2-digit",minute:"2-digit"}) : "not scheduled";
-  $("card").innerHTML = `<div class="done"><h2>All caught up</h2><p>Nothing is due in this set right now. Next review: <b>${when}</b>.</p><div class="actions" style="justify-content:center"><button class="btn primary" id="anyway">Practise the weakest one anyway</button></div></div>`;
+  $("card").innerHTML = `<div class="done"><h2>All caught up</h2><p>Nothing is due in this set right now. Next review: <b>${when}</b>.</p><div class="actions" style="justify-content:center">${sample ? '<button class="btn primary" id="genMore">Generate new questions</button>' : ''}<button class="btn${sample ? '' : ' primary'}" id="anyway">Practise the weakest one anyway</button></div>${sample ? '' : '<p class="note">Want fresh questions? Open "Smart features" below.</p>'}</div>`;
+  if ($("genMore")) $("genMore").onclick = () => { $("aiBox").open = true; generate(); };
   $("anyway").onclick = () => {
     const weakest = pool.slice().sort((a,b)=>(state.skills[a.id]?.box??0)-(state.skills[b.id]?.box??0))[0];
     current = { s: weakest, lvl: sk(weakest.id).lvl }; state.shown++; checked = false; renderCard();
@@ -365,7 +511,7 @@ function renderCard(){
   $("card").innerHTML = `
     <div class="eyebrow"><span>Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${ladder} ${LEVELS[lvl]}</span></div>
     <h2>${esc(s.title)}</h2>
-    <div class="src">${mode === "twin" ? "Variation of" : "From"}: ${esc(SRC[s.id] || "course material")}</div>
+    <div class="src">${s.gen ? "AI-generated question: its answer hasn't been checked by a compiler" : `${mode === "twin" ? "Variation of" : "From"}: ${esc(SRC[s.id] || "course material")}`}</div>
     ${body}
     <div class="actions">
       <button class="btn primary" id="check">Check</button>
@@ -384,6 +530,27 @@ function renderCard(){
   }
   document.querySelectorAll(".blank, #pred").forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } }));
   const first = document.querySelector(".blank, #pred"); if (first) first.focus();
+  restoreDraft();
+  document.querySelectorAll("#code, .blank, #pred").forEach(el => el.addEventListener("input", saveDraftSoon));
+}
+// what you've typed on the current card is saved as you type, and comes back if you close the page
+function draftKey(){ return `${current.s.id}:${current.lvl}:${mode}`; }
+function readInputs(){
+  if ($("code")) return { code: $("code").value };
+  if ($("pred")) return { pred: $("pred").value };
+  return { blanks: [...document.querySelectorAll(".blank")].map(el => el.value) };
+}
+function restoreDraft(){
+  const d = state.drafts && state.drafts[draftKey()];
+  if (!d) return;
+  if (d.code != null && $("code")) $("code").value = d.code;
+  if (d.pred != null && $("pred")) $("pred").value = d.pred;
+  if (d.blanks) document.querySelectorAll(".blank").forEach((el, i) => { if (d.blanks[i] != null) el.value = d.blanks[i]; });
+}
+let draftTimer = null;
+function saveDraftSoon(){
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => { state.drafts = state.drafts || {}; state.drafts[draftKey()] = readInputs(); persist(); }, 800);
 }
 function unesc(s){ return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&"); }
 
@@ -469,6 +636,7 @@ Reply with only JSON: {"compiles": true/false, "correct": true/false, "line": ".
     retry((r && r.compiles === false ? "This wouldn't compile. " : "") + fb + (quoted ? `<br><span class="hint">Look at: <code>${esc(quoted)}</code></span>` : ""));
   } catch(e) {
     setBusy(false);
+    if (e && e.code === "bad_key") { setBusy(false); $("res").innerHTML = `<div class="result meh"><h3>Your API key was rejected</h3><p>Check it in "Smart features" below, or mark this one yourself.</p><div class="actions"><button class="btn" id="selfmark">Mark it myself</button></div></div>`; $("selfmark").onclick = selfGrade; return; }
     if (e && (e.code === "not_granted" || e.code === "sampling_disabled" || e.code === "capability_disabled" || e.code === "not_declared")) { sample = null; return isFill ? check() : selfGrade(); }
     $("res").innerHTML = `<div class="result meh"><h3>Couldn't check right now</h3><p>${e && e.code === "rate_limited" ? "Too many checks in a short time. Wait a minute and press Check again, or mark it yourself below." : "The checker didn't answer. Press Check to try again, or mark it yourself below."}</p><div class="actions"><button class="btn" id="selfmark">Mark it myself</button></div></div>`;
     $("selfmark").onclick = selfGrade;
@@ -505,6 +673,9 @@ function finish(ok, msg, attempt, retried){
   if (checked) return;
   checked = true;
   const { lvl } = current; const s = V(current.s);
+  clearTimeout(draftTimer);
+  if (state.drafts) delete state.drafts[draftKey()];
+  if (state.current) state.current.done = true;
   retried = retried || current.tries > 0;
   grade(ok, ok && retried);
   const x = state.skills[s.id];
@@ -726,22 +897,31 @@ $("undo").onclick = () => {
   state.skills[lastUndo.id] = lastUndo.prev; state.today = lastUndo.today; state.todayKey = lastUndo.todayKey;
   const id = lastUndo.id; lastUndo = null; $("undo").disabled = true;
   persist();
-  const s = DECK.find(d => d.id === id);
+  const s = allSkills().find(d => d.id === id);
   current = { s, lvl: sk(id).lvl }; checked = false; renderCard(); renderStats();
 };
 $("reset").onclick = () => { $("resetConfirm").hidden = false; $("resetYes").focus(); };
 $("resetNo").onclick = () => { $("resetConfirm").hidden = true; };
 $("resetYes").onclick = () => { state = { skills:{}, shown:0, todayKey:"", today:0, updated:0 }; lastUndo = null; $("undo").disabled = true; $("resetConfirm").hidden = true; persist(); pickAndRender(); };
-document.querySelectorAll(".chip[data-week]").forEach(c => c.onclick = () => {
-  week = c.dataset.week;
-  document.querySelectorAll(".chip[data-week]").forEach(o => o.setAttribute("aria-pressed", String(o === c)));
-  try { localStorage.setItem(LS_KEY + "-week", week); } catch(e) {}
-  pickAndRender();
+function renderWeekTicks(){
+  document.querySelectorAll(".tick input[data-week]").forEach(el => { el.checked = weeksSel.has(Number(el.dataset.week)); });
+}
+document.querySelectorAll(".tick input[data-week]").forEach(el => el.onchange = () => {
+  const w = Number(el.dataset.week);
+  if (el.checked) weeksSel.add(w); else if (weeksSel.size > 1) weeksSel.delete(w); else el.checked = true;
+  try { localStorage.setItem(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); } catch(e) {}
+  if (!checked || !current) pickAndRender(); else renderStats();
 });
+$("weeksAll").onclick = () => {
+  weeksSel = new Set(ALL_WEEKS); renderWeekTicks();
+  try { localStorage.setItem(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); } catch(e) {}
+  pickAndRender();
+};
 load();
-try { const w = localStorage.getItem(LS_KEY + "-week"); if (w) { week = w; document.querySelectorAll(".chip[data-week]").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.week === w))); } } catch(e) {}
+try { const ws = JSON.parse(localStorage.getItem(LS_KEY + "-weeks") || "null"); if (Array.isArray(ws)) { const keep = ws.map(Number).filter(w => ALL_WEEKS.includes(w)); if (keep.length) weeksSel = new Set(keep); } } catch(e) {}
+renderWeekTicks();
 try { const m = localStorage.getItem(LS_KEY + "-mode"); if (m) { mode = m; document.querySelectorAll(".chip.mode").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.mode === m))); } } catch(e) {}
-pickAndRender();
+resumeOrPick();
 try { const v = localStorage.getItem(LS_KEY + "-view"); if (v === "test" && T) setView("test"); } catch(e) {}
 // when the page is updated while open, hand the progress to the new version
 window.claude?.hot?.snapshot?.(() => ({ state }));

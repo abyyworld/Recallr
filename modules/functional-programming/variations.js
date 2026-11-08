@@ -320,4 +320,9 @@ next: { title: "Bounded + Enum: prev",
   predict: { code: "prev x\n  | x == minBound = maxBound\n  | otherwise     = pred x", expr: "prev 'b'" },
   explain: "The mirror of `next`: `pred` is the value before. At the first value, wrap round to the last (`maxBound`)." },
 };
+{
+  const extra = require("./deck-4-5.js");
+  Object.assign(SRC, extra.SRC45);
+  Object.assign(TWINS, extra.TWINS45);
+}
 if (typeof module !== "undefined") module.exports = { SRC, TWINS };
