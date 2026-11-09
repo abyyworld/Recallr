@@ -51,7 +51,8 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
     .replace("__DECK__", json(DECK))
     .replace("__TWINS__", json(TWINS))
     .replace("__SRC__", json(SRC))
-    .replace("__TESTS__", json(TESTS));
+    .replace("__TESTS__", json(TESTS))
+    .replace("__EXAMS__", json(mod.exams || []));
   fs.mkdirSync(path.join(root, "docs", mod.id), { recursive: true });
   fs.writeFileSync(path.join(root, "docs", mod.id, "index.html"),
     `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${pwaHead("../")}</head><body>\n${html}\n</body></html>\n`);

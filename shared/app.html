@@ -119,6 +119,9 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .goalrow{align-items:center}
 .goalrow .note{margin-right:2px}
 .banner{margin:0;font-weight:600;color:var(--accent)}
+#examBox summary{overflow-wrap:anywhere}
+#examBody{display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
+#examBody p{margin:0}
 .result{position:relative}
 .remind{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
 .remind input{font:15px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);color:var(--ink)}
@@ -151,6 +154,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
     </div>
     <button class="btn theme" id="themeBtn" aria-label="Switch between dark and light">Light mode</button>
     <div class="stats">
+      <div class="stat" id="stDays" hidden><b id="sDays"></b><span>days to test</span></div>
       <div class="stat"><b id="sDue">0</b><span>due</span></div>
       <div class="stat"><b id="sDone">0</b><span>today</span></div>
       <div class="stat" id="stStreak" hidden><b id="sStreak"></b><span>day streak</span></div>
@@ -158,9 +162,14 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
     </div>
   </header>
 
+  <details class="settings" id="examBox">
+    <summary id="examSum">No test date set</summary>
+    <div id="examBody"></div>
+  </details>
+
   <div class="chips" role="group" aria-label="Mode">
     <button class="chip view" data-view="practice" aria-pressed="true">Practice</button>
-    <button class="chip view" data-view="test" aria-pressed="false">Mock test (vLab style)</button>
+    <button class="chip view" data-view="test" aria-pressed="false">Test practice (vLab style)</button>
   </div>
 
   <div id="practiceView" class="stack">
@@ -250,6 +259,10 @@ __WEEK_CHIPS__
   </div>
 
   <section id="testView" class="stack" hidden>
+    <div class="chips" id="testPick" role="group" aria-label="Which test">
+      <button class="chip" data-t="quick" aria-pressed="true">Quick test (20 min, new each time)</button>
+      <button class="chip" data-t="mock" aria-pressed="false">Practice Test 1 (60 min)</button>
+    </div>
     <div class="card">
       <div class="eyebrow"><span id="tScope"></span><span class="timer" id="tTimer">60:00</span></div>
       <h2 id="tTitle">Mock test</h2>
@@ -261,9 +274,11 @@ __WEEK_CHIPS__
       </ul>
       <div class="actions">
         <button class="btn primary" id="tStart">Start the timer</button>
+        <button class="btn" id="tNew" hidden>New quick test</button>
         <button class="btn" id="tCopy">Copy file for vLab or laptop</button>
         <button class="btn" id="tReset">Start again with a blank file</button>
       </div>
+      <div id="tNewConfirm" hidden class="result bad"><p>Throw away this quick test and make a new one?</p><div class="actions"><button class="btn primary" id="tNewYes">Yes, new test</button><button class="btn" id="tNewNo">Cancel</button></div></div>
       <div id="tResetConfirm" hidden class="result bad"><p>Clear your answers and your mark for this test?</p><div class="actions"><button class="btn primary" id="tResetYes">Yes, clear it</button><button class="btn" id="tResetNo">Cancel</button></div></div>
       <p class="note" id="paperLinks">Exam on paper? Try the paper-style mock: <a href="papers/paper-mock-1.pdf" target="_blank" rel="noopener">questions (PDF)</a> and, afterwards, <a href="papers/paper-mock-1-answers.pdf" target="_blank" rel="noopener">answers and marking</a>.</p>
       <label class="label" for="tfile" id="tFileLabel">PracticeTest1.hs</label>
@@ -289,6 +304,7 @@ const DECK = __DECK__;
 const TWINS = __TWINS__;
 const SRC = __SRC__;
 const TESTS = __TESTS__;
+const EXAMS = __EXAMS__;
 const LEVELS = {3:"Write it", 2:"Fill the gaps", 1:"Predict"};
 const INTERVALS = [10*60e3, 864e5, 3*864e5, 7*864e5, 16*864e5, 35*864e5];
 const MASTER_BOX = 3;
@@ -622,8 +638,76 @@ function nextDayStart(){ const now = new Date(), d = new Date(now.getFullYear(),
 // today's finish line: the daily goal, plus any "5 more" added today
 function target(){ const e = state.extra; return (state.goal || 5) + (e && e.key === dayKey() ? e.n || 0 : 0); }
 function cardsToday(){ return (state.days || {})[dayKey()] || 0; }
-// course questions (never generated ones) that count toward "can write from memory"
-function trackerPool(){ return DECK; }
+// ---------- test countdown and the 80% tracker ----------
+// The next test: from the module (EXAMS) or added by the user (state.exams). Nothing else is stored.
+const ymdOk = d => typeof d === "string" && /^\d{4}-\d\d-\d\d$/.test(d);
+function nextExam(){
+  const today = dayKey();
+  return EXAMS.concat(state.exams || []).filter(e => e && ymdOk(e.date) && e.date >= today).sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0)[0] || null;
+}
+function examDate(e){ const [y, m, d] = e.date.split("-").map(Number); return new Date(y, m - 1, d); }
+function daysTo(e){ const n = new Date(); return Math.round((examDate(e) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5); }
+function examWeeks(e){ const ws = e && Array.isArray(e.weeks) ? e.weeks.map(Number).filter(w => ALL_WEEKS.includes(w)) : []; return ws.length ? ws : ALL_WEEKS; }
+// course questions (never generated ones) in the next test's weeks: they count toward "can write from memory"
+function trackerPool(){ const ws = examWeeks(nextExam()); return DECK.filter(s => ws.includes(Number(s.week))); }
+function tracker(){
+  const exam = nextExam(), pool = trackerPool(), now = Date.now();
+  const can = canCount(pool), target = Math.ceil(0.8 * pool.length);
+  const daysLeft = exam ? daysTo(exam) : null;
+  const seen = pool.map(s => state.skills[s.id]).filter(x => x && x.seen);
+  const fading = seen.filter(x => x.lvl === 3 && x.box >= 1 && now - x.due >= 2*864e5).length;
+  const finalWeek = daysLeft != null && daysLeft >= 1 && daysLeft <= 7;
+  const dt = Math.max(1, (daysLeft || 0) - 3), need = Math.max(0, target - can);
+  const reviews = seen.filter(x => x.due < now + 7*864e5).length / 7;
+  const perDay = Math.min(20, Math.max(3, Math.ceil(need * 3 / dt + reviews)));
+  return { exam, pool, can, target, daysLeft, fading, finalWeek, dt, need, perDay };
+}
+const fmtDay = d => d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+let examHtml = "";
+function renderExam(){
+  const t = tracker(), e = t.exam, goal = state.goal || 5;
+  $("stDays").hidden = !e;
+  if (e) $("sDays").textContent = t.daysLeft;
+  let sum, body = [];
+  if (!e) {
+    sum = "No test date set";
+    body.push(`<p class="note">Add your next test or exam to see a countdown and how much you can write.</p>
+      <div class="row"><input id="exName" value="Final exam" aria-label="Name"><input type="date" id="exDate" aria-label="Date"><button class="btn" id="exSave">Save date</button></div>`);
+  } else if (t.daysLeft === 0) {
+    sum = `${e.name} today.${/open book/i.test(e.info || "") ? " Open book: keep your notes open." : " Good luck."}`;
+  } else {
+    sum = `${e.name} ${t.daysLeft === 1 ? "tomorrow" : `in ${t.daysLeft} days`} · can write ${t.can} of ${t.pool.length} · aim ${t.target}`;
+    if (t.can >= t.target) sum += " · on the 80% line";
+    if (t.finalWeek) sum += " · final week";
+    const mock = TESTS[0];
+    if (t.finalWeek) body.push(`<p>Final week: a quick test a day${mock ? `, and ${esc(mock.title)} once (${mock.minutes} min)` : ""}.</p>`);
+    else if (t.can >= t.target) body.push("<p>On the 80% line. Your daily set keeps it there.</p>");
+    else if (t.perDay <= goal) body.push(`<p>Pace: ${t.need} to go in ${t.dt} days. About ${t.perDay} cards a day, so your daily ${goal} is enough.</p>`);
+    else body.push(`<p>Pace: about ${t.perDay} cards a day. Your goal is ${goal}.</p><div class="actions"><button class="btn" id="exGoal" data-n="${t.perDay}">Set daily goal to ${t.perDay}</button></div>`);
+  }
+  if (e && t.fading) body.push(`<p>${t.fading} skill${t.fading === 1 ? " is" : "s are"} fading (over 2 days overdue). ${qset === "twin" ? "Switch to Essentials or All course questions to review them." : "Your next cards pick them first."}</p>`);
+  const last = (state.quickLog || []).slice(-1)[0];
+  if (last && last.total) body.push(`<p>Last quick test: ${last.got} / ${last.total} (${Math.round(last.got / last.total * 100)}%), marked by ${last.by === "ghc" ? "GHC" : "the AI checker, which can make mistakes"} on ${new Date(last.at).toLocaleDateString("en-GB", { weekday: "long" })}.</p>`);
+  if (e) {
+    const by = examDate(e); by.setDate(by.getDate() - 3);
+    body.push(`<p class="note">How this works: a skill counts when you last wrote it from memory and it's at most 2 days overdue. Answers you marked yourself count too. 80% of ${t.pool.length} is ${t.target}. Pace assumes about 3 cards to learn a new skill and aims to finish by ${fmtDay(by)}. It's a guide to how much you can write, not a predicted mark. Recallr covers __MODULE_SCOPE__; the test may include later weeks.</p>`);
+    body.push(`<p class="note">${esc(String(e.name))}: ${fmtDay(examDate(e))}${e.info ? ", " + esc(String(e.info)) : ""}.</p>`);
+  }
+  $("examSum").textContent = sum;
+  const html = body.join("");
+  // only redraw when something changed, so typing in the date form isn't wiped
+  if (html !== examHtml) { examHtml = html; $("examBody").innerHTML = html; }
+}
+$("examBody").onclick = ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  if (b.id === "exGoal") { state.goal = Number(b.dataset.n) || state.goal || 5; persist(); renderStats(); if (!current && cardsToday() < target()) pickAndRender(); }
+  if (b.id === "exSave") {
+    const date = $("exDate").value, name = $("exName").value.trim() || "Exam";
+    if (!ymdOk(date) || date < dayKey()) { $("exDate").focus(); return; }
+    state.exams = (state.exams || []).concat({ name, date, weeks: ALL_WEEKS.slice() });
+    persist(); renderStats();
+  }
+};
 function canCount(pool){ const now = Date.now(); return pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.lvl === 3 && x.box >= 1 && now - x.due < 2*864e5; }).length; }
 // how today's cards went, for the colours in the day bar: g right first time, a right after a retry or hint, r not right
 let sessMarks = [], combo = 0;
@@ -678,7 +762,9 @@ function pick(){
   const cooling = pool.filter(s => seen(s) && X(s).due <= now && X(s).notBefore > state.shown).sort((a,b) => X(a).notBefore - X(b).notBefore);
   // warm-up: the day's first card is one you can already write
   const warm = ((state.days || {})[dayKey()] || 0) === 0 ? ready.filter(s => X(s).lvl === 3 && X(s).box >= 2).sort((a,b) => X(b).box - X(a).box) : [];
-  const order = [["warm", warm], ["learning", learning]];
+  // fading: skills you could write that are over 2 days overdue come back before anything new
+  const fading = reviews.filter(s => now - X(s).due >= 2*864e5);
+  const order = [["warm", warm], ["learning", learning], ["ready", fading]];
   // after every 2 new skills in a row, a review if one is ready
   if (newRun >= 2 && reviews.length) order.push(["ready", reviews]);
   // new exercises come before repeating ones that are still cooling down
@@ -764,6 +850,7 @@ function afterFocus(){
   if (!current || (!checked && weight(current.s) === 0)) pickAndRender();
 }
 function renderStats(){
+  renderExam();
   renderWeekProgress();
   renderFocus();
   const pool = setPool();
@@ -845,11 +932,13 @@ function renderDayEnd(kind){
   const r = pool.filter(s => X(s) && X(s).seen && X(s).due < nextDayStart() + 864e5).length;
   const nextNew = freshOrder(pool.filter(s => !(X(s) && X(s).seen)))[0];
   const unticked = ALL_WEEKS.find(w => !weeksSel.has(w));
-  const quick = typeof quickSuggested === "function" && typeof openQuick === "function" && quickSuggested();
+  const quick = quickSuggested();
+  // in the final week before a test, the one-off practice test (once, until it has a mark)
+  const mockGo = !quick && TESTS.length && tracker().finalWeek && !(state.tests && state.tests[TESTS[0].id] && state.tests[TESTS[0].id].result);
   const first = kind === "done" ? `${n} card${n === 1 ? "" : "s"}. That's enough for today.` : kind === "closed" ? "Come back tomorrow, or keep going if you like." : "Nothing new or due in the ticked weeks.";
   let btns = "";
   if (kind === "empty") btns = `<button class="btn primary" id="anywayE">Practise the weakest one anyway</button>${unticked != null ? `<button class="btn" id="addWeek">Add week ${unticked}</button>` : ""}`;
-  else btns = `${quick ? '<button class="btn primary" id="quickGo">Quick test (20 min)</button>' : ""}<button class="btn${quick ? "" : " primary"}" id="more5">5 more</button>${kind === "closed" ? '<button class="btn" id="keepGo">Keep going</button>' : '<button class="btn" id="stopHere">Stop here</button>'}`;
+  else btns = `${quick ? '<button class="btn primary" id="quickGo">Quick test (20 min)</button>' : ""}${mockGo ? `<button class="btn primary" id="mockGo">${esc(TESTS[0].title)} (${TESTS[0].minutes} min)</button>` : ""}<button class="btn${quick || mockGo ? "" : " primary"}" id="more5">5 more</button>${kind === "closed" ? '<button class="btn" id="keepGo">Keep going</button>' : '<button class="btn" id="stopHere">Stop here</button>'}`;
   const remind = kind === "done" && !lsGet(LS_KEY + "-remind") ? `<div class="remind"><label class="note" for="remT">Remind me daily at</label><input type="time" id="remT" value="19:00"><button class="btn" id="remGo">Add to calendar</button></div>
     <p class="note" id="remNote">Adds a daily 10-minute event to your calendar. Recallr can't send notifications itself.</p>` : "";
   $("card").innerHTML = `<div class="done">
@@ -866,6 +955,7 @@ function renderDayEnd(kind){
   on("stopHere", () => { $("card").innerHTML = `<div class="done"><h2>See you tomorrow</h2><p>Progress saved.</p><button class="btn" id="anyway2">Practise anyway</button></div>`; $("anyway2").onclick = pickAndRender; $("anyway2").focus(); });
   on("keepGo", pickAndRender);
   on("quickGo", () => openQuick());
+  on("mockGo", () => { setTestChoice("mock"); setView("test"); });
   on("anywayE", () => { const w = pool.slice().sort((a,b) => (X(a)?.box ?? 0) - (X(b)?.box ?? 0))[0]; if (!w) return; current = makeCurrent(w); state.shown++; checked = false; present(); });
   on("addWeek", () => { weeksSel.add(unticked); renderWeekTicks(); lsSet(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); pickAndRender(); });
   on("remGo", saveReminder);
@@ -879,7 +969,7 @@ async function saveReminder(){
   const tm = ($("remT").value || "19:00").split(":").map(Number), pad = n => String(n).padStart(2, "0");
   const ymd = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
   const now = new Date(), start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, tm[0] || 0, tm[1] || 0);
-  const until = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 60);
+  const ex = nextExam(), until = ex ? examDate(ex) : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 60);
   const utc = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
   const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Recallr//EN", "BEGIN:VEVENT",
     `UID:recallr-daily-${Date.now()}@recallr`, `DTSTAMP:${utc}`,
@@ -1472,10 +1562,204 @@ document.querySelectorAll(".chip.goal").forEach(c => c.onclick = () => {
   state.goal = Number(c.dataset.goal) || 5; persist(); renderStats();
   if (!current && cardsToday() < target()) pickAndRender();
 });
-// ---------- mock test ----------
+// ---------- tests: the quick test (new each time) and the practice test ----------
 let lastRun = null;
-let view = "practice", T = TESTS[0] || null, tickTimer = null, saveTimer = null, tBusy = false;
-function ts(){ state.tests = state.tests || {}; return state.tests[T.id] || (state.tests[T.id] = { file: T.template, start: 0, result: null }); }
+let view = "practice", T = null, tickTimer = null, saveTimer = null, tBusy = false, shownTestId = null;
+const QUICK_ON = "__LANG__" === "Haskell";
+let testChoice = "quick";
+try { const c = localStorage.getItem(LS_KEY + "-test"); if (c === "quick" || c === "mock") testChoice = c; } catch(e) {}
+function setTestChoice(c){ testChoice = c; lsSet(LS_KEY + "-test", c); }
+function ts(){ state.tests = state.tests || {}; return state.tests[T.id] || (state.tests[T.id] = T.quick ? { file: T.template, start: 0, result: null, fed: false } : { file: T.template, start: 0, result: null }); }
+function pickT(){
+  let c = testChoice;
+  if (c === "mock" && !TESTS.length) c = "quick";
+  if (c === "quick" && !QUICK_ON) c = "mock";
+  if (c === "quick" && (state.quick || newQuickState())) return state.quick;
+  return TESTS[0] || null;
+}
+// Blocks of Haskell source at the top level: a line at column 0 starts one, indented lines carry on.
+// kind is "type", "import", "sig" or "eq", or empty for anything a quick test leaves out (instances, operators).
+function hsBlocks(src){
+  const out = []; let cur = null;
+  for (const l of String(src).replace(/\r/g, "").split("\n")) {
+    if (!l.trim()) { if (cur) cur.lines.push(l); continue; }
+    if (/^\s/.test(l) && cur) { cur.lines.push(l); continue; }
+    if (/^--/.test(l)) { cur = null; continue; }
+    out.push(cur = { lines: [l] });
+  }
+  for (const b of out) {
+    while (!b.lines[b.lines.length - 1].trim()) b.lines.pop();
+    b.text = b.lines.join("\n");
+    const h = b.lines[0]; let m;
+    b.kind = ""; b.name = "";
+    if ((m = h.match(/^(data|type|newtype)\s+([A-Z][\w']*)/))) { b.kind = "type"; b.name = m[2]; b.cons = m[1] === "type" ? [] : consOf(b.text); }
+    else if (/^import\s/.test(h)) b.kind = "import";
+    else if ((m = h.match(/^([a-z_][\w']*)\s*::/))) { b.kind = "sig"; b.name = m[1]; }
+    else if ((m = h.match(/^([a-z_][\w']*)/)) && !/^[a-z_][\w']*\s+(`[^`]+`|[!#$%&*+./<>?@\\^~:-][!#$%&*+./<=>?@\\^|~:-]*|=[!#$%&*+./<=>?@\\^|~:-]+|\|[!#$%&*+./<=>?@\\^|~:-]+)\s/.test(h)
+      && !/^(module|where|let|in|case|of|if|then|else|do|instance|class|deriving|infix[lr]?|default|foreign)\b/.test(h)) { b.kind = "eq"; b.name = m[1]; }
+  }
+  return out;
+}
+// the constructors (and record fields) a data or newtype declaration defines
+function consOf(text){
+  const body = text.replace(/\bderiving\b[\s\S]*$/, "").split("=").slice(1).join("="), out = [];
+  for (const alt of body.split("|")) {
+    const m = alt.trim().match(/^([A-Z][\w']*)/); if (m) out.push(m[1]);
+    const rec = alt.match(/\{([\s\S]*)\}/);
+    if (rec) rec[1].split(",").forEach(f => { const n = f.split("::")[0].trim(); if (/^[a-z_][\w']*$/.test(n)) out.push(n); });
+  }
+  return out;
+}
+const QUICK_RESERVED = new Set(["main", "checks", "try", "evaluate", "SomeException"]);
+// One deck exercise as a test part, or null when it doesn't fit the format: it needs exactly one function
+// to write (the rest given), no imports, instances or operators, and checks with plain text output.
+function quickPart(s){
+  const ascii = t => /^[\x20-\x7e]*$/.test(String(t));
+  if (!s || s.gen || !s.sol || !s.write || !Array.isArray(s.checks) || !s.checks.length) return null;
+  if (/^import\s/m.test(s.sol) || /^import\s/m.test(s.write.starter || "")) return null;
+  if (!s.checks.every(c => Array.isArray(c) && c.length >= 2 && ascii(c[0]) && ascii(c[1]))) return null;
+  const gb = hsBlocks(starterOf(s)), sb = hsBlocks(s.sol);
+  if (gb.concat(sb).some(b => !b.kind || b.kind === "import")) return null;
+  const given = new Set(gb.filter(b => b.kind === "sig" || b.kind === "eq").map(b => b.name));
+  const sigs = sb.filter(b => b.kind === "sig" && !given.has(b.name));
+  if (sigs.length !== 1) return null;
+  const fn = sigs[0].name, ans = sb.filter(b => b.kind === "eq" && !given.has(b.name));
+  if (!ans.some(b => b.name === fn)) return null;
+  // types: the solution's version, then any the question adds
+  const types = [];
+  for (const b of sb.concat(gb)) if (b.kind === "type" && !types.some(t => t.name === b.name)) types.push(b);
+  const helpers = [...given].map(n => ({ name: n, text: gb.filter(b => b.name === n).map(b => b.text).join("\n") }));
+  // every name the part defines, with the text that defines it, to spot clashes with other parts
+  const names = [];
+  for (const t of types) { names.push(["T:" + t.name, t.text]); for (const c of t.cons) names.push([(/^[A-Z]/.test(c) ? "C:" : "v:") + c, t.text]); }
+  for (const h of helpers) names.push(["v:" + h.name, h.text]);
+  for (const n of new Set(ans.map(b => b.name))) names.push(["v:" + n, "\u0000answer:" + s.id]);
+  if (names.some(([k]) => QUICK_RESERVED.has(k.slice(2)))) return null;
+  return { s, fn, sig: sigs[0].text, types, helpers, answer: ans.map(b => b.text).join("\n"), names };
+}
+// A new quick test: weak skills you've seen, one new one, topped up to 4 parts, with no clashing names.
+function makeQuick(prev){
+  if (!QUICK_ON) return null;
+  const weeks = examWeeks(nextExam());
+  const parts = DECK.filter(s => weeks.includes(Number(s.week))).map(quickPart).filter(Boolean);
+  if (!parts.length) return null;
+  const X = p => state.skills[p.s.id], was = new Set(prev && Array.isArray(prev.skillIds) ? prev.skillIds : []);
+  const rnd = new Map(parts.map(p => [p.s.id, Math.random()]));
+  const lastly = list => list.filter(p => !was.has(p.s.id)).concat(list.filter(p => was.has(p.s.id)));
+  const weak = p => X(p).lvl < 3 ? 0 : X(p).box;
+  const seen = lastly(parts.filter(p => X(p) && X(p).seen).sort((a,b) => weak(a) - weak(b) || X(a).due - X(b).due || rnd.get(a.s.id) - rnd.get(b.s.id)));
+  const unseen = lastly(parts.filter(p => !(X(p) && X(p).seen)));
+  const chosen = [], names = new Map();
+  const perTopic = t => chosen.filter(p => p.s.topic === t).length;
+  const fits = p => !chosen.includes(p) && p.names.every(([k, v]) => !names.has(k) || names.get(k) === v);
+  const take = p => { chosen.push(p); p.names.forEach(([k, v]) => names.set(k, v)); };
+  for (const p of seen) { if (chosen.length >= 3) break; if (perTopic(p.s.topic) < 2 && fits(p)) take(p); }
+  const nu = unseen.find(p => fits(p) && !perTopic(p.s.topic)) || unseen.find(fits);
+  if (nu) take(nu);
+  const rest = seen.concat(lastly(unseen.slice().sort((a,b) => rnd.get(a.s.id) - rnd.get(b.s.id))));
+  for (const strict of [true, false]) for (const p of rest) { if (chosen.length >= 4) break; if (fits(p) && (!strict || perTopic(p.s.topic) < 2)) take(p); }
+  chosen.sort((a,b) => DECK.indexOf(a.s) - DECK.indexOf(b.s));
+  return buildQuick(chosen, weeks);
+}
+function buildQuick(parts, weeks){
+  const n = parts.length, marks = 5 * n, minutes = 5 * n, ab = "ab";
+  const wrap = (first, text) => {
+    const out = []; let line = "";
+    for (const w of String(text).replace(/`/g, "").split(/\s+/).filter(Boolean)) {
+      if (line && (line + " " + w).length > 64) { out.push(line); line = w; } else line = line ? line + " " + w : w;
+    }
+    if (line) out.push(line);
+    return out.map((l, i) => (i ? "--     " : first) + l);
+  };
+  const types = [];
+  for (const p of parts) for (const t of p.types) if (!types.some(x => x.text === t.text)) types.push(t);
+  const typeText = types.map(t => t.text).join("\n");
+  const rule = "-- " + "=".repeat(60), thin = "-- " + "-".repeat(60);
+  const tpl = [rule, "--  Quick test (Recallr)".padEnd(62 - `${marks} marks, ${minutes} minutes`.length) + `${marks} marks, ${minutes} minutes`,
+    "--    * Replace each `undefined` with your own code.",
+    "--    * Don't change any name or type signature.",
+    "--    * Unfinished? Leave it as `undefined` so the file compiles.",
+    "--    * Open book: notes, course PDFs, Hoogle. No AI.", rule, "", "module QuickTest where", ""];
+  const sol = ["module QuickTest where", ""];
+  if (typeText) { tpl.push(typeText, ""); sol.push(typeText, ""); }
+  const written = new Set(), questions = [];
+  parts.forEach((p, i) => {
+    const id = `Q${Math.floor(i / 2) + 1}${ab[i % 2]}`;
+    if (i % 2 === 0) tpl.push(thin, `-- QUESTION ${i / 2 + 1} (${5 * Math.min(2, n - i)} marks)`, thin, "");
+    tpl.push(...wrap(`-- (${ab[i % 2]}) [5 marks] `, p.s.write.task));
+    p.s.checks.forEach(c => tpl.push(`--   ${c[0]}  ==  ${c[1]}`));
+    tpl.push("");
+    // helper code the question gives, written once even when two parts share it
+    const given = p.helpers.filter(h => !written.has(h.name)).map(h => (written.add(h.name), h.text + "\n\n")).join("");
+    tpl.push(given + p.sig, `${p.fn} = undefined`, "");
+    sol.push(`-- ${id}`, given + p.sig, p.answer, "");
+    questions.push({ id, fn: p.fn, marks: 5, skill: p.s.id, v: "c", answer: p.answer,
+      checks: p.s.checks.map(c => ["show (" + c[0] + ")", JSON.stringify(String(c[1]))]) });
+  });
+  const lo = Math.min(...weeks), hi = Math.max(...weeks);
+  return { id: "quick-" + Date.now(), quick: true, title: "Quick test", scope: lo === hi ? `week ${lo}` : `weeks ${lo}-${hi}`, minutes,
+    file: "QuickTest.hs", template: tpl.join("\n").replace(/\n{3,}/g, "\n\n"), solution: sol.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n",
+    questions, skillIds: parts.map(p => p.s.id) };
+}
+// make a new quick test and keep only the 5 newest quick-test files (the scores stay in quickLog)
+function newQuickState(){
+  const prev = state.quick, q = makeQuick(prev);
+  if (!q) return null;
+  const prevN = prev ? Number(String(prev.id).slice(6)) || 0 : 0;
+  q.id = "quick-" + Math.max(Date.now(), prevN + 1);
+  state.quick = q;
+  state.tests = state.tests || {};
+  Object.keys(state.tests).filter(k => /^quick-/.test(k)).sort((a,b) => (Number(b.slice(6)) || 0) - (Number(a.slice(6)) || 0)).slice(5).forEach(k => delete state.tests[k]);
+  persist();
+  return q;
+}
+function newQuick(){
+  flushTestSave();
+  setTestChoice("quick");
+  if (!newQuickState()) return;
+  $("tNewConfirm").hidden = true;
+  renderTest();
+  $("tfile").focus();
+}
+// used by the end of the daily set
+function openQuick(){
+  setTestChoice("quick");
+  const q = state.quick, done = q && state.tests && state.tests[q.id] && state.tests[q.id].result;
+  if (!q || done) newQuickState();
+  setView("test");
+}
+// a quick test is suggested when you can write a few skills and haven't done one lately
+// (every 2 days, or daily in the final week before a test)
+function quickSuggested(){
+  if (!QUICK_ON) return false;
+  const t = tracker();
+  if (t.can < 4 || t.daysLeft === 0) return false;
+  const now = Date.now(), d = new Date();
+  let since = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 4).getTime(); if (since > now) since -= 864e5;
+  const from = t.finalWeek ? since : now - 2*864e5;
+  return !(state.quickLog || []).some(e => e && e.at > from);
+}
+// A marked quick test feeds the cards: full marks move a skill up, a missed part is back in today's practice.
+// It counts as the day's set. Each quick test feeds once.
+function feedQuick(s){
+  if (!T || !T.quick || !s.result) return;
+  const dk = dayKey(), now = Date.now();
+  if (!state.dayStart || state.dayStart.key !== dk) state.dayStart = { key: dk, can: canCount(trackerPool()) };
+  state.days = state.days || {}; state.days[dk] = Math.max(state.days[dk] || 0, target());
+  if (s.result.self || s.fed) return;
+  let got = 0, total = 0;
+  for (const it of s.result.items) {
+    got += it.awarded; total += it.marks;
+    const q = T.questions.find(q => q.id === it.id);
+    if (!q || !it.tried) continue;
+    const x = sk(q.skill);
+    x.seen = true; x.lesson = true; x.notBefore = 0;
+    if (it.awarded >= it.marks) { x.lvl = 3; x.box = Math.min(Math.max(x.box || 0, 1) + 1, 5); x.due = now + INTERVALS[x.box - 1]; }
+    else { x.box = 0; x.due = now; }
+  }
+  state.quickLog = (state.quickLog || []).concat({ id: T.id, at: now, got, total, by: s.result.byTests ? "ghc" : "ai" });
+  s.fed = true;
+}
 function setView(v){
   view = v;
   document.querySelectorAll(".chip.view").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.view === v)));
@@ -1484,14 +1768,30 @@ function setView(v){
   try { localStorage.setItem(LS_KEY + "-view", v); } catch(e) {}
   if (v === "test") renderTest();
 }
+// a pending autosave of the file goes to the test it was typed in, before another test is shown
+function flushTestSave(){
+  if (!saveTimer) return;
+  clearTimeout(saveTimer); saveTimer = null;
+  if (T && shownTestId === T.id) { ts().file = $("tfile").value; persist(); }
+}
 function renderTest(){
+  flushTestSave();
+  T = pickT();
   if (!T) { $("testView").innerHTML = '<div class="card"><p>No mock test for this module yet.</p></div>'; return; }
+  document.querySelectorAll("#testPick .chip").forEach(c => c.setAttribute("aria-pressed", String((c.dataset.t === "quick") === !!T.quick)));
   const s = ts();
+  if (shownTestId !== T.id) {
+    shownTestId = T.id;
+    $("tOut").textContent = "ghci> checks\n(press Run checks)";
+    ["tNewConfirm", "tResetConfirm", "tSubmitConfirm"].forEach(id => { $(id).hidden = true; });
+  }
   $("tTitle").textContent = T.title;
   $("tScope").textContent = `${T.scope} · ${T.questions.length} parts · ${T.questions.reduce((a,q)=>a+q.marks,0)} marks · ${T.minutes} minutes`;
   $("tFileLabel").textContent = T.file;
   if ($("tfile").value !== s.file) $("tfile").value = s.file;
   $("tStart").hidden = !!s.start;
+  $("tNew").hidden = !T.quick;
+  $("paperLinks").hidden = !!T.quick || !!window.claude || MODULE_ID !== "functional-programming";
   tick(); clearInterval(tickTimer); tickTimer = setInterval(tick, 1000);
   renderMark();
 }
@@ -1587,18 +1887,27 @@ async function submitTest(){
   $("tSubmitConfirm").hidden = true;
   const file = $("tfile").value, und = undoneLocally(file), s = ts();
   s.file = file;
-  if (!sample) {
+  // GHC first (on Wandbox); a quick test falls back to the checker, then to marking it yourself
+  if (!sample || T.quick) {
     let r = null;
-    if (runnerOk !== false) { try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {} }
+    if (runnerOk !== false) {
+      tBusy = true; $("tSubmit").disabled = true; $("tRun").disabled = true;
+      $("tMark").innerHTML = `<p class="hint">Marking with GHC…</p>`;
+      try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {}
+      tBusy = false; $("tSubmit").disabled = false; $("tRun").disabled = false;
+    }
     if (r) {
       const items = T.questions.map(q => {
         const line = r.out.find(l => l.startsWith(q.id + " ")) || "";
         const ok = r.compiled && /: ok$/.test(line);
-        return { id: q.id, fn: q.fn, marks: q.marks, awarded: ok ? q.marks : 0, feedback: !r.compiled ? "The file doesn't compile." : und[q.id] ? "Not attempted." : ok ? "Passes the tests." : "Doesn't pass the tests yet." };
+        return { id: q.id, fn: q.fn, marks: q.marks, awarded: ok ? q.marks : 0, tried: !und[q.id], feedback: !r.compiled ? "The file doesn't compile." : und[q.id] ? "Not attempted." : ok ? "Passes the tests." : "Doesn't pass the tests yet." };
       });
       s.result = { compiles: r.compiled, error: r.error, items, at: Date.now(), byTests: true };
-    } else s.result = { self: true, at: Date.now() };
-    persist(); return renderMark();
+    } else if (T.quick && runnerSlow && runnerOk) {
+      $("tMark").innerHTML = `<div class="result meh"><h3>The code runner is busy right now</h3><p>Your file is kept. Submit again in a moment.</p></div>`;
+      return;
+    } else if (!T.quick || !sample) s.result = { self: true, at: Date.now() };
+    if (r || !T.quick || !sample) { feedQuick(s); persist(); renderStats(); return renderMark(); }
   }
   tBusy = true; $("tSubmit").disabled = true; $("tRun").disabled = true;
   $("tMark").innerHTML = `<div class="result meh"><h3>Marking…</h3><p class="hint">This takes up to a minute.</p></div>`;
@@ -1612,10 +1921,11 @@ Reply with only JSON: {"compiles": true/false, "error": "...", "parts": [{"id": 
       const p = (r && Array.isArray(r.parts) ? r.parts : []).find(x => x && x.id === q.id) || {};
       let a = Math.round(Number(p.awarded)); if (!isFinite(a)) a = 0; a = Math.max(0, Math.min(q.marks, a));
       if (und[q.id]) a = 0;
-      return { id: q.id, fn: q.fn, marks: q.marks, awarded: a, feedback: und[q.id] ? "Not attempted." : String(p.feedback || "") };
+      return { id: q.id, fn: q.fn, marks: q.marks, awarded: a, tried: !und[q.id], feedback: und[q.id] ? "Not attempted." : String(p.feedback || "") };
     });
     s.result = { compiles: !(r && r.compiles === false), error: r && r.error ? String(r.error) : "", items, at: Date.now() };
-    persist();
+    feedQuick(s);
+    persist(); renderStats();
   } catch(e) {
     $("tMark").innerHTML = `<div class="result meh"><h3>Couldn't mark it just now</h3><p>${e && e.code === "rate_limited" ? "Too many requests. Wait a minute and submit again." : "Try submitting again in a moment."}</p></div>`;
     tBusy = false; $("tSubmit").disabled = false; $("tRun").disabled = false; return;
@@ -1627,7 +1937,7 @@ function renderMark(){
   const s = ts(), r = s.result;
   if (!r) { $("tMark").innerHTML = ""; return; }
   const total = T.questions.reduce((a,q)=>a+q.marks,0);
-  const answers = `<div class="actions"><button class="btn" id="tShowSol">Show model answers</button></div><pre class="code" id="tSol" hidden>${hl(T.solution)}</pre>`;
+  const answers = `<div class="actions"><button class="btn" id="tShowSol">Show model answers</button>${T.quick ? '<button class="btn primary" id="tNew2">New quick test</button>' : ""}</div><pre class="code" id="tSol" hidden>${hl(T.solution)}</pre>`;
   if (r.self) {
     $("tMark").innerHTML = `<div class="result meh"><h3>Mark it yourself</h3><p>Compare each part with the model answers, or run the copied file on vLab: each <code>ok</code> from <code>checks</code> is worth that part's marks (out of ${total}).</p>${answers}</div>`;
   } else {
@@ -1638,14 +1948,25 @@ function renderMark(){
     $("tMark").innerHTML = `<div class="result ${r.compiles ? (pct >= 40 ? "good" : "bad") : "bad"}">
       <h3>${got} / ${total} (${pct}%, ${band})</h3>
       ${r.compiles ? "" : `<p><b>Your file doesn't compile</b>, so on the real test it would score 0. Fix this first: <code>${esc(r.error || "compile error")}</code>. The marks below are what each part would get once it compiles.</p>`}
+      ${T.quick ? `<p>80% would be ${Math.ceil(0.8 * total)} / ${total}.</p><p class="hint">Full-mark parts move up in your cards. Missed ones are back in practice today.</p>` : ""}
       <div class="tablewrap"><table class="marks"><thead><tr><th>Part</th><th>Mark</th><th>Feedback</th></tr></thead><tbody>${rows}</tbody></table></div>
       <p class="hint">${r.byTests ? "Marked by running your file with GHC against the tests: full marks for a part that passes, none otherwise. Real markers may also give partial credit." : "Marked by Recallr's checker, which can make mistakes."}</p>
       ${answers}</div>`;
   }
+  if ($("tNew2")) $("tNew2").onclick = newQuick;
   $("tShowSol").onclick = () => { const el = $("tSol"); el.hidden = !el.hidden; $("tShowSol").textContent = el.hidden ? "Show model answers" : "Hide model answers"; };
 }
-if (T) {
-  $("tfile").addEventListener("input", () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { ts().file = $("tfile").value; persist(); }, 1200); });
+if (TESTS.length || QUICK_ON) {
+  $("tfile").addEventListener("input", () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { saveTimer = null; ts().file = $("tfile").value; persist(); }, 1200); });
+  const mockChip = document.querySelector('#testPick [data-t="mock"]'), quickChip = document.querySelector('#testPick [data-t="quick"]');
+  if (TESTS.length) mockChip.textContent = `${TESTS[0].title} (${TESTS[0].minutes} min)`; else mockChip.hidden = true;
+  quickChip.hidden = !QUICK_ON;
+  $("testPick").hidden = !(TESTS.length && QUICK_ON);
+  $("testPick").onclick = e => { const c = e.target.closest(".chip"); if (!c) return; flushTestSave(); setTestChoice(c.dataset.t); renderTest(); };
+  // a new quick test asks first only when it would throw away unmarked work
+  $("tNew").onclick = () => { const s = ts(); if (s.file !== T.template && !s.result) { $("tNewConfirm").hidden = false; $("tNewYes").focus(); } else newQuick(); };
+  $("tNewYes").onclick = newQuick;
+  $("tNewNo").onclick = () => { $("tNewConfirm").hidden = true; };
   $("tfile").addEventListener("keydown", e => { if (e.key === "Tab") { e.preventDefault(); const ta = $("tfile"), p = ta.selectionStart; ta.setRangeText("  ", p, ta.selectionEnd, "end"); } });
   $("tStart").onclick = () => { ts().start = Date.now(); persist(); renderTest(); };
   $("tRun").onclick = runChecks;
@@ -1654,7 +1975,7 @@ if (T) {
   $("tSubmitYes").onclick = submitTest;
   $("tReset").onclick = () => { $("tResetConfirm").hidden = false; };
   $("tResetNo").onclick = () => { $("tResetConfirm").hidden = true; };
-  $("tResetYes").onclick = () => { state.tests[T.id] = { file: T.template, start: 0, result: null }; $("tResetConfirm").hidden = true; persist(); $("tOut").textContent = "ghci> checks\n(press Run checks)"; renderTest(); };
+  $("tResetYes").onclick = () => { const was = state.tests[T.id]; clearTimeout(saveTimer); saveTimer = null; state.tests[T.id] = T.quick ? { file: T.template, start: 0, result: null, fed: !!(was && was.fed) } : { file: T.template, start: 0, result: null }; $("tResetConfirm").hidden = true; persist(); $("tOut").textContent = "ghci> checks\n(press Run checks)"; renderTest(); };
   $("tCopy").onclick = () => {
     const text = fullFile($("tfile").value);
     const done = () => { $("tCopy").textContent = "Copied. Paste into " + T.file; };
@@ -1743,7 +2064,7 @@ renderWeekTicks();
 try { let m = localStorage.getItem(LS_KEY + "-set"); if (!SET_LABEL[m]) { const old = localStorage.getItem(LS_KEY + "-mode"); m = old ? (/^twins?$/.test(old) ? "twin" : "course") : "core"; } qset = m; } catch(e) {}
 markSet();
 resumeOrPick();
-try { const v = localStorage.getItem(LS_KEY + "-view"); if (v === "test" && T) setView("test"); } catch(e) {}
+try { const v = localStorage.getItem(LS_KEY + "-view"); if (v === "test" && (TESTS.length || QUICK_ON)) setView("test"); } catch(e) {}
 // when the page is updated while open, hand the progress to the new version
 window.claude?.hot?.snapshot?.(() => ({ state }));
 if (window.claude?.hot?.ready) window.claude.hot.ready(data => { if (adopt(data && data.state)) refreshAfterAdopt(); });
