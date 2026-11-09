@@ -45,6 +45,7 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
     .split("__MODULE_ID__").join(mod.id)
     .split("__LANG__").join(mod.language)
     .split("__COMPILER__").join(mod.compiler)
+    .split("__RUNNER_LANG__").join(JSON.stringify(mod.runner || null))
     .replace("__WEEK_CHIPS__", chips)
     .replace("__SUPPORT__", support)
     .replace("__DECK__", json(DECK))

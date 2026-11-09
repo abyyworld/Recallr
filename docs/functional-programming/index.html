@@ -686,6 +686,59 @@ function retry(msg){
   $("overrule").onclick = () => finish(true, "Counted as correct.", $("code")?.value ?? null);
   const f = $("code") || document.querySelector(".blank, #pred"); if (f) f.focus();
 }
+// ---------- running real code ----------
+// The free Piston service (emkc.org) compiles and runs the code with GHC. If it can't be reached
+// (blocked, offline, or inside Claude where the page can't call other sites), the app falls back to
+// the checker or self-marking.
+const RUNNER = "https://emkc.org/api/v2/piston/execute";
+let runnerOk = "haskell" ? null : false;
+async function runCode(source){
+  if (runnerOk === false) throw { code: "runner_off" };
+  let res;
+  try {
+    res = await fetch(RUNNER, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language: "haskell", version: "*", files: [{ name: "Main.hs", content: source }], compile_timeout: 20000, run_timeout: 5000 }) });
+  } catch(e) { runnerOk = false; throw { code: "runner_off" }; }
+  if (res.status === 401 || res.status === 403 || res.status === 404) { runnerOk = false; throw { code: "runner_off" }; }
+  if (!res.ok) throw { code: "runner_busy" };
+  const j = await res.json();
+  if (!j.run && !j.compile) { runnerOk = false; throw { code: "runner_off" }; }
+  runnerOk = true;
+  const compileFailed = j.compile && j.compile.code !== 0;
+  return {
+    compiled: !compileFailed,
+    error: cleanGhc(compileFailed ? (j.compile.stderr || j.compile.output || "") : ""),
+    out: (j.run && j.run.stdout || "").replace(/\s+$/, "").split("\n"),
+    crash: cleanGhc(j.run && j.run.code !== 0 ? (j.run.stderr || "") : ""),
+  };
+}
+function cleanGhc(s){
+  return String(s).split("\n").filter(l => !/^\[\d+ of \d+\]|^Linking /.test(l)).join("\n").replace(/\/piston\/jobs\/[^/]+\//g, "").trim().split("\n").slice(0, 12).join("\n");
+}
+function withContext(code, s){
+  // gap code can leave out type and import lines that the solution declares
+  const ctx = s.sol.split("\n").filter(l => /^(type|data|import) /.test(l) && !code.includes(l));
+  return (ctx.length ? ctx.join("\n") + "\n" : "") + code;
+}
+function testProgram(code, s){
+  const lines = code.split("\n");
+  const imports = lines.filter(l => /^import /.test(l)), rest = lines.filter(l => !/^import /.test(l) && !/^main\s*(::|=)/.test(l) && !/^\s+print\b/.test(l));
+  return imports.concat(rest).join("\n") + "\n\nmain :: IO ()\nmain = do\n" + s.checks.map(c => `  print (${c[0]})`).join("\n") + "\n";
+}
+// Runs the code against the exercise's checks. Returns {ok, msg} or null when the runner isn't available.
+async function runAgainstChecks(code, s){
+  let r;
+  try { r = await runCode(testProgram(code, s)); } catch(e) { return null; }
+  if (!r.compiled) return { ok: false, msg: `It doesn't compile. GHC says:<pre class="term">${esc(r.error || "compile error")}</pre>` };
+  for (let i = 0; i < s.checks.length; i++) {
+    const got = r.out[i];
+    if (got === undefined) return { ok: false, msg: `It compiles, but <code>${esc(s.checks[i][0])}</code> crashed${r.crash ? `:<pre class="term">${esc(r.crash)}</pre>` : "."}` };
+    if (got !== s.checks[i][1]) return { ok: false, msg: `It compiles, but <code>${esc(s.checks[i][0])}</code> gave <code>${esc(got)}</code> instead of <code>${esc(s.checks[i][1])}</code>.` };
+  }
+  return { ok: true, msg: `Correct: it compiled and passed every test (${s.checks.map(c => `<code>${esc(c[0])}</code>`).join(", ")}).` };
+}
+function running(){ setBusy(true); $("res").innerHTML = `<div class="result meh"><h3>Running your code…</h3><p class="hint">Compiling with GHC. This takes a few seconds.</p></div>`; }
+
 async function check(){
   if (checked) return;
   const { lvl } = current; const s = V(current.s);
@@ -700,12 +753,24 @@ async function check(){
     if (vals.some(v => !v.trim())) return document.querySelector(".blank:placeholder-shown, .blank")?.focus();
     const exact = s.fill.blanks.every((acc, i) => acc.map(norm).includes(norm(vals[i])));
     if (exact) return finish(true, "Right.", null);
-    if (!sample) return retry("That doesn't match the expected answer. Check spelling and brackets.");
     let filled = s.fill.code; vals.forEach(v => filled = filled.replace("___", v));
+    if (runnerOk !== false) {
+      running();
+      const r = await runAgainstChecks(withContext(filled, s), s);
+      if (r) return r.ok ? finish(true, "Right: a different answer, but it compiles and passes every test.", null, current.tries > 0) : (setBusy(false), retry(r.msg));
+      setBusy(false); $("res").innerHTML = "";
+    }
+    if (!sample) return retry("That doesn't match the expected answer. Check spelling and brackets.");
     return aiGrade(filled, true);
   }
   const code = $("code").value;
   if (norm(code) === norm(s.write.starter)) return $("code").focus();
+  if (runnerOk !== false && !s.gen) {
+    running();
+    const r = await runAgainstChecks(code, s);
+    if (r) return r.ok ? finish(true, r.msg, code, current.tries > 0) : (setBusy(false), retry(r.msg));
+    setBusy(false); $("res").innerHTML = "";
+  }
   if (!sample) return selfGrade();
   return aiGrade(code, false);
 }
@@ -760,9 +825,9 @@ function selfGrade(){
   setBusy(true);
   $("res").innerHTML = `<div class="result meh"><h3>Compare with this</h3>
     <pre class="code">${hl(s.sol)}</pre>
-    <p class="hint">Test yours on jdoodle with the copy button, or compare line by line. Be honest: it only helps you.</p>
+    <p class="hint">The code runner isn't reachable right now, so compare yours line by line (or copy it into ghci). Be honest: it only helps you.</p>
     <div class="actions">
-      <button class="btn" id="copyRun">Copy mine for jdoodle</button>
+      <button class="btn" id="copyRun">Copy mine with tests</button>
       <button class="btn primary" id="selfYes">Mine works</button>
       <button class="btn" id="selfNo">Mine doesn't</button>
     </div></div>`;
@@ -840,6 +905,7 @@ document.querySelectorAll(".chip.mode").forEach(c => c.onclick = () => {
   if (current && !checked) renderCard();
 });
 // ---------- mock test ----------
+let lastRun = null;
 let view = "practice", T = TESTS[0] || null, tickTimer = null, saveTimer = null, tBusy = false;
 function ts(){ state.tests = state.tests || {}; return state.tests[T.id] || (state.tests[T.id] = { file: T.template, start: 0, result: null }); }
 function setView(v){
@@ -919,7 +985,18 @@ async function runChecks(){
   if (tBusy) return;
   const file = $("tfile").value, und = undoneLocally(file);
   if (T.questions.every(q => und[q.id])) return termLines("Ok, one module loaded.", T.questions.map(q => `${q.id} ${q.fn}: <span class="no">not done yet (or crashed)</span>`));
-  if (!sample) return termLines("(Run checks needs Recallr inside Claude.)", ["Use \"Copy file for vLab or laptop\", then in a terminal:", "  ghci " + esc(T.file), "  checks"]);
+  if (runnerOk !== false) {
+    tBusy = true; $("tRun").disabled = true; termLines("Compiling…", []);
+    let r = null;
+    try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {}
+    tBusy = false; $("tRun").disabled = false;
+    if (r) {
+      if (!r.compiled) return termLines(`<span class="no">${esc(r.error || "compile error")}</span>\nFailed, no modules loaded.`, []);
+      lastRun = r.out;
+      return termLines("Ok, one module loaded.", r.out.filter(Boolean).map(l => esc(l).replace(/: (ok)$/, ': <span class="ok">$1</span>').replace(/: (FAILED|not done yet \(or crashed\))$/, ': <span class="no">$1</span>')));
+    }
+  }
+  if (!sample) return termLines("(The code runner isn't reachable right now.)", ["Use \"Copy file for vLab or laptop\", then in a terminal:", "  ghci " + esc(T.file), "  checks"]);
   tBusy = true; $("tRun").disabled = true;
   termLines("Compiling…", []);
   try {
@@ -941,7 +1018,19 @@ async function submitTest(){
   $("tSubmitConfirm").hidden = true;
   const file = $("tfile").value, und = undoneLocally(file), s = ts();
   s.file = file;
-  if (!sample) { s.result = { self: true, at: Date.now() }; persist(); return renderMark(); }
+  if (!sample) {
+    let r = null;
+    if (runnerOk !== false) { try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {} }
+    if (r) {
+      const items = T.questions.map(q => {
+        const line = r.out.find(l => l.startsWith(q.id + " ")) || "";
+        const ok = r.compiled && /: ok$/.test(line);
+        return { id: q.id, fn: q.fn, marks: q.marks, awarded: ok ? q.marks : 0, feedback: !r.compiled ? "The file doesn't compile." : und[q.id] ? "Not attempted." : ok ? "Passes the tests." : "Doesn't pass the tests yet." };
+      });
+      s.result = { compiles: r.compiled, error: r.error, items, at: Date.now(), byTests: true };
+    } else s.result = { self: true, at: Date.now() };
+    persist(); return renderMark();
+  }
   tBusy = true; $("tSubmit").disabled = true; $("tRun").disabled = true;
   $("tMark").innerHTML = `<div class="result meh"><h3>Marking…</h3><p class="hint">This takes up to a minute.</p></div>`;
   try {
@@ -981,7 +1070,7 @@ function renderMark(){
       <h3>${got} / ${total} (${pct}%, ${band})</h3>
       ${r.compiles ? "" : `<p><b>Your file doesn't compile</b>, so on the real test it would score 0. Fix this first: <code>${esc(r.error || "compile error")}</code>. The marks below are what each part would get once it compiles.</p>`}
       <div class="tablewrap"><table class="marks"><thead><tr><th>Part</th><th>Mark</th><th>Feedback</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <p class="hint">Marked by Recallr's checker, which can make mistakes.</p>
+      <p class="hint">${r.byTests ? "Marked by running your file with GHC against the tests: full marks for a part that passes, none otherwise. Real markers may also give partial credit." : "Marked by Recallr's checker, which can make mistakes."}</p>
       ${answers}</div>`;
   }
   $("tShowSol").onclick = () => { const el = $("tSol"); el.hidden = !el.hidden; $("tShowSol").textContent = el.hidden ? "Show model answers" : "Hide model answers"; };
