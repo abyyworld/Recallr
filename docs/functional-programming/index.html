@@ -7,8 +7,9 @@
 /* Layout: one centred practice column: header stats, the card, then the skill ladder. Feels like a ghci session: terminal-green accent on paper. */
 :root{
   --bg:#f6f7f3; --surface:#ffffff; --ink:#1d2421; --muted:#5f6b66; --line:#dfe4de;
-  --accent:#2c7a57; --accent-ink:#ffffff; --accent-soft:#e3f1ea;
-  --good:#2c7a57; --good-soft:#e3f1ea; --bad:#b4442c; --bad-soft:#f8e6e1; --warn:#9a6a12; --warn-soft:#f6eedb;
+  --accent:#256b4b; --accent-ink:#ffffff; --accent-soft:#e3f1ea;
+  --good:#256b4b; --good-soft:#e3f1ea; --bad:#b4442c; --bad-soft:#f8e6e1; --warn:#865a0f; --warn-soft:#f6eedb;
+  --seg-empty:#7d8882;
   --code-bg:#f0f2ed; --code-ink:#1d2421; --kw:#7b3fa0; --str:#2c6a8a;
   --term-bg:#18201c; --term-ink:#d6e6dc; --term-ok:#7fd8a6; --term-bad:#ff9b85;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
@@ -19,12 +20,12 @@
   --bg:#121614; --surface:#1a201d; --ink:#e7ece9; --muted:#9aa7a1; --line:#2c3531;
   --accent:#5cc492; --accent-ink:#0d1210; --accent-soft:#1f3a2d;
   --good:#5cc492; --good-soft:#1f3a2d; --bad:#ef8a72; --bad-soft:#3d2520; --warn:#e2b45a; --warn-soft:#3a3020;
-  --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; color-scheme:dark}}
+  --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; --seg-empty:#5a6862; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121614; --surface:#1a201d; --ink:#e7ece9; --muted:#9aa7a1; --line:#2c3531;
   --accent:#5cc492; --accent-ink:#0d1210; --accent-soft:#1f3a2d;
   --good:#5cc492; --good-soft:#1f3a2d; --bad:#ef8a72; --bad-soft:#3d2520; --warn:#e2b45a; --warn-soft:#3a3020;
-  --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; color-scheme:dark}
+  --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; --seg-empty:#5a6862; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 .trace{background:var(--codebg,#111);border-radius:12px;padding:12px 14px;margin:6px 0 12px;font-family:var(--mono,ui-monospace,monospace);font-size:14px;line-height:1.55;overflow-x:auto}
@@ -45,8 +46,11 @@ h1 .lam{color:var(--accent)}
 .stat b{font-family:var(--display);font-size:22px;line-height:1}
 .stat span{font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer;min-height:40px}
+.chip.goal{min-width:44px}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#testPick .chip{font-size:13px}
+#testPick .chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 .chip:focus-visible,.btn:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
 .eyebrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
@@ -57,10 +61,13 @@ h1 .lam{color:var(--accent)}
 .task{margin:0;max-width:65ch}
 code,.code,textarea,.blank,.answer-row input{font-family:var(--mono);font-size:14px;font-variant-ligatures:none;font-feature-settings:"calt" 0,"liga" 0}
 :not(pre)>code{background:var(--code-bg);padding:1px 5px;border-radius:4px}
+code.nw{white-space:nowrap}
 pre.code{background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:14px;margin:0;overflow-x:auto;line-height:1.6;white-space:pre}
 .kw{color:var(--kw);font-weight:600}.st{color:var(--str)}
 textarea{width:100%;min-height:170px;resize:vertical;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--line);border-radius:10px;padding:14px;line-height:1.6;tab-size:2}
-.blank{display:inline-block;min-width:4ch;border:none;border-bottom:2px solid var(--accent);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:3px 3px 0 0}
+#code,#tfile{white-space:pre;overflow-wrap:normal;overflow-x:auto}
+.blank{display:inline-block;min-width:4ch;border:none;border-bottom:2px solid var(--accent);background:var(--surface);color:var(--ink);padding:6px 4px;min-height:34px;border-radius:3px 3px 0 0}
+pre.code.fill{line-height:2.2}
 .answer-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .answer-row input{flex:1 1 220px;min-width:0;font-family:var(--mono);font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);color:var(--ink)}
 .actions{display:flex;flex-wrap:wrap;gap:10px}
@@ -81,23 +88,25 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .sk{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;padding:6px 10px;border-radius:8px;background:var(--code-bg);min-width:0}
 .sk code{background:none;padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pill{font-size:11px;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap}
-.pill.new{background:var(--line);color:var(--muted)}.pill.learn{background:var(--warn-soft);color:var(--warn)}.pill.ok{background:var(--accent-soft);color:var(--accent)}
-.done{text-align:center;padding:30px 20px}
+.pill.new{background:var(--surface);color:var(--muted)}.pill.learn{background:var(--warn-soft);color:var(--warn)}.pill.ok{background:var(--accent-soft);color:var(--accent)}
+.done{text-align:center;padding:14px 4px}
+.done p{margin:0 0 10px}
+.wrap>p.note{margin:0}
 .done h2{font-size:26px}
 .note{font-size:13px;color:var(--muted)}
 .src{font-size:12px;color:var(--muted)}
-.btn.theme{padding:6px 12px;font-size:13px}
+.btn.theme{padding:6px 12px;font-size:13px;min-height:40px}
 .weeks{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.tick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer}
+.tick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer;min-height:40px}
 .tick input{accent-color:var(--accent);width:16px;height:16px;margin:0}
 .tick:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
 .tick:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 .settings{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 16px}
 .settings .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-bottom:12px}
-.settings input,.settings select{font:15px var(--body);padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);color:var(--ink);min-width:0;flex:1 1 220px}
+.settings input:not([type=checkbox]),.settings select{font:15px var(--body);padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);color:var(--ink);min-width:0;flex:1 1 220px}
 .stack{display:flex;flex-direction:column;gap:18px;min-width:0}
 .term{background:var(--term-bg);color:var(--term-ink);font-family:var(--mono);font-size:13px;line-height:1.6;border-radius:10px;padding:14px;margin:0;overflow-x:auto;white-space:pre;font-variant-ligatures:none}
-.term .p{color:var(--accent)}.term .ok{color:var(--term-ok)}.term .no{color:var(--term-bad)}
+.term .p{color:var(--term-ok)}.term .ok{color:var(--term-ok)}.term .no{color:var(--term-bad)}
 .timer{font-family:var(--mono);font-size:22px;font-variant-numeric:tabular-nums}
 .timer.over{color:var(--bad)}
 #tfile{min-height:520px}
@@ -107,20 +116,75 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .tablewrap{overflow-x:auto}
 .rules{margin:0;padding-left:20px;color:var(--muted);font-size:14px}
 .lesson-tag{margin:0;font-weight:600;color:var(--accent)}
-.fweek{display:flex;flex-direction:column;gap:6px;padding-bottom:10px}
-.frow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;font-size:14px}
-.seg4{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-.fbtn{border:0;border-left:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 12px var(--body);padding:4px 10px;cursor:pointer}
-.fbtn:first-child{border-left:0}
-.fbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+/* Focus: one compact row per topic, a 4-way switch on the right, grouped by week */
+#focusList{display:flex;flex-direction:column;gap:10px;padding-bottom:4px}
+.fweek{display:flex;flex-direction:column}
+.fweek .label{padding-bottom:2px}
+.frow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;font-size:14px;line-height:1.25;padding:5px 0;border-top:1px solid var(--line)}
+.ftopic{overflow-wrap:anywhere}
+.frow.f0 .ftopic{color:var(--muted);text-decoration:line-through}
+.frow.f3 .ftopic{font-weight:600}
+.seg4{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--code-bg)}
+.fbtn{border:0;border-left:1px solid var(--line);background:none;color:var(--muted);font:600 12px var(--body);padding:5px 9px;cursor:pointer;min-height:30px}
+.fbtn:first-child{border-left:0;border-radius:7px 0 0 7px}
+.fbtn:last-child{border-radius:0 7px 7px 0}
+.fbtn[aria-pressed="true"]{background:var(--line);color:var(--ink)}
+.fbtn[data-f="0"][aria-pressed="true"]{background:var(--bad-soft);color:var(--bad)}
+.fbtn[data-f="1"][aria-pressed="true"]{background:var(--warn-soft);color:var(--warn)}
 .fbtn[data-f="3"][aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.freset{margin:0 0 6px}
+#focusReset{padding:11px 0;min-height:40px}
+#focusBox>.note{margin:0 0 8px}
+@media (min-width:700px){.frows{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);font:600 14px var(--body);text-decoration:underline;cursor:pointer}
+/* one screen: header, test line, view chips, day bar, the card; settings fold away under it */
+header{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"brand stats theme";align-items:end;gap:12px 16px}
+.brand{grid-area:brand;min-width:0}.stats{grid-area:stats}#themeBtn{grid-area:theme;align-self:center}
+#chooser>summary,#moreBox>summary{display:flex;align-items:baseline;gap:10px}
+#chooserSum{font-size:15px}
+#chooserSum::after{content:"Change";margin-left:auto;padding-left:8px;color:var(--accent);font-size:14px;white-space:nowrap}
+#chooser[open] #chooserSum::after{content:"Close"}
+details>summary{list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"▸";display:inline-block;width:1em;color:var(--muted)}
+details[open]>summary::before{content:"▾"}
+#chooser>summary::before,#moreBox>summary::before{flex:none}
+#moreBox>summary{color:var(--muted);font-size:15px}
+.cbody{display:flex;flex-direction:column;gap:14px;padding:4px 0 6px}
+.crow{display:flex;flex-direction:column;gap:6px}
+.crow .note{margin:0}
+.goal + .note,.chips .note{align-self:center}
+details.sub-d{background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:0}
+details.sub-d>summary{font-size:15px}
+#chooser details.sub-d{margin-top:0}
+.more-actions{padding:14px 0 6px;border-top:1px solid var(--line)}
+#moreBox #backupNote:empty{display:none}
+#moreBox #resetConfirm{margin-bottom:14px}
+@media (max-width:520px){
+  .sub{display:none}
+  .stats{gap:12px}
+  .stat b{font-size:18px}
+  header{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand theme" "stats stats";gap:8px 12px}
+  .stats{justify-content:flex-start;gap:18px}
+  .stat{flex-direction:row;align-items:baseline;gap:5px}
+  .wrap{gap:14px;padding-top:14px}
+  .card{padding:16px}
+  .frow{font-size:13px;gap:8px}
+  .fbtn{padding:5px 5px;font-size:11.5px;min-height:40px;min-width:40px}
+  /* read-only code wraps with a hanging indent, so nothing hides off the right edge */
+  pre.code .ln{display:block;white-space:pre-wrap;overflow-wrap:anywhere;padding-left:2ch;text-indent:-2ch}
+  #stDays{display:none}
+}
 .fbtn:focus-visible,.linkbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fbtn:focus-visible{position:relative;z-index:1}
+.kbd{display:none}
+@media (hover:hover) and (pointer:fine){.kbd{display:inline}}
+.actions .linkbtn.undo{margin-left:auto;align-self:center;padding:10px 4px;min-height:40px}
 @media (prefers-reduced-motion:no-preference){.card{animation:in .18s ease-out}@keyframes in{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}}
 /* daily set: one segment per card, coloured by how it went */
 .daybar{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);min-width:0}
 .segs{flex:1;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;min-width:40px}
-.seg{height:8px;border-radius:4px;background:var(--line)}
+.seg{height:8px;border-radius:4px;background:var(--seg-empty)}
 .seg.on{background:var(--accent)}.seg.g{background:var(--good)}.seg.a{background:var(--warn)}.seg.r{background:var(--bad)}
 #dayTxt{white-space:nowrap;font-variant-numeric:tabular-nums}
 .goalrow{align-items:center}
@@ -130,7 +194,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 #examBody{display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
 #examBody p{margin:0}
 .result{position:relative}
-.remind{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+.remind{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
 .remind input{font:15px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);color:var(--ink)}
 /* a quick reward on a correct answer (none when the device asks for less motion) */
 .confetti{display:none}
@@ -155,18 +219,16 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 </script>
 <div class="wrap">
   <header>
-    <div>
+    <div class="brand">
       <h1><span class="lam">λ</span> Recallr</h1>
       <p class="sub">Functional Programming · weeks 1-5 · write it, or step down until you can</p>
     </div>
-    <button class="btn theme" id="themeBtn" aria-label="Switch between dark and light">Light mode</button>
     <div class="stats">
       <div class="stat" id="stDays" hidden><b id="sDays"></b><span>days to test</span></div>
-      <div class="stat"><b id="sDue">0</b><span>due</span></div>
       <div class="stat"><b id="sDone">0</b><span>today</span></div>
       <div class="stat" id="stStreak" hidden><b id="sStreak"></b><span>day streak</span></div>
-      <div class="stat"><b id="sMastered">0</b><span id="sMasteredOf">mastered</span></div>
     </div>
+    <button class="btn theme" id="themeBtn" aria-label="Switch between dark and light">Light mode</button>
   </header>
 
   <details class="settings" id="examBox">
@@ -180,42 +242,59 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
   </div>
 
   <div id="practiceView" class="stack">
-  <div class="weeks" role="group" aria-label="Weeks to practise">
+  <div id="dayBar" class="daybar"><div class="segs" id="segs"></div><span id="dayTxt">Today 0 / 5</span></div>
+  <main id="card" class="card" aria-live="polite"></main>
+
+  <details class="settings" id="chooser">
+    <summary id="chooserSum">Weeks · Essentials</summary>
+    <div class="cbody">
+      <div class="crow">
+        <span class="label">Weeks</span>
+        <div class="weeks" role="group" aria-label="Weeks to practise">
     <label class="tick"><input type="checkbox" data-week="1" checked> Week 1</label>
     <label class="tick"><input type="checkbox" data-week="2" checked> Week 2</label>
     <label class="tick"><input type="checkbox" data-week="3" checked> Week 3</label>
     <label class="tick"><input type="checkbox" data-week="4" checked> Week 4</label>
     <label class="tick"><input type="checkbox" data-week="5" checked> Week 5</label>
-    <button class="chip" id="weeksAll">All weeks</button>
-  </div>
-  <div class="chips" role="group" aria-label="Which questions">
-    <button class="chip set" data-set="core" aria-pressed="true">Essentials</button>
-    <button class="chip set" data-set="course" aria-pressed="false">All course questions</button>
-    <button class="chip set" data-set="twin" aria-pressed="false">Variations</button>
-  </div>
-  <div class="chips goalrow" role="group" aria-label="Cards a day">
-    <span class="note">Cards a day</span>
-    <button class="chip goal" data-goal="3" aria-pressed="false">3</button>
-    <button class="chip goal" data-goal="5" aria-pressed="true">5</button>
-    <button class="chip goal" data-goal="10" aria-pressed="false">10</button>
-  </div>
-  <details class="settings" id="focusBox">
-    <summary id="focusSum">Focus</summary>
-    <p class="note">How often each topic comes up. Off hides it.</p>
-    <div id="focusList"></div>
-    <p><button class="linkbtn" id="focusReset">Reset focus</button></p>
+          <button class="chip" id="weeksAll">All weeks</button>
+        </div>
+      </div>
+      <div class="crow">
+        <span class="label">Questions</span>
+        <div class="chips" role="group" aria-label="Which questions">
+          <button class="chip set" data-set="core" aria-pressed="true">Essentials</button>
+          <button class="chip set" data-set="course" aria-pressed="false">All course questions</button>
+          <button class="chip set" data-set="twin" aria-pressed="false">Variations</button>
+        </div>
+        <p class="note">Best order: Essentials week by week, then Variations, then a test.</p>
+      </div>
+      <div class="crow">
+        <span class="label">Daily goal</span>
+        <div class="chips" role="group" aria-label="Daily goal">
+          <button class="chip goal" data-goal="3" aria-pressed="false">3</button>
+          <button class="chip goal" data-goal="5" aria-pressed="true">5</button>
+          <button class="chip goal" data-goal="10" aria-pressed="false">10</button>
+          <span class="note">cards a day</span>
+        </div>
+      </div>
+      <details id="focusBox" class="sub-d">
+        <summary id="focusSum">Focus</summary>
+        <p class="note">How often each topic comes up. Off hides it.</p>
+        <div id="focusList"></div>
+        <p class="freset"><button class="linkbtn" id="focusReset">Reset focus</button></p>
+      </details>
+    </div>
   </details>
 
-  <div id="dayBar" class="daybar"><div class="segs" id="segs"></div><span id="dayTxt">Today 0 / 5</span></div>
-  <main id="card" class="card" aria-live="polite"></main>
-
-  <details id="ladderBox">
+  <details id="moreBox">
+    <summary>More: all skills, sync, backup, smart features</summary>
+  <details id="ladderBox" class="sub-d">
     <summary>All skills and where you are</summary>
     <p class="note">A new skill starts with a 10-second lesson, then <b>Predict</b>, <b>Fill the gaps</b> and <b>Write it</b>. Not right? Try again as often as you like; the answer only appears when you give up, and the skill steps down a level. Right first time and it climbs up. After 3 goes in a day it waits until tomorrow. Essentials and All course questions share progress; Variations keep their own. A skill you can write comes back after 10 minutes, then 1, 3, 7, 16 and 35 days. "Mastered" means you wrote it correctly three times in a row, spread over days. A day counts toward your streak with at least 3 cards. Every 7 days earns a rest day (up to 2).</p>
     <div class="skills" id="skills"></div>
   </details>
 
-  <details class="settings" id="syncBox">
+  <details class="settings sub-d" id="syncBox">
     <summary>Sync between your phone and laptop</summary>
     <p class="note" id="syncStatus">Off. Progress stays in this browser only.</p>
     <div id="syncForm">
@@ -235,7 +314,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
     </div>
   </details>
 
-  <details class="settings" id="aiBox">
+  <details class="settings sub-d" id="aiBox">
     <summary>Smart features: marking, explanations, new questions</summary>
     <p class="note" id="aiStatus">Checking what's available…</p>
     <div id="keyForm">
@@ -258,7 +337,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
     </div>
     <p class="note" id="genStatus"></p>
   </details>
-  <div class="actions">
+  <div class="actions more-actions">
     <button class="btn" id="undo" disabled>Undo last mark</button>
     <button class="btn" id="reset">Reset all progress</button>
     <button class="btn" id="backup">Back up progress</button>
@@ -267,6 +346,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
   </div>
   <p class="note" id="backupNote"></p>
   <div id="resetConfirm" hidden class="result bad"><p>Reset every skill back to new? Your streak is kept. This can't be undone.</p><div class="actions"><button class="btn primary" id="resetYes">Yes, reset</button><button class="btn" id="resetNo">Cancel</button></div></div>
+  </details>
   </div>
 
   <section id="testView" class="stack" hidden>
@@ -293,7 +373,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
       <div id="tResetConfirm" hidden class="result bad"><p>Clear your answers and your mark for this test?</p><div class="actions"><button class="btn primary" id="tResetYes">Yes, clear it</button><button class="btn" id="tResetNo">Cancel</button></div></div>
       <p class="note" id="paperLinks">Exam on paper? Try the paper-style mock: <a href="papers/paper-mock-1.pdf" target="_blank" rel="noopener">questions (PDF)</a> and, afterwards, <a href="papers/paper-mock-1-answers.pdf" target="_blank" rel="noopener">answers and marking</a>.</p>
       <label class="label" for="tfile" id="tFileLabel">PracticeTest1.hs</label>
-      <textarea id="tfile" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+      <textarea id="tfile" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
       <div class="actions">
         <button class="btn primary" id="tRun">Run checks</button>
         <button class="btn" id="tSubmit">Submit for marking</button>
@@ -306,7 +386,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
   </section>
 
   <p class="note" id="saveNote">Progress is saved in this browser.</p>
-  <p class="note">Your progress stays on your device. Recallr has no server and never sees it. To use another device, back it up and restore it there.</p>
+  <p class="note">Recallr has no server and never sees your progress.</p>
   
 </div>
 
@@ -341,7 +421,10 @@ function hl(src){
   return String(src).replace(/("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|\b(where|case|of|if|then|else|let|in|data|type|newtype|instance|class|deriving|otherwise|module|import)\b|([^"'a-z]+|[a-z_][\w']*|.)/gs,
     (m, str, kw) => str ? `<span class="st">${esc(str)}</span>` : kw ? `<span class="kw">${kw}</span>` : esc(m));
 }
-function md(s){ return esc(s).replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, a, b) => `<code>${a ?? b}</code>`); }
+// read-only code, one span per line, so on a phone a long line wraps with a hanging indent
+function hlLines(src){ return hl(src).split("\n").map((l, i, a) => `<span class="ln">${l}${i < a.length - 1 ? "\n" : ""}</span>`).join(""); }
+// short inline code stays on one line, so "Int -> Int" never breaks at the arrow
+function md(s){ return esc(s).replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, a, b) => { const c = a ?? b; return `<code${unesc(c).length <= 22 ? ' class="nw"' : ""}>${c}</code>`; }); }
 
 // ---------- persistence ----------
 // Progress lives in three places, and the newest copy always wins:
@@ -376,6 +459,12 @@ function load(){
     for (const key of [LS_KEY, ...OLD_LS_KEYS]) adopt(parse(localStorage.getItem(key)));
   } catch(e) {}
   adopt(window.claude?.hot?.data?.state);
+  seedDays();
+}
+// older versions only kept a count for today (today, todayKey): bring it into days once, so it counts
+function seedDays(){
+  if (state.days && Object.keys(state.days).length) return;
+  if (state.todayKey === new Date().toDateString() && state.today > 0) { state.days = { [dayKey()]: state.today }; saveLocal(); }
 }
 function saveLocal(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {} }
 function persist(){
@@ -468,7 +557,7 @@ function refreshAfterAdopt(){
 async function connect(){
   try {
     const [d, u] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
-    if (!d || !u) note(window.claude ? "Progress saved in this browser. Sign in to Claude to keep it across devices." : "Progress saved in this browser. To use another device, back it up below and restore it there.");
+    if (!d || !u) note(window.claude ? "Progress saved in this browser. Sign in to Claude to keep it across devices." : "Progress saved in this browser. To use another device, back it up (under More) and restore it there.");
     const id = d && u ? await u.id() : null;
     if (d && u && !id) note("Progress saved in this browser. Sign in to Claude to keep it across devices.");
     if (id) {
@@ -845,9 +934,9 @@ const attr = s => esc(String(s)).replace(/"/g, "&quot;");
 function renderFocus(){
   const box = $("focusList"); if (!box) return;
   const a = document.activeElement, back = a && a.classList && a.classList.contains("fbtn") ? [a.dataset.topic, a.dataset.f] : null;
-  box.innerHTML = focusTopics().map(g => `<div class="fweek"><div class="label">Week ${g.w}</div>${g.ts.map(t =>
-    `<div class="frow"><span>${esc(t)}</span><span class="seg4" role="group" aria-label="Focus for ${attr(t)}">${FOCUS.map((name, f) =>
-      `<button class="fbtn" data-topic="${attr(t)}" data-f="${f}" aria-pressed="${focusOf(t) === f}">${name}</button>`).join("")}</span></div>`).join("")}</div>`).join("");
+  box.innerHTML = focusTopics().map(g => `<div class="fweek"><div class="label">Week ${g.w}</div><div class="frows">${g.ts.map(t =>
+    `<div class="frow f${focusOf(t)}"><span class="ftopic">${esc(t)}</span><span class="seg4" role="group" aria-label="Focus for ${attr(t)}">${FOCUS.map((name, f) =>
+      `<button class="fbtn" data-topic="${attr(t)}" data-f="${f}" aria-pressed="${focusOf(t) === f}" tabindex="${focusOf(t) === f ? 0 : -1}">${name}</button>`).join("")}</span></div>`).join("")}</div></div>`).join("");
   $("focusSum").textContent = focusSummary() || "Focus: all topics normal";
   if (back) { const b = [...box.querySelectorAll(".fbtn")].find(el => el.dataset.topic === back[0] && el.dataset.f === back[1]); if (b) b.focus(); }
 }
@@ -856,19 +945,33 @@ function setFocus(topic, f){
   state.focus[topic] = f;
   persist(); afterFocus();
 }
+// on today's end screen, changing the weeks, set or focus never pulls another card
+function onDayEnd(){ return !current && checked && cardsToday() >= target(); }
 function afterFocus(){
   renderStats();
+  if (onDayEnd()) return;
   if (!current || (!checked && weight(current.s) === 0)) pickAndRender();
+}
+// "Weeks 1-5" for a run, "Week 2" for one week, "Weeks 2, 4" otherwise
+function weeksLabel(ws){
+  ws = ws.slice().sort((a,b) => a-b);
+  if (ws.length === 1) return `Week ${ws[0]}`;
+  const run = ws.every((w, i) => !i || w === ws[i-1] + 1);
+  return run ? `Weeks ${ws[0]}-${ws[ws.length-1]}` : `Weeks ${ws.join(", ")}`;
+}
+// the chooser's one-line summary: what you're practising, what's due, the goal and any focus
+function renderChooser(){
+  const parts = [weeksLabel([...weeksSel]), SET_LABEL[qset], `${dueList().length} due`, `goal ${state.goal || 5}`];
+  const f = focusSummary(); if (f) parts.push(f);
+  $("chooserSum").textContent = parts.join(" · ");
 }
 function renderStats(){
   renderExam();
   renderWeekProgress();
   renderFocus();
   const pool = setPool();
-  $("sDue").textContent = dueList().length;
   renderDay();
-  $("sMastered").textContent = pool.filter(isMastered).length;
-  $("sMasteredOf").textContent = `of ${pool.length} mastered`;
+  renderChooser();
   $("skills").innerHTML = pool.map(s => {
     const x = stateOf(s);
     let pill = '<span class="pill new">new</span>';
@@ -905,6 +1008,8 @@ function makeCurrent(s, k){
 function present(){
   const x = sk(current.k);
   lastId = current.s.id; lastTopic = current.s.topic;
+  // an unfinished "Write it" draft from an older version opens straight at Write it
+  if (!x.seen && !x.lesson && state.drafts && state.drafts[`${current.s.id}:3:${current.v === "t" ? "twin" : "course"}`]) { x.lesson = true; x.lvl = 3; current.lvl = 3; }
   if (!x.seen && !x.lesson) current.lesson = true;
   rerender();
 }
@@ -914,9 +1019,12 @@ function pickAndRender(){
   const dk = dayKey(), n = cardsToday(), t = target();
   if (n >= t && state.dayEnded !== dk + ":" + t) { state.dayEnded = dk + ":" + t; saveLocal(); return renderDayEnd("done"); }
   const s = pick();
-  if (!s) { current = null; state.current = null; renderDone(); renderStats(); return; }
+  if (!s) {
+    if (n >= 1 && activePool().length) return renderDayEnd("empty");
+    current = null; state.current = null; renderDone(); renderStats(); return;
+  }
   // only repeats that are still cooling down are left: stop rather than loop
-  if (pickKind === "cooling" && n >= 1) return renderDayEnd("empty");
+  if (pickKind === "cooling" && n >= 1) return renderDayEnd("empty", s);
   if (pickKind === "fresh") newRun++; else if (pickKind === "ready" || pickKind === "warm") newRun = 0;
   current = makeCurrent(s);
   current.warm = pickKind === "warm";
@@ -930,12 +1038,21 @@ function pickAndRender(){
 function resumeOrPick(){
   const c = state.current;
   const s = c && !c.done && allSkills().find(x => x.id === c.id);
-  if (s && (c.k || c.id) === pk(s) && weight(s) > 0 && setPool().some(p => p.id === s.id)) { current = makeCurrent(s); checked = false; present(); renderStats(); }
+  // a saved card from an older version has no k: the set read from its old mode picks the version
+  if (s && (c.k ? c.k === pk(s) : true) && weight(s) > 0 && setPool().some(p => p.id === s.id)) { current = makeCurrent(s); checked = false; present(); renderStats(); }
   else if (cardsToday() >= target()) { state.dayEnded = dayKey() + ":" + target(); saveLocal(); renderDayEnd("closed"); }
   else pickAndRender();
 }
 // the end of today's set: what you did, the streak, what's next, and a clear place to stop
-function renderDayEnd(kind){
+// parked: 3 goes today, waiting until tomorrow
+function parked(x){ return !!(x && x.dayKey === dayKey() && x.dayN >= 3 && x.due > Date.now()); }
+// "practise anyway": the weakest skill that isn't parked and wasn't just shown (any skill only when asked)
+function weakestOf(pool, any){
+  const box = s => stateOf(s)?.box ?? 0;
+  const ok = pool.filter(s => s.id !== lastId && !parked(stateOf(s)));
+  return (ok.length ? ok : any ? pool : []).slice().sort((a,b) => box(a) - box(b))[0] || null;
+}
+function renderDayEnd(kind, cool){
   current = null; checked = true; state.current = null;
   const k = dayKey(), n = cardsToday(), now = canCount(trackerPool());
   const ds = state.dayStart && state.dayStart.key === k ? state.dayStart.can : now;
@@ -948,12 +1065,13 @@ function renderDayEnd(kind){
   const mockGo = !quick && TESTS.length && tracker().finalWeek && !(state.tests && state.tests[TESTS[0].id] && state.tests[TESTS[0].id].result);
   const first = kind === "done" ? `${n} card${n === 1 ? "" : "s"}. That's enough for today.` : kind === "closed" ? "Come back tomorrow, or keep going if you like." : "Nothing new or due in the ticked weeks.";
   let btns = "";
-  if (kind === "empty") btns = `<button class="btn primary" id="anywayE">Practise the weakest one anyway</button>${unticked != null ? `<button class="btn" id="addWeek">Add week ${unticked}</button>` : ""}`;
-  else btns = `${quick ? '<button class="btn primary" id="quickGo">Quick test (20 min)</button>' : ""}${mockGo ? `<button class="btn primary" id="mockGo">${esc(TESTS[0].title)} (${TESTS[0].minutes} min)</button>` : ""}<button class="btn${quick || mockGo ? "" : " primary"}" id="more5">5 more</button>${kind === "closed" ? '<button class="btn" id="keepGo">Keep going</button>' : '<button class="btn" id="stopHere">Stop here</button>'}`;
+  const anyway = kind === "empty" ? cool || weakestOf(pool) : null;
+  if (kind === "empty") btns = `${anyway ? '<button class="btn primary" id="anywayE">Practise the weakest one anyway</button>' : ""}${unticked != null ? `<button class="btn${anyway ? "" : " primary"}" id="addWeek">Add week ${unticked}</button>` : ""}`;
+  else btns = `${quick ? '<button class="btn primary" id="quickGo">Quick test (20 min)</button>' : ""}${mockGo ? `<button class="btn primary" id="mockGo">${esc(TESTS[0].title)} (${TESTS[0].minutes} min)</button>` : ""}${kind === "closed" ? "" : `<button class="btn${quick || mockGo ? "" : " primary"}" id="stopHere">Stop here</button>`}<button class="btn" id="more5">5 more</button>${kind === "closed" ? '<button class="btn" id="keepGo">Keep going</button>' : ""}`;
   const remind = kind === "done" && !lsGet(LS_KEY + "-remind") ? `<div class="remind"><label class="note" for="remT">Remind me daily at</label><input type="time" id="remT" value="19:00"><button class="btn" id="remGo">Add to calendar</button></div>
     <p class="note" id="remNote">Adds a daily 10-minute event to your calendar. Recallr can't send notifications itself.</p>` : "";
   $("card").innerHTML = `<div class="done">
-    <h2>${kind === "empty" ? "That's everything for now" : "Done for today"}</h2>
+    <h2 tabindex="-1">${kind === "empty" ? "That's everything for now" : "Done for today"}</h2>
     <p>${first}</p>
     <p>Can write from memory: ${ds !== now ? `${ds} → ${now}` : now}</p>
     <p>${streakLine()}</p>
@@ -963,14 +1081,15 @@ function renderDayEnd(kind){
   </div>`;
   const on = (id, f) => { const el = $(id); if (el) el.onclick = f; };
   on("more5", () => { state.extra = { key: k, n: (state.extra && state.extra.key === k ? state.extra.n || 0 : 0) + 5 }; persist(); pickAndRender(); });
-  on("stopHere", () => { $("card").innerHTML = `<div class="done"><h2>See you tomorrow</h2><p>Progress saved.</p><button class="btn" id="anyway2">Practise anyway</button></div>`; $("anyway2").onclick = pickAndRender; $("anyway2").focus(); });
+  on("stopHere", () => { $("card").innerHTML = `<div class="done"><h2 tabindex="-1">See you tomorrow</h2><p>Progress saved.</p><button class="btn" id="anyway2">Practise anyway</button></div>`; $("anyway2").onclick = pickAndRender; $("card").querySelector("h2").focus(); });
   on("keepGo", pickAndRender);
   on("quickGo", () => openQuick());
   on("mockGo", () => { setTestChoice("mock"); setView("test"); });
-  on("anywayE", () => { const w = pool.slice().sort((a,b) => (X(a)?.box ?? 0) - (X(b)?.box ?? 0))[0]; if (!w) return; current = makeCurrent(w); state.shown++; checked = false; present(); });
+  on("anywayE", () => { if (!anyway) return; current = makeCurrent(anyway); state.shown++; checked = false; present(); });
   on("addWeek", () => { weeksSel.add(unticked); renderWeekTicks(); lsSet(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); pickAndRender(); });
   on("remGo", saveReminder);
-  const f = $("card").querySelector(".btn.primary"); if (f) f.focus();
+  // focus the heading, not a button: Enter here never pulls more cards
+  $("card").querySelector("h2").focus();
   renderStats();
 }
 function lsGet(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }
@@ -1006,11 +1125,13 @@ function renderDone(){
   const pool = activePool();
   const next = pool.map(s => stateOf(s)).filter(Boolean).map(x=>x.due).sort((a,b)=>a-b)[0];
   const when = next ? new Date(next).toLocaleString(undefined,{weekday:"short",hour:"2-digit",minute:"2-digit"}) : "not scheduled";
-  if (!pool.length) { $("card").innerHTML = `<div class="done"><h2>Nothing to practise</h2><p>Every topic in the ticked weeks is set to Off. Change it in Focus.</p></div>`; return; }
-  $("card").innerHTML = `<div class="done"><h2>All caught up</h2><p>Nothing is due in this set right now. Next review: <b>${when}</b>.</p>${document.querySelector(".tick input[data-week]:not(:checked)") ? '<p>Tick the next week above to carry on with new exercises.</p>' : ''}<div class="actions" style="justify-content:center">${sample ? '<button class="btn primary" id="genMore">Generate new questions</button>' : ''}<button class="btn${sample ? '' : ' primary'}" id="anyway">Practise the weakest one anyway</button></div>${sample ? '' : '<p class="note">Want fresh questions? Open "Smart features" below.</p>'}</div>`;
-  if ($("genMore")) $("genMore").onclick = () => { $("aiBox").open = true; generate(); };
+  if (!pool.length) { $("card").innerHTML = `<div class="done"><h2>Nothing to practise</h2><p>Every topic in the ticked weeks is set to Off. Change it in Focus, under the card.</p></div>`; return; }
+  const unticked = ALL_WEEKS.find(w => !weeksSel.has(w));
+  $("card").innerHTML = `<div class="done"><h2>All caught up</h2><p>Nothing is due in this set right now. Next review: <b>${when}</b>.</p><div class="actions" style="justify-content:center">${unticked != null ? `<button class="btn primary" id="addWeekD">Add week ${unticked}</button>` : sample ? '<button class="btn primary" id="genMore">Generate new questions</button>' : ''}<button class="btn${sample || unticked != null ? '' : ' primary'}" id="anyway">Practise the weakest one anyway</button></div>${sample ? '' : '<p class="note">Want fresh questions? Open "More" below, then Smart features.</p>'}</div>`;
+  if ($("genMore")) $("genMore").onclick = () => { $("moreBox").open = true; $("aiBox").open = true; generate(); };
+  if ($("addWeekD")) $("addWeekD").onclick = () => { weeksSel.add(unticked); renderWeekTicks(); lsSet(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); pickAndRender(); };
   $("anyway").onclick = () => {
-    const weakest = pool.slice().sort((a,b)=>(stateOf(a)?.box??0)-(stateOf(b)?.box??0))[0];
+    const weakest = weakestOf(pool, true);
     current = makeCurrent(weakest); state.shown++; checked = false; present();
   };
 }
@@ -1032,17 +1153,17 @@ function renderLesson(){
     <h2>${esc(s.title)}</h2>
     <p class="lesson-tag">Learn it in 10 seconds</p>
     ${s.lesson ? lessonHtml(s.lesson) : `<p class="task">${md(s.explain || "")}</p>`}
-    <div class="label">${s.lesson ? "The code" : "Example"}</div>
-    <pre class="code">${hl(s.predict.code)}</pre>
-    ${s.lesson && s.lesson.tip ? `<p class="hint lesson-tip">${esc(s.lesson.tip)}</p>` : ""}
     <div class="actions">
       <button class="btn primary" id="gotIt">Got it</button>
       <button class="btn" id="lessonSkip">I already know this</button>
-    </div>`;
+    </div>
+    <div class="label">${s.lesson ? "The code" : "Example"}</div>
+    <pre class="code">${hlLines(s.predict.code)}</pre>
+    ${s.lesson && s.lesson.tip ? `<p class="hint lesson-tip">${esc(s.lesson.tip)}</p>` : ""}`;
   const go = lvl => { const y = sk(current.k); y.lesson = true; y.lvl = lvl; current.lvl = lvl; current.lesson = false; persist(); renderCard(); };
   $("gotIt").onclick = () => go(1);
   $("lessonSkip").onclick = () => go(3);
-  $("gotIt").focus();
+  $("gotIt").focus({ preventScroll: true });
 }
 function renderCard(){
   const { lvl } = current; const s = V(current.s);
@@ -1053,18 +1174,19 @@ function renderCard(){
   if (lvl === 3) {
     body = `<p class="task">${md(s.write.task)}</p>
       <label class="label" for="code">Your code</label>
-      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Write the type signature and the function">${esc(starterOf(s))}</textarea>
-      <p class="hint">Write only the function (no <code>main</code> needed). Ctrl+Enter to check.</p>`;
+      <textarea id="code" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Write the type signature and the function">${esc(starterOf(s))}</textarea>
+      <p class="hint">Write only the function (no <code>main</code> needed).<span class="kbd"> Ctrl+Enter to check.</span></p>`;
   } else if (lvl === 2) {
     let i = 0;
-    const parts = esc(s.fill.code).split("___").map((p, k, arr) => k < arr.length-1 ? hl(unesc(p)) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" spellcheck="false" size="10">` : hl(unesc(p)));
+    const parts = esc(s.fill.code).split("___").map((p, k, arr) => k < arr.length-1 ? hl(unesc(p)) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" size="10">` : hl(unesc(p)));
     body = `<p class="task">Fill the gap${s.fill.blanks.length>1?'s':''} so the code is correct.</p>
       <p class="task hint">${md(s.write.task)}</p>
-      <pre class="code">${parts.join("")}</pre>`;
+      <pre class="code fill">${parts.join("")}</pre>`;
   } else {
     body = `<p class="task">Read the code. What does <code>${esc(s.predict.expr)}</code> give?</p>
-      <pre class="code">${hl(s.predict.code)}</pre>
-      <div class="answer-row"><input id="pred" autocomplete="off" spellcheck="false" placeholder="type what ghci would print" aria-label="Your answer"></div>`;
+      <pre class="code">${hlLines(s.predict.code)}</pre>
+      <div class="answer-row"><input id="pred" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="type what ghci would print" aria-label="Your answer"></div>
+      <p class="hint">Type it exactly as ghci prints it: lists in <code>[ ]</code> with commas, like <code>[(1,'a'),(2,'b')]</code>; text in <code>" "</code>.</p>`;
   }
   $("card").innerHTML = `
     <div class="eyebrow"><span>${current.warm ? "Warm-up · " : ""}Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${ladder} ${LEVELS[lvl]}</span></div>
@@ -1074,7 +1196,7 @@ function renderCard(){
     <div class="actions">
       <button class="btn primary" id="check">Check</button>
       ${shape ? '<button class="btn" id="hint">Hint</button>' : ""}
-      <button class="btn" id="stuck">Show the answer</button>
+      <button class="btn" id="stuck">I give up, show the answer</button>
     </div>
     <div id="res"></div>`;
   $("check").onclick = check;
@@ -1126,7 +1248,7 @@ function restoreDraft(){
   const s = V(current.s);
   if (d.code != null && $("code") && norm(d.code) !== norm(starterOf(s))) {
     $("res").innerHTML = `<p class="hint">This is what you typed last time, kept for you. <button class="btn" id="startBlank">Start blank</button></p>`;
-    $("startBlank").onclick = () => { $("code").value = starterOf(s); $("res").innerHTML = ""; if (state.drafts) delete state.drafts[draftKey()]; save(); $("code").focus(); };
+    $("startBlank").onclick = () => { $("code").value = starterOf(s); $("res").innerHTML = ""; clearTimeout(draftTimer); if (state.drafts) delete state.drafts[draftKey()]; persist(); $("code").focus(); };
   }
   if (d.code != null && $("code")) $("code").value = d.code;
   if (d.pred != null && $("pred")) $("pred").value = d.pred;
@@ -1175,10 +1297,12 @@ async function pickCompiler(){
 }
 // Wandbox sometimes fails on its own side ("OCI runtime error", "Resource temporarily unavailable").
 // That isn't the student's mistake: retry a couple of times, then say the runner is busy.
+let runInterp = true; // GHC's interpreter is faster on Wandbox (no linking); falls back by itself
 const INFRA = /OCI runtime|crun:|runc:|Resource temporarily unavailable|Cannot allocate memory|fork: |resource exhausted/i;
 async function runCode(source){
   for (let i = 0; ; i++) {
     const r = await runOnce(source);
+    if (r.retryPlain) { i--; continue; }
     if (!r.infra) return r;
     if (i >= 2) { runnerSlow = true; throw { code: "runner_slow" }; }
     await new Promise(z => setTimeout(z, 1200 * (i + 1)));
@@ -1193,7 +1317,7 @@ async function runOnce(source){
     let res;
     try {
       res = await fetch(RUNNER + "/compile.json", { method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
-        body: JSON.stringify({ compiler, code: source, options: "", save: false }) });
+        body: JSON.stringify({ compiler, code: source, options: "", "compiler-option-raw": runInterp ? "-e\nmain" : "", save: false }) });
     } catch(e) { if (e.name === "AbortError") { runnerSlow = true; throw { code: "runner_slow" }; } throw e; }
     finally { clearTimeout(timer); }
     // a refusal (too many requests) or a server error is temporary: say "busy", never switch the runner off for it
@@ -1209,15 +1333,23 @@ async function runOnce(source){
   runnerOk = true;
   const errText = String(j.compiler_error || "");
   const progErr = String(j.program_error || "") + String(j.signal || "");
-  if (INFRA.test(errText) || INFRA.test(progErr)) return { infra: true };
+  // interpreter mode: GHC runs main itself (like ghci), so the output arrives with the compiler's,
+  // and Wandbox's own attempt to run a program afterwards fails harmlessly (ignored)
+  const viaInterp = runInterp && !j.program_output;
+  if (runInterp && /unrecogni[sz]ed flag/.test(errText)) { runInterp = false; return { retryPlain: true }; }
+  if (INFRA.test(errText) || (!viaInterp && INFRA.test(progErr))) return { infra: true };
   // a real GHC error always names the file; anything else on the compile side is Wandbox's problem
-  const compileFailed = /error/i.test(errText) && !j.program_output;
+  const compileFailed = viaInterp ? /prog\.hs:\d+:\d+:\s*error/.test(errText) : (/error/i.test(errText) && !j.program_output);
   if (compileFailed && !/prog\.hs/.test(errText)) return { infra: true };
+  const outText = viaInterp ? String(j.compiler_output || "") : String(j.program_output || "");
+  const crashAt = errText.search(/<interactive>:|\*\*\* Exception/);
+  const crash = viaInterp ? (crashAt >= 0 && !compileFailed ? errText.slice(crashAt) : "") : (String(j.status) !== "0" ? (j.program_error || j.signal || "") : "");
   return {
     compiled: !compileFailed,
     error: cleanGhc(compileFailed ? errText : ""),
-    out: String(j.program_output || "").replace(/\s+$/, "").split("\n"),
-    crash: cleanGhc(String(j.status) !== "0" ? (j.program_error || j.signal || "") : ""),
+    out: outText ? outText.replace(/\s+$/, "").split("\n") : [],
+    // keep the message itself, not GHC's internal call stack
+    crash: cleanGhc(crash.replace(/^<interactive>:\s*/, "").split("\n").filter(l => !/^(CallStack|HasCallStack)|^\s+\S.*called at /.test(l)).join("\n")),
   };
 }
 function cleanGhc(s){
@@ -1260,7 +1392,7 @@ function running(){
 }
 function slowAgain(){
   setBusy(false);
-  $("res").innerHTML = `<div class="result meh"><h3>The code runner is busy right now</h3><p class="hint">Wandbox, the free service that compiles the code, didn't give a result (it was slow or had a problem on its side). Your answer is kept; press Check to try again. This doesn't count as an attempt.</p></div>`;
+  $("res").innerHTML = `<div class="result meh"><h3>The code runner is busy right now</h3><p class="hint">Your answer is kept. Press Check to try again (not counted).</p></div>`;
 }
 
 // ---------- making Check feel instant ----------
@@ -1304,7 +1436,7 @@ function sameAsModel(code, s){
   } catch(e) { return false; }
 }
 const RUNS_KEY = "recallr-runs2", runCache = new Map();
-function runKey(code, s){ return s.id + "\u0001" + code.replace(/[ \t]+$/gm, "").trim(); }
+function runKey(code, s){ return s.id + "\u0001" + JSON.stringify(s.checks) + "\u0001" + code.replace(/[ \t]+$/gm, "").trim(); }
 try { localStorage.removeItem("recallr-runs"); } catch(e) {}
 function savedRuns(){ try { return JSON.parse(localStorage.getItem(RUNS_KEY) || "{}"); } catch(e) { return {}; } }
 function storeRun(k, r){
@@ -1379,7 +1511,7 @@ async function check(){
   const code = $("code").value;
   if (norm(code) === norm(starterOf(s))) return $("code").focus();
   const noSig = missingSigs(code, s);
-  if (noSig.length) return retry(`Your function itself may be fine, but the type signature is missing: write the line <code>${esc(noSig[0])} :: ...</code> above it. The signature is part of the answer, and in the test it's what the marker checks first.`);
+  if (noSig.length) return retry(`Add the type signature: <code>${esc(noSig[0])} :: ...</code> above it. Markers check it first.`);
   if (!s.gen && sameAsModel(code, s)) return finish(true, instantMsg(s), code, current.tries > 0);
   if (runnerOk !== false && !s.gen) {
     running();
@@ -1422,8 +1554,10 @@ Decide:
 Do NOT give the corrected code or the answer. Give a hint that lets them fix it themselves.
 
 Reply with only JSON: {"compiles": true/false, "correct": true/false, "line": "...", "feedback": "..."}`;
+  const card = current;
   try {
     const r = await sample.json(prompt, { modelTier: "default" });
+    if (checked || current !== card) return;
     const ok = !!(r && r.correct && r.compiles);
     const fb = r && typeof r.feedback === "string" ? md(r.feedback) : "";
     if (ok) return finish(true, "Correct. " + fb, code, current.tries > 0);
@@ -1432,8 +1566,9 @@ Reply with only JSON: {"compiles": true/false, "correct": true/false, "line": ".
     if (invented) return retry("The checker pointed at a line that isn't in your code, so it may be wrong. If you've tested yours and it works, press the button below; otherwise look again.");
     retry((r && r.compiles === false ? "This wouldn't compile. " : "") + fb + (quoted ? `<br><span class="hint">Look at: <code>${esc(quoted)}</code></span>` : ""));
   } catch(e) {
+    if (checked || current !== card) return;
     setBusy(false);
-    if (e && e.code === "bad_key") { setBusy(false); $("res").innerHTML = `<div class="result meh"><h3>Your API key was rejected</h3><p>Check it in "Smart features" below, or mark this one yourself.</p><div class="actions"><button class="btn" id="selfmark">Mark it myself</button></div></div>`; $("selfmark").onclick = selfGrade; return; }
+    if (e && e.code === "bad_key") { setBusy(false); $("res").innerHTML = `<div class="result meh"><h3>Your API key was rejected</h3><p>Check it under "More", in Smart features, or mark this one yourself.</p><div class="actions"><button class="btn" id="selfmark">Mark it myself</button></div></div>`; $("selfmark").onclick = selfGrade; return; }
     if (e && (e.code === "not_granted" || e.code === "sampling_disabled" || e.code === "capability_disabled" || e.code === "not_declared")) { sample = null; return isFill ? check() : selfGrade(); }
     $("res").innerHTML = `<div class="result meh"><h3>Couldn't check right now</h3><p>${e && e.code === "rate_limited" ? "Too many checks in a short time. Wait a minute and press Check again, or mark it yourself below." : "The checker didn't answer. Press Check to try again, or mark it yourself below."}</p><div class="actions"><button class="btn" id="selfmark">Mark it myself</button></div></div>`;
     $("selfmark").onclick = selfGrade;
@@ -1489,14 +1624,16 @@ function finish(ok, msg, attempt, retried){
   else if (ok) next = x.box >= MASTER_BOX ? "Mastered. It still comes back now and then." : `Back in ${["10 minutes","1 day","3 days","7 days","16 days","35 days"][Math.max(0,x.box-1)]}.`;
   else next = x.lvl < lvl ? `Next time: ${LEVELS[x.lvl]}.` : "Back in a couple of cards.";
   const self = ok && /yourself|Marked as correct/.test(msg);
-  const answer = `${ok && attempt && norm(attempt) !== norm(s.sol) ? `<div class="label">Your code</div>
+  const gives = lvl === 1 && s.predict ? `<div class="label">${esc(s.predict.expr)} gives</div><pre class="code">${esc(String(s.predict.answer))}</pre>` : "";
+  const answer = `${gives}${ok && attempt && norm(attempt) !== norm(s.sol) ? `<div class="label">Your code</div>
     <pre class="code">${hl(attempt.trim())}</pre>
     <div class="label">Model answer${sameAsModel(attempt, s) ? "" : " (yours is different, and both work)"}</div>` : `<div class="label">${ok ? "Model answer" : "Answer"}</div>`}
-    <pre class="code">${hl(s.sol)}</pre>
-    <p>${md(s.explain)}</p>
+    <pre class="code">${hlLines(s.sol)}</pre>
+    <p>${md(s.explain || "")}</p>
     <div class="ai" id="aiExplain" hidden></div>
     ${sample ? '<div class="actions"><button class="btn" id="explain">Explain step by step</button></div>' : ''}`;
   setBusy(true);
+  const row = $("check") && $("check").closest(".actions"); if (row) row.hidden = true;
   if (ok) {
     $("res").innerHTML = `<div class="result good"><span class="confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
       <h3>${current.hinted ? "✓ Correct, with a hint" : current.tries > 0 ? "✓ Correct after a retry" : "✓ Correct"}</h3>
@@ -1506,7 +1643,7 @@ function finish(ok, msg, attempt, retried){
       <div class="actions">
         <button class="btn primary" id="next">Next</button>
         <button class="btn" id="moreBtn" aria-expanded="false" aria-controls="more">Model answer</button>
-        <button class="btn" id="undoR">Undo</button>
+        <button class="linkbtn undo" id="undoR">Undo</button>
       </div>
       <div id="more" hidden>${msg && !self ? `<p>${msg}</p>` : ""}${answer}</div></div>`;
     $("moreBtn").onclick = () => { const m = $("more"); m.hidden = !m.hidden; $("moreBtn").textContent = m.hidden ? "Model answer" : "Hide answer"; $("moreBtn").setAttribute("aria-expanded", String(!m.hidden)); };
@@ -1519,7 +1656,7 @@ function finish(ok, msg, attempt, retried){
       ${answer}
       <div class="actions">
         <button class="btn primary" id="next">Next</button>
-        <button class="btn" id="undoR">Undo</button>
+        <button class="linkbtn undo" id="undoR">Undo</button>
       </div></div>`;
   }
   $("next").onclick = pickAndRender;
@@ -1548,7 +1685,7 @@ function rewardLine(a, b){
 }
 async function explain(attempt){
   const s = V(current.s);
-  const out = $("aiExplain"), btn = $("explain");
+  const out = $("aiExplain"), btn = $("explain"), card = current;
   btn.disabled = true; out.hidden = false; out.textContent = "Thinking…";
   const prompt = `Explain this Haskell exercise to a university student who is new to programming and finds syntax hard. Be short and concrete: under 170 words, plain words, no headings. Go through the solution line by line, saying what each symbol does. ${attempt ? "Then say exactly what was different or wrong in the student's attempt, kindly, in 1-2 sentences." : ""}
 
@@ -1557,8 +1694,9 @@ Solution:
 ${s.sol}
 ${attempt ? "Student's attempt:\n" + attempt : ""}`;
   try {
-    await sample(prompt, { modelTier: "default", onText: ({ text }) => { out.textContent = text; } });
+    await sample(prompt, { modelTier: "default", onText: ({ text }) => { if (current === card) out.textContent = text; } });
   } catch(e) {
+    if (current !== card) return;
     out.textContent = e && e.text ? e.text : (e && e.code === "rate_limited" ? "Too many requests just now. Try again in a minute." : "Couldn't get an explanation right now.");
   }
   btn.disabled = false; btn.textContent = "Explain again";
@@ -1572,12 +1710,19 @@ function setSet(v){
   qset = v; markSet(); newRun = 0;
   try { localStorage.setItem(LS_KEY + "-set", v); } catch(e) {}
   // keep an open card when it belongs to the new set with the same progress
-  if (current && !checked && !current.lesson && pk(current.s) === current.k && activePool().some(s => s.id === current.s.id)) renderStats();
+  if (onDayEnd() || (current && !checked && !current.lesson && pk(current.s) === current.k && activePool().some(s => s.id === current.s.id))) renderStats();
   else if (!current || !checked) pickAndRender();
   else renderStats();
 }
 document.querySelectorAll(".chip.set").forEach(c => c.onclick = () => setSet(c.dataset.set));
 $("focusList").onclick = e => { const b = e.target.closest(".fbtn"); if (b) setFocus(b.dataset.topic, Number(b.dataset.f)); };
+$("focusList").onkeydown = e => {
+  const b = e.target.closest(".fbtn"), d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+  if (!b || !d) return;
+  e.preventDefault();
+  const all = [...b.parentNode.querySelectorAll(".fbtn")], nb = all[(all.indexOf(b) + d + all.length) % all.length];
+  nb.focus(); setFocus(nb.dataset.topic, Number(nb.dataset.f));
+};
 $("focusReset").onclick = () => { state.focus = {}; persist(); afterFocus(); };
 // cards a day: 3, 5 or 10; the finish line moves at once
 document.querySelectorAll(".chip.goal").forEach(c => c.onclick = () => {
@@ -1587,7 +1732,7 @@ document.querySelectorAll(".chip.goal").forEach(c => c.onclick = () => {
 // ---------- tests: the quick test (new each time) and the practice test ----------
 let lastRun = null;
 let view = "practice", T = null, tickTimer = null, saveTimer = null, tBusy = false, shownTestId = null;
-const QUICK_ON = false; // quick tests are switched on in the next release
+const QUICK_ON = "Haskell" === "Haskell";
 let testChoice = "quick";
 try { const c = localStorage.getItem(LS_KEY + "-test"); if (c === "quick" || c === "mock") testChoice = c; } catch(e) {}
 function setTestChoice(c){ testChoice = c; lsSet(LS_KEY + "-test", c); }
@@ -1669,14 +1814,17 @@ function makeQuick(prev){
   const rnd = new Map(parts.map(p => [p.s.id, Math.random()]));
   const lastly = list => list.filter(p => !was.has(p.s.id)).concat(list.filter(p => was.has(p.s.id)));
   const weak = p => X(p).lvl < 3 ? 0 : X(p).box;
-  const seen = lastly(parts.filter(p => X(p) && X(p).seen).sort((a,b) => weak(a) - weak(b) || X(a).due - X(b).due || rnd.get(a.s.id) - rnd.get(b.s.id)));
+  // weakest first, but shuffled within the same strength, so each quick test is a fresh mix
+  const seen = lastly(parts.filter(p => X(p) && X(p).seen).sort((a,b) => weak(a) - weak(b) || rnd.get(a.s.id) - rnd.get(b.s.id)));
   const unseen = lastly(parts.filter(p => !(X(p) && X(p).seen)));
   const chosen = [], names = new Map();
   const perTopic = t => chosen.filter(p => p.s.topic === t).length;
   const fits = p => !chosen.includes(p) && p.names.every(([k, v]) => !names.has(k) || names.get(k) === v);
   const take = p => { chosen.push(p); p.names.forEach(([k, v]) => names.set(k, v)); };
   for (const p of seen) { if (chosen.length >= 3) break; if (perTopic(p.s.topic) < 2 && fits(p)) take(p); }
-  const nu = unseen.find(p => fits(p) && !perTopic(p.s.topic)) || unseen.find(fits);
+  // one new skill, picked at random from the next few in course order
+  const near = unseen.filter(fits).slice(0, 6).sort((a,b) => rnd.get(a.s.id) - rnd.get(b.s.id));
+  const nu = near.find(p => !perTopic(p.s.topic)) || near[0];
   if (nu) take(nu);
   const rest = seen.concat(lastly(unseen.slice().sort((a,b) => rnd.get(a.s.id) - rnd.get(b.s.id))));
   for (const strict of [true, false]) for (const p of rest) { if (chosen.length >= 4) break; if (fits(p) && (!strict || perTopic(p.s.topic) < 2)) take(p); }
@@ -1697,7 +1845,7 @@ function buildQuick(parts, weeks){
   for (const p of parts) for (const t of p.types) if (!types.some(x => x.text === t.text)) types.push(t);
   const typeText = types.map(t => t.text).join("\n");
   const rule = "-- " + "=".repeat(60), thin = "-- " + "-".repeat(60);
-  const tpl = [rule, ("--  Quick test (Recallr)").padEnd(40) + `${marks} marks, ${minutes} minutes`,
+  const tpl = [rule, "--  Quick test (Recallr)".padEnd(62 - `${marks} marks, ${minutes} minutes`.length) + `${marks} marks, ${minutes} minutes`,
     "--    * Replace each `undefined` with your own code.",
     "--    * Don't change any name or type signature.",
     "--    * Unfinished? Leave it as `undefined` so the file compiles.",
@@ -1763,8 +1911,9 @@ function quickSuggested(){
 }
 // A marked quick test feeds the cards: full marks move a skill up, a missed part is back in today's practice.
 // It counts as the day's set. Each quick test feeds once.
-function feedQuick(s){
-  if (!T || !T.quick || !s.result) return;
+function feedQuick(s, t){
+  t = t || T;
+  if (!t || !t.quick || !s.result) return;
   const dk = dayKey(), now = Date.now();
   if (!state.dayStart || state.dayStart.key !== dk) state.dayStart = { key: dk, can: canCount(trackerPool()) };
   state.days = state.days || {}; state.days[dk] = Math.max(state.days[dk] || 0, target());
@@ -1772,14 +1921,14 @@ function feedQuick(s){
   let got = 0, total = 0;
   for (const it of s.result.items) {
     got += it.awarded; total += it.marks;
-    const q = T.questions.find(q => q.id === it.id);
+    const q = t.questions.find(q => q.id === it.id);
     if (!q || !it.tried) continue;
     const x = sk(q.skill);
     x.seen = true; x.lesson = true; x.notBefore = 0;
     if (it.awarded >= it.marks) { x.lvl = 3; x.box = Math.min(Math.max(x.box || 0, 1) + 1, 5); x.due = now + INTERVALS[x.box - 1]; }
     else { x.box = 0; x.due = now; }
   }
-  state.quickLog = (state.quickLog || []).concat({ id: T.id, at: now, got, total, by: s.result.byTests ? "ghc" : "ai" });
+  state.quickLog = (state.quickLog || []).concat({ id: t.id, at: now, got, total, by: s.result.byTests ? "ghc" : "ai" });
   s.fed = true;
 }
 function setView(v){
@@ -1828,7 +1977,8 @@ function tick(){
 function undoneLocally(file){
   // a function still defined as `undefined` can be spotted without compiling
   const out = {};
-  for (const q of T.questions) out[q.id] = new RegExp("^" + q.fn + "\\b[^\\n]*=\\s*undefined\\s*$", "m").test(file);
+  // (?![\w']) rather than \b, so names ending in ' work too
+  for (const q of T.questions) out[q.id] = new RegExp("^" + q.fn.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![\\w'])[^\\n]*=\\s*undefined\\s*$", "m").test(file);
   return out;
 }
 function fullFile(file){
@@ -1852,8 +2002,9 @@ ${checks}
                                Left _      -> "not done yet (or crashed)")
 `;
 }
-function termLines(header, lines){
-  $("tOut").innerHTML = `<span class="p">ghci&gt;</span> :load ${esc(T.file)}\n${header}\n<span class="p">ghci&gt;</span> checks\n` + lines.join("\n");
+function termLines(header, lines, t){
+  if (t && t !== T) return;
+  $("tOut").innerHTML = `<span class="p">ghci&gt;</span> :load ${esc((t || T).file)}\n${header}\n<span class="p">ghci&gt;</span> checks\n` + lines.join("\n");
 }
 function testPrompt(file, task){
   return `You are GHC 9 and ghci checking a student's Haskell test file. Be exact: read every line before deciding and never invent code that isn't there.
@@ -1873,18 +2024,18 @@ ${task}`;
 }
 async function runChecks(){
   if (tBusy) return;
-  const file = $("tfile").value, und = undoneLocally(file);
+  const t = T, file = $("tfile").value, und = undoneLocally(file);
   if (T.questions.every(q => und[q.id])) return termLines("Ok, one module loaded.", T.questions.map(q => `${q.id} ${q.fn}: <span class="no">not done yet (or crashed)</span>`));
   if (runnerOk !== false) {
     tBusy = true; $("tRun").disabled = true; termLines("Compiling…", []);
     let r = null;
     try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {}
     tBusy = false; $("tRun").disabled = false;
-    if (!r && runnerSlow) return termLines(`(Wandbox, the code runner, is busy or slow right now. Press Run checks to try again.)`, []);
+    if (!r && runnerSlow) return termLines(`(Wandbox, the code runner, is busy or slow right now. Press Run checks to try again.)`, [], t);
     if (r) {
-      if (!r.compiled) return termLines(`<span class="no">${esc(r.error || "compile error")}</span>\nFailed, no modules loaded.`, []);
+      if (!r.compiled) return termLines(`<span class="no">${esc(r.error || "compile error")}</span>\nFailed, no modules loaded.`, [], t);
       lastRun = r.out;
-      return termLines("Ok, one module loaded.", r.out.filter(Boolean).map(l => esc(l).replace(/: (ok)$/, ': <span class="ok">$1</span>').replace(/: (FAILED|not done yet \(or crashed\))$/, ': <span class="no">$1</span>')));
+      return termLines("Ok, one module loaded.", r.out.filter(Boolean).map(l => esc(l).replace(/: (ok)$/, ': <span class="ok">$1</span>').replace(/: (FAILED|not done yet \(or crashed\))$/, ': <span class="no">$1</span>')), t);
     }
   }
   if (!sample) return termLines("(The code runner isn't reachable right now.)", ["Use \"Copy file for vLab or laptop\", then in a terminal:", "  ghci " + esc(T.file), "  checks"]);
@@ -1895,32 +2046,43 @@ async function runChecks(){
 1. Would the whole file compile? If not, give the FIRST error the way GHC would: "${T.file}:LINE:COL: error: short message".
 2. If it compiles, for each part: "ok" if every expression gives exactly the expected output with the student's code, "FAILED" if any gives something else, "not done yet (or crashed)" if it is still undefined or crashes.
 Reply with only JSON: {"compiles": true/false, "error": "...", "results": {"Q1a": "ok", ...}}`), { modelTier: "default" });
-    if (r && r.compiles === false) termLines(`<span class="no">${esc(String(r.error || "error"))}</span>\nFailed, no modules loaded.`, []);
-    else termLines("Ok, one module loaded.", T.questions.map(q => {
+    if (r && r.compiles === false) termLines(`<span class="no">${esc(String(r.error || "error"))}</span>\nFailed, no modules loaded.`, [], t);
+    else termLines("Ok, one module loaded.", t.questions.map(q => {
       const v = und[q.id] ? "not done yet (or crashed)" : String((r && r.results && r.results[q.id]) || "not done yet (or crashed)");
       return `${q.id} ${q.fn}: <span class="${v === "ok" ? "ok" : "no"}">${esc(v)}</span>`;
-    }).concat(["", "(Checked by Recallr's checker, which can make mistakes. Run the file on vLab for the real result.)"]));
+    }).concat(["", "(Checked by Recallr's checker, which can make mistakes. Run the file on vLab for the real result.)"]), t);
   } catch(e) {
-    termLines("Couldn't run the checks just now.", [e && e.code === "rate_limited" ? "Too many checks in a short time. Wait a minute." : "Try again, or copy the file and run it on vLab."]);
+    termLines("Couldn't run the checks just now.", [e && e.code === "rate_limited" ? "Too many checks in a short time. Wait a minute." : "Try again, or copy the file and run it on vLab."], t);
   }
   tBusy = false; $("tRun").disabled = false;
 }
 async function submitTest(){
   $("tSubmitConfirm").hidden = true;
-  const file = $("tfile").value, und = undoneLocally(file), s = ts();
+  const t = T, file = $("tfile").value, und = undoneLocally(file), s = ts();
   s.file = file;
-  if (!sample) {
+  // after a wait, show the mark only if this test is still the one on screen
+  const show = () => { if (T !== t) return; renderMark(); const h = $("tMark").querySelector("h3"); if (h) { h.tabIndex = -1; $("tMark").scrollIntoView({ block: "start", behavior: "smooth" }); h.focus({ preventScroll: true }); } };
+  // GHC first (on Wandbox); a quick test falls back to the checker, then to marking it yourself
+  if (!sample || T.quick) {
     let r = null;
-    if (runnerOk !== false) { try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {} }
+    if (runnerOk !== false) {
+      tBusy = true; $("tSubmit").disabled = true; $("tRun").disabled = true;
+      $("tMark").innerHTML = `<p class="hint">Marking with GHC…</p>`;
+      try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {}
+      tBusy = false; $("tSubmit").disabled = false; $("tRun").disabled = false;
+    }
     if (r) {
-      const items = T.questions.map(q => {
+      const items = t.questions.map(q => {
         const line = r.out.find(l => l.startsWith(q.id + " ")) || "";
         const ok = r.compiled && /: ok$/.test(line);
-        return { id: q.id, fn: q.fn, marks: q.marks, awarded: ok ? q.marks : 0, feedback: !r.compiled ? "The file doesn't compile." : und[q.id] ? "Not attempted." : ok ? "Passes the tests." : "Doesn't pass the tests yet." };
+        return { id: q.id, fn: q.fn, marks: q.marks, awarded: ok ? q.marks : 0, tried: !und[q.id], feedback: !r.compiled ? "The file doesn't compile." : und[q.id] ? "Not attempted." : ok ? "Passes the tests." : "Doesn't pass the tests yet." };
       });
       s.result = { compiles: r.compiled, error: r.error, items, at: Date.now(), byTests: true };
-    } else s.result = { self: true, at: Date.now() };
-    persist(); return renderMark();
+    } else if (t.quick && runnerSlow && runnerOk) {
+      if (T === t) $("tMark").innerHTML = `<div class="result meh"><h3>The code runner is busy right now</h3><p>Your file is kept. Submit again in a moment.</p></div>`;
+      return;
+    } else if (!t.quick || !sample) s.result = { self: true, at: Date.now() };
+    if (r || !t.quick || !sample) { feedQuick(s, t); persist(); renderStats(); return show(); }
   }
   tBusy = true; $("tSubmit").disabled = true; $("tRun").disabled = true;
   $("tMark").innerHTML = `<div class="result meh"><h3>Marking…</h3><p class="hint">This takes up to a minute.</p></div>`;
@@ -1930,26 +2092,27 @@ async function submitTest(){
 - Then mark EACH part out of its marks as if that part compiled on its own: full marks if correct for the tests and for other reasonable inputs; partial credit for the right idea with a small mistake; 0 if still undefined or wrong.
 - "feedback": one or two short plain sentences per part for a beginner. Say what is wrong and where; don't paste the full answer.
 Reply with only JSON: {"compiles": true/false, "error": "...", "parts": [{"id": "Q1a", "awarded": 5, "feedback": "..."}, ...]}`), { modelTier: "default" });
-    const items = T.questions.map(q => {
+    const items = t.questions.map(q => {
       const p = (r && Array.isArray(r.parts) ? r.parts : []).find(x => x && x.id === q.id) || {};
       let a = Math.round(Number(p.awarded)); if (!isFinite(a)) a = 0; a = Math.max(0, Math.min(q.marks, a));
       if (und[q.id]) a = 0;
-      return { id: q.id, fn: q.fn, marks: q.marks, awarded: a, feedback: und[q.id] ? "Not attempted." : String(p.feedback || "") };
+      return { id: q.id, fn: q.fn, marks: q.marks, awarded: a, tried: !und[q.id], feedback: und[q.id] ? "Not attempted." : String(p.feedback || "") };
     });
     s.result = { compiles: !(r && r.compiles === false), error: r && r.error ? String(r.error) : "", items, at: Date.now() };
-    persist();
+    feedQuick(s, t);
+    persist(); renderStats();
   } catch(e) {
-    $("tMark").innerHTML = `<div class="result meh"><h3>Couldn't mark it just now</h3><p>${e && e.code === "rate_limited" ? "Too many requests. Wait a minute and submit again." : "Try submitting again in a moment."}</p></div>`;
+    if (T === t) $("tMark").innerHTML = `<div class="result meh"><h3>Couldn't mark it just now</h3><p>${e && e.code === "rate_limited" ? "Too many requests. Wait a minute and submit again." : "Try submitting again in a moment."}</p></div>`;
     tBusy = false; $("tSubmit").disabled = false; $("tRun").disabled = false; return;
   }
   tBusy = false; $("tSubmit").disabled = false; $("tRun").disabled = false;
-  renderMark();
+  show();
 }
 function renderMark(){
   const s = ts(), r = s.result;
   if (!r) { $("tMark").innerHTML = ""; return; }
   const total = T.questions.reduce((a,q)=>a+q.marks,0);
-  const answers = `<div class="actions"><button class="btn" id="tShowSol">Show model answers</button></div><pre class="code" id="tSol" hidden>${hl(T.solution)}</pre>`;
+  const answers = `<div class="actions"><button class="btn" id="tShowSol">Show model answers</button>${T.quick ? '<button class="btn primary" id="tNew2">New quick test</button>' : ""}</div><pre class="code" id="tSol" hidden>${hl(T.solution)}</pre>`;
   if (r.self) {
     $("tMark").innerHTML = `<div class="result meh"><h3>Mark it yourself</h3><p>Compare each part with the model answers, or run the copied file on vLab: each <code>ok</code> from <code>checks</code> is worth that part's marks (out of ${total}).</p>${answers}</div>`;
   } else {
@@ -1960,15 +2123,25 @@ function renderMark(){
     $("tMark").innerHTML = `<div class="result ${r.compiles ? (pct >= 40 ? "good" : "bad") : "bad"}">
       <h3>${got} / ${total} (${pct}%, ${band})</h3>
       ${r.compiles ? "" : `<p><b>Your file doesn't compile</b>, so on the real test it would score 0. Fix this first: <code>${esc(r.error || "compile error")}</code>. The marks below are what each part would get once it compiles.</p>`}
+      ${T.quick ? `<p>80% would be ${Math.ceil(0.8 * total)} / ${total}.</p><p class="hint">Full-mark parts move up in your cards. Missed ones are back in practice today.</p>` : ""}
       <div class="tablewrap"><table class="marks"><thead><tr><th>Part</th><th>Mark</th><th>Feedback</th></tr></thead><tbody>${rows}</tbody></table></div>
       <p class="hint">${r.byTests ? "Marked by running your file with GHC against the tests: full marks for a part that passes, none otherwise. Real markers may also give partial credit." : "Marked by Recallr's checker, which can make mistakes."}</p>
       ${answers}</div>`;
   }
+  if ($("tNew2")) $("tNew2").onclick = newQuick;
   $("tShowSol").onclick = () => { const el = $("tSol"); el.hidden = !el.hidden; $("tShowSol").textContent = el.hidden ? "Show model answers" : "Hide model answers"; };
 }
 if (TESTS.length || QUICK_ON) {
-  if (!QUICK_ON) document.querySelectorAll('#testPick [data-t="quick"]').forEach(el => { el.hidden = true; });
-  $("tfile").addEventListener("input", () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { ts().file = $("tfile").value; persist(); }, 1200); });
+  $("tfile").addEventListener("input", () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { saveTimer = null; ts().file = $("tfile").value; persist(); }, 1200); });
+  const mockChip = document.querySelector('#testPick [data-t="mock"]'), quickChip = document.querySelector('#testPick [data-t="quick"]');
+  if (TESTS.length) mockChip.textContent = `${TESTS[0].title} (${TESTS[0].minutes} min)`; else mockChip.hidden = true;
+  quickChip.hidden = !QUICK_ON;
+  $("testPick").hidden = !(TESTS.length && QUICK_ON);
+  $("testPick").onclick = e => { const c = e.target.closest(".chip"); if (!c || tBusy) return; flushTestSave(); setTestChoice(c.dataset.t); renderTest(); };
+  // a new quick test asks first only when it would throw away unmarked work
+  $("tNew").onclick = () => { if (tBusy) return; const s = ts(); if (s.file !== T.template && !s.result) { $("tNewConfirm").hidden = false; $("tNewYes").focus(); } else newQuick(); };
+  $("tNewYes").onclick = () => { if (!tBusy) newQuick(); };
+  $("tNewNo").onclick = () => { $("tNewConfirm").hidden = true; };
   $("tfile").addEventListener("keydown", e => { if (e.key === "Tab") { e.preventDefault(); const ta = $("tfile"), p = ta.selectionStart; ta.setRangeText("  ", p, ta.selectionEnd, "end"); } });
   $("tStart").onclick = () => { ts().start = Date.now(); persist(); renderTest(); };
   $("tRun").onclick = runChecks;
@@ -1977,7 +2150,7 @@ if (TESTS.length || QUICK_ON) {
   $("tSubmitYes").onclick = submitTest;
   $("tReset").onclick = () => { $("tResetConfirm").hidden = false; };
   $("tResetNo").onclick = () => { $("tResetConfirm").hidden = true; };
-  $("tResetYes").onclick = () => { state.tests[T.id] = { file: T.template, start: 0, result: null }; $("tResetConfirm").hidden = true; persist(); $("tOut").textContent = "ghci> checks\n(press Run checks)"; renderTest(); };
+  $("tResetYes").onclick = () => { if (tBusy) return; const was = state.tests[T.id]; clearTimeout(saveTimer); saveTimer = null; state.tests[T.id] = T.quick ? { file: T.template, start: 0, result: null, fed: !!(was && was.fed) } : { file: T.template, start: 0, result: null }; $("tResetConfirm").hidden = true; persist(); $("tOut").textContent = "ghci> checks\n(press Run checks)"; renderTest(); };
   $("tCopy").onclick = () => {
     const text = fullFile($("tfile").value);
     const done = () => { $("tCopy").textContent = "Copied. Paste into " + T.file; };
@@ -2003,8 +2176,10 @@ $("undo").onclick = () => {
   sessMarks.pop(); if (u.combo != null) combo = u.combo;
   $("card").classList.remove("win");
   lastUndo = null; $("undo").disabled = true;
-  persist();
+  if (current && current.lesson) { const y = state.skills[current.k]; if (y && !y.seen) delete y.lesson; }
   const s = allSkills().find(d => d.id === u.id);
+  state.current = { id: s.id, done: false, k, v: k.endsWith("~t") ? "t" : "c" };
+  persist();
   current = makeCurrent(s, k); checked = false; present(); renderStats();
 };
 // Moving progress to another device or browser, with no server: save a backup file, open it on the other one.
@@ -2037,6 +2212,7 @@ $("restoreFile").onchange = async () => {
     const days = mergeDays(state.days, s.days);
     state = Object.assign({ skills:{}, shown:0, todayKey:"", today:0, updated:0, tests:{}, days:{}, goal:5 }, s);
     state.days = days;
+    seedDays();
     persist(); refreshAfterAdopt();
     $("backupNote").textContent = `Restored your progress from ${f.name}.`;
   } catch(e) { $("backupNote").textContent = `Couldn't restore: ${e.message}.`; }
@@ -2052,12 +2228,12 @@ document.querySelectorAll(".tick input[data-week]").forEach(el => el.onchange = 
   const w = Number(el.dataset.week);
   if (el.checked) weeksSel.add(w); else if (weeksSel.size > 1) weeksSel.delete(w); else el.checked = true;
   try { localStorage.setItem(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); } catch(e) {}
-  if (!checked || !current) pickAndRender(); else renderStats();
+  if (!onDayEnd() && (!checked || !current)) pickAndRender(); else renderStats();
 });
 $("weeksAll").onclick = () => {
   weeksSel = new Set(ALL_WEEKS); renderWeekTicks();
   try { localStorage.setItem(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); } catch(e) {}
-  pickAndRender();
+  if (onDayEnd() || (current && checked)) renderStats(); else pickAndRender();
 };
 load();
 try { const ws = JSON.parse(localStorage.getItem(LS_KEY + "-weeks") || "null"); if (Array.isArray(ws)) { const keep = ws.map(Number).filter(w => ALL_WEEKS.includes(w)); if (keep.length) weeksSel = new Set(keep); } } catch(e) {}
@@ -2066,7 +2242,7 @@ renderWeekTicks();
 try { let m = localStorage.getItem(LS_KEY + "-set"); if (!SET_LABEL[m]) { const old = localStorage.getItem(LS_KEY + "-mode"); m = old ? (/^twins?$/.test(old) ? "twin" : "course") : "core"; } qset = m; } catch(e) {}
 markSet();
 resumeOrPick();
-try { const v = localStorage.getItem(LS_KEY + "-view"); if (v === "test" && T) setView("test"); } catch(e) {}
+try { const v = localStorage.getItem(LS_KEY + "-view"); if (v === "test" && (TESTS.length || QUICK_ON)) setView("test"); } catch(e) {}
 // when the page is updated while open, hand the progress to the new version
 window.claude?.hot?.snapshot?.(() => ({ state }));
 if (window.claude?.hot?.ready) window.claude.hot.ready(data => { if (adopt(data && data.state)) refreshAfterAdopt(); });
