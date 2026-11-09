@@ -292,7 +292,7 @@ function refreshAfterAdopt(){
 async function connect(){
   try {
     const [d, u] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
-    if (!d || !u) note("Progress saved in this browser. Sign in to Claude to keep it across devices.");
+    if (!d || !u) note(window.claude ? "Progress saved in this browser. Sign in to Claude to keep it across devices." : "Progress saved in this browser. To use another device, back it up below and restore it there.");
     const id = d && u ? await u.id() : null;
     if (d && u && !id) note("Progress saved in this browser. Sign in to Claude to keep it across devices.");
     if (id) {
