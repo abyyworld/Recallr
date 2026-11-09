@@ -259,10 +259,10 @@ let sample = null, db = null, uid = null, saving = false, saveAgain = false;
 
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+// colours code in one pass, so a colour tag is never coloured again
 function hl(src){
-  return esc(src)
-    .replace(/(&quot;|"[^"\n]*")/g, m => `<span class="st">${m}</span>`)
-    .replace(/\b(where|case|of|if|then|else|let|in|data|type|instance|class|deriving|otherwise)\b/g, '<span class="kw">$1</span>');
+  return String(src).replace(/("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|\b(where|case|of|if|then|else|let|in|data|type|newtype|instance|class|deriving|otherwise|module|import)\b|([^"'a-z]+|[a-z_][\w']*|.)/gs,
+    (m, str, kw) => str ? `<span class="st">${esc(str)}</span>` : kw ? `<span class="kw">${kw}</span>` : esc(m));
 }
 function md(s){ return esc(s).replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, a, b) => `<code>${a ?? b}</code>`); }
 
@@ -757,9 +757,16 @@ async function runOnce(source){
         body: JSON.stringify({ compiler, code: source, options: "", save: false }) });
     } catch(e) { if (e.name === "AbortError") { runnerSlow = true; throw { code: "runner_slow" }; } throw e; }
     finally { clearTimeout(timer); }
-    if (!res.ok) { if (res.status >= 400 && res.status < 500) runnerOk = false; throw new Error("http " + res.status); }
+    // a refusal (too many requests) or a server error is temporary: say "busy", never switch the runner off for it
+    if (!res.ok) { runnerSlow = true; throw { code: "runner_slow" }; }
     j = await res.json();
-  } catch(e) { if (e && e.code === "runner_slow") throw e; if (runnerOk !== true) runnerOk = false; throw { code: "runner_off" }; }
+  } catch(e) {
+    if (e && e.code === "runner_slow") throw e;
+    // the site can't be reached at all (offline, or inside Claude where pages can't call other sites):
+    // switch off only if it has never worked in this visit; after that, treat it as a hiccup
+    if (runnerOk !== true) { runnerOk = false; throw { code: "runner_off" }; }
+    runnerSlow = true; throw { code: "runner_slow" };
+  }
   runnerOk = true;
   const errText = String(j.compiler_error || "");
   const progErr = String(j.program_error || "") + String(j.signal || "");
@@ -882,15 +889,18 @@ function attemptCode(s){
   let f = s.fill.code; vals.forEach(v => f = f.replace("___", v));
   return withContext(f, s);
 }
-let preTimer = null;
+let preTimer = null, bgBusy = false, bgAgain = false;
 function precompileSoon(){
   clearTimeout(preTimer);
   preTimer = setTimeout(() => {
     const s = current && V(current.s);
     if (!s || s.gen || checked || runnerOk === false) return;
     const c = attemptCode(s);
-    if (c && !($("code") && sameAsModel(c, s))) checkCached($("code") ? withContext(c, s) : c, s).catch(() => {});
-  }, 1200);
+    if (!c || ($("code") && (sameAsModel(c, s) || missingSigs(c, s).length))) return;
+    if (bgBusy) { bgAgain = true; return; }
+    bgBusy = true;
+    checkCached($("code") ? withContext(c, s) : c, s).catch(() => {}).finally(() => { bgBusy = false; if (bgAgain) { bgAgain = false; precompileSoon(); } });
+  }, 1500);
 }
 // functions whose type signature the model answer has, the question doesn't give, and the student left out
 function missingSigs(code, s){
