@@ -217,6 +217,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
         <button class="btn" id="tReset">Start again with a blank file</button>
       </div>
       <div id="tResetConfirm" hidden class="result bad"><p>Clear your answers and your mark for this test?</p><div class="actions"><button class="btn primary" id="tResetYes">Yes, clear it</button><button class="btn" id="tResetNo">Cancel</button></div></div>
+      <p class="note" id="paperLinks">Exam on paper? Try the paper-style mock: <a href="papers/paper-mock-1.pdf" target="_blank" rel="noopener">questions (PDF)</a> and, afterwards, <a href="papers/paper-mock-1-answers.pdf" target="_blank" rel="noopener">answers and marking</a>.</p>
       <label class="label" for="tfile" id="tFileLabel">PracticeTest1.hs</label>
       <textarea id="tfile" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
       <div class="actions">
@@ -499,7 +500,8 @@ Reply with only a JSON array of 5 objects.`;
 $("genBtn").onclick = generate;
 
 // sync controls (the website only: inside Claude, your Claude account already syncs your devices)
-if (window.claude) { $("syncBox").hidden = true; }
+if (window.claude) { $("syncBox").hidden = true; $("paperLinks").hidden = true; }
+if (MODULE_ID !== "functional-programming") $("paperLinks").hidden = true;
 $("syncConnect").onclick = () => {
   const token = $("syncToken").value.trim(); if (!token) { $("syncToken").focus(); return; }
   try { localStorage.setItem(SYNC_STORE, JSON.stringify({ token })); } catch(e) {}
