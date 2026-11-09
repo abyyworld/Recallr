@@ -990,7 +990,9 @@ function finish(ok, msg, attempt, retried){
     <h3>${ok ? "✓ Correct" : "✗ Not yet"}</h3>
     <p>${msg}</p>
     <p class="hint">${next}</p>
-    <div class="label">Answer</div>
+    ${ok && attempt && norm(attempt) !== norm(s.sol) ? `<div class="label">Your code</div>
+    <pre class="code">${hl(attempt.trim())}</pre>
+    <div class="label">Model answer${sameAsModel(attempt, s) ? "" : " (yours is different, and both work)"}</div>` : `<div class="label">Answer</div>`}
     <pre class="code">${hl(s.sol)}</pre>
     <p>${md(s.explain)}</p>
     <div class="ai" id="aiExplain" hidden></div>
