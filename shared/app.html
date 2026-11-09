@@ -700,7 +700,18 @@ async function pickCompiler(){
   if (!ghc.length) throw new Error("no compiler");
   return (runnerCompiler = ghc[0].name);
 }
+// Wandbox sometimes fails on its own side ("OCI runtime error", "Resource temporarily unavailable").
+// That isn't the student's mistake: retry a couple of times, then say the runner is busy.
+const INFRA = /OCI runtime|crun:|runc:|Resource temporarily unavailable|Cannot allocate memory|fork: |resource exhausted/i;
 async function runCode(source){
+  for (let i = 0; ; i++) {
+    const r = await runOnce(source);
+    if (!r.infra) return r;
+    if (i >= 2) { runnerSlow = true; throw { code: "runner_slow" }; }
+    await new Promise(z => setTimeout(z, 1200 * (i + 1)));
+  }
+}
+async function runOnce(source){
   if (runnerOk === false) throw { code: "runner_off" };
   let j;
   try {
@@ -717,7 +728,11 @@ async function runCode(source){
   } catch(e) { if (e && e.code === "runner_slow") throw e; if (runnerOk !== true) runnerOk = false; throw { code: "runner_off" }; }
   runnerOk = true;
   const errText = String(j.compiler_error || "");
-  const compileFailed = /error:|error\]/.test(errText) && !j.program_output;
+  const progErr = String(j.program_error || "") + String(j.signal || "");
+  if (INFRA.test(errText) || INFRA.test(progErr)) return { infra: true };
+  // a real GHC error always names the file; anything else on the compile side is Wandbox's problem
+  const compileFailed = /error/i.test(errText) && !j.program_output;
+  if (compileFailed && !/prog\.hs/.test(errText)) return { infra: true };
   return {
     compiled: !compileFailed,
     error: cleanGhc(compileFailed ? errText : ""),
@@ -759,7 +774,7 @@ function running(){
 }
 function slowAgain(){
   setBusy(false);
-  $("res").innerHTML = `<div class="result meh"><h3>The code runner is slow right now</h3><p class="hint">Wandbox didn't answer within ${RUN_LIMIT} seconds. Your answer is kept; press Check to try again. This doesn't count as an attempt.</p></div>`;
+  $("res").innerHTML = `<div class="result meh"><h3>The code runner is busy right now</h3><p class="hint">Wandbox, the free service that compiles the code, didn't give a result (it was slow or had a problem on its side). Your answer is kept; press Check to try again. This doesn't count as an attempt.</p></div>`;
 }
 
 // ---------- making Check feel instant ----------
@@ -802,8 +817,9 @@ function sameAsModel(code, s){
     return Object.keys(a.sigs).every(k => a.sigs[k] === b.sigs[k]);
   } catch(e) { return false; }
 }
-const RUNS_KEY = "recallr-runs", runCache = new Map();
+const RUNS_KEY = "recallr-runs2", runCache = new Map();
 function runKey(code, s){ return s.id + "\u0001" + code.replace(/[ \t]+$/gm, "").trim(); }
+try { localStorage.removeItem("recallr-runs"); } catch(e) {}
 function savedRuns(){ try { return JSON.parse(localStorage.getItem(RUNS_KEY) || "{}"); } catch(e) { return {}; } }
 function storeRun(k, r){
   try { const all = savedRuns(); all[k] = r; const ks = Object.keys(all); ks.slice(0, Math.max(0, ks.length - 300)).forEach(x => delete all[x]);
@@ -1092,7 +1108,7 @@ async function runChecks(){
     let r = null;
     try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {}
     tBusy = false; $("tRun").disabled = false;
-    if (!r && runnerSlow) return termLines(`(Wandbox didn't answer within ${RUN_LIMIT} seconds. Press Run checks to try again.)`, []);
+    if (!r && runnerSlow) return termLines(`(Wandbox, the code runner, is busy or slow right now. Press Run checks to try again.)`, []);
     if (r) {
       if (!r.compiled) return termLines(`<span class="no">${esc(r.error || "compile error")}</span>\nFailed, no modules loaded.`, []);
       lastRun = r.out;
