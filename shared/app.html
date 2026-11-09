@@ -884,6 +884,12 @@ function precompileSoon(){
     if (c && !($("code") && sameAsModel(c, s))) checkCached($("code") ? withContext(c, s) : c, s).catch(() => {});
   }, 1200);
 }
+// functions whose type signature the model answer has, the question doesn't give, and the student left out
+function missingSigs(code, s){
+  const sigs = src => [...src.matchAll(/^([a-z_][\w']*)\s*::/gm)].map(m => m[1]);
+  const given = new Set(sigs(starterOf(s))), have = new Set(sigs(code));
+  return sigs(s.sol).filter(n => !given.has(n) && !have.has(n) && new RegExp("^" + n + "\\b", "m").test(code));
+}
 function instantMsg(s){ return `Correct: it's the model answer, which passes every test (${s.checks.map(c => esc(c[0])).join(", ")}).`; }
 
 async function check(){
@@ -913,6 +919,8 @@ async function check(){
   }
   const code = $("code").value;
   if (norm(code) === norm(starterOf(s))) return $("code").focus();
+  const noSig = missingSigs(code, s);
+  if (noSig.length) return retry(`Your function itself may be fine, but the type signature is missing: write the line <code>${esc(noSig[0])} :: ...</code> above it. The signature is part of the answer, and in the test it's what the marker checks first.`);
   if (!s.gen && sameAsModel(code, s)) return finish(true, instantMsg(s), code, current.tries > 0);
   if (runnerOk !== false && !s.gen) {
     running();
