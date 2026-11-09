@@ -324,5 +324,13 @@ const DECK = [
   predict: { code: "next x\n  | x == maxBound = minBound\n  | otherwise     = succ x", expr: "next 'a'" },
   explain: "`maxBound`/`minBound` are the largest/smallest value of a type (needs `Bounded`). `succ` is the next value (needs `Enum`). At the last value, wrap back to the first." },
 ];
+// more week 3 exercises, then weeks 4-5, then more week 5 exercises (course order)
+DECK.push(...require("./deck-3x.js").DECK3X);
 DECK.push(...require("./deck-4-5.js").DECK45);
+DECK.push(...require("./deck-5x.js").DECK5X);
+
+// Essentials: the smallest set per week that still meets every idea the week teaches
+// (near-duplicates like product, and, or are left to "All course questions")
+const CORE = ["double", "swap", "addTen", "sign", "safetail", "describe", "sum", "take", "zip", "takeWhile", "foldr", "compose", "qsort", "suitDeriving", "instanceEq", "suitShow", "constraint", "next", "rmdups", "suitOrd", "safeDiv", "either", "pyths", "positions", "btInorder", "btMirror", "mapFoldr", "firstPosition", "exprEval", "roseSize", "bstInsert", "bstCheck", "msort", "foldTree"];
+for (const s of DECK) if (CORE.includes(s.id)) s.core = true;
 if (typeof module !== "undefined") module.exports = DECK;

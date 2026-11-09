@@ -324,5 +324,9 @@ next: { title: "Bounded + Enum: prev",
   const extra = require("./deck-4-5.js");
   Object.assign(SRC, extra.SRC45);
   Object.assign(TWINS, extra.TWINS45);
+  for (const f of ["./deck-3x.js", "./deck-5x.js"]) {
+    const more = require(f);
+    for (const k in more) if (/^SRC/.test(k)) Object.assign(SRC, more[k]); else if (/^TWINS/.test(k)) Object.assign(TWINS, more[k]);
+  }
 }
 if (typeof module !== "undefined") module.exports = { SRC, TWINS };
