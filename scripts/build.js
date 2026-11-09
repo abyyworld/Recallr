@@ -48,7 +48,10 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
 
   const chips = mod.weeks.map(w => `    <label class="tick"><input type="checkbox" data-week="${w}" checked> Week ${w}</label>`).join("\n");
   const json = v => JSON.stringify(v).replace(/</g, "\\u003c");
-  const html = template
+  // a module can have its own copy of the page (modules/<id>/app.html), so work on one module never touches the others
+  const own = path.join(dir, "app.html");
+  const html = (fs.existsSync(own) ? fs.readFileSync(own, "utf8") : template)
+    .replace("__EXAMS__", () => json(mod.exams || []))
     .replace("__LANGS_JS__", () => langs)
     .split("__DEFAULT_LANG__").join(mod.lang || "haskell")
     .split("__MODULE_NAME__").join(esc(mod.name))

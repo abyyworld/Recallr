@@ -7,5 +7,6 @@
   "language": "Haskell",
   "compiler": "GHC 9",
   "test": "haskell",
-  "runner": "haskell"
+  "runner": "haskell",
+  "exams": [{ "name": "Class test", "date": "2026-12-10", "weeks": [1, 2, 3, 4, 5], "info": "20%, on vLab, open book" }]
 }

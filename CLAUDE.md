@@ -8,3 +8,7 @@ Rules for anyone (including AI assistants) changing this repo:
 - No em dashes in any file or commit message.
 - Follow the content rules in README.md: original exercises only, labelled with their source; never course files, solutions or assessed work.
 - Before committing a module change, run its test script and `node scripts/build.js`, and commit the regenerated `answers.json` and `docs/`.
+- Several modules are worked on at the same time, in separate chats. Keep changes inside your own module:
+  - A module can have its own copy of the page at `modules/<module>/app.html`; the build uses it instead of `shared/app.html`. Functional Programming has its own copy. Change only your module's copy.
+  - Change `shared/` or `scripts/` only when every module needs it, keep that change small, and rebuild every module to check the others still work.
+  - Before pushing, fetch and merge `main`; never overwrite another module's files.
