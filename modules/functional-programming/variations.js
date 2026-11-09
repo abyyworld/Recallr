@@ -300,7 +300,7 @@ instanceEq: { title: "instance Show by hand",
   sol: "data Light = On | Off\n\ninstance Show Light where\n  show On  = \"on\"\n  show Off = \"off\"",
   checks: [["show On", "\"on\""], ["show [On, Off]", "\"[on,off]\""]],
   write: { task: "Given `data Light = On | Off` (no deriving), write `instance Show Light` so that `On` shows as `on` and `Off` as `off`.", starter: "data Light = On | Off\n\n" },
-  fill: { code: "data Light = On | Off\n\ninstance Show Light where\n  ___ On  = \"on\"\n  show Off = \"off\"", blanks: [["show"]] },
+  fill: { code: "data Light = On | Off\n\n___ where\n  show On  = \"on\"\n  show Off = \"off\"", blanks: [["instance Show Light"]] },
   predict: { code: "instance Show Light where\n  show On  = \"on\"\n  show Off = \"off\"", expr: "show Off" },
   explain: "`instance Show Light where` says how to turn each value into text by defining `show` for it." },
 

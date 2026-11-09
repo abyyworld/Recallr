@@ -46,7 +46,7 @@ const DECK = [
   sol: "type Cell = (Int, Int)\n\nneighbours :: Cell -> [Cell]\nneighbours (x,y) = [ (x+i,y+j) | i <- [-1..1], j <- [-1..1], not (i==0 && j==0) ]",
   checks: [["length (neighbours (5,5))", "8"], ["head (neighbours (5,5))", "(4,4)"]],
   write: { task: "Write `neighbours`, giving the 8 cells around a cell (not the cell itself), using a list comprehension. `neighbours (2,2)` starts with `(1,1)`.", starter: "type Cell = (Int, Int)\n\nneighbours :: Cell -> [Cell]\n" },
-  fill: { code: "neighbours :: Cell -> [Cell]\nneighbours (x,y) = [ (x+i,y+j) | i <- [-1..1], j <- ___, not (i==0 && j==0) ]", blanks: [["[-1..1]", "[-1,0,1]"]] },
+  fill: { code: "neighbours :: Cell -> [Cell]\nneighbours (x,y) = [ (x+i,y+j) | i <- [-1..1], j <- [-1..1], ___ ]", blanks: [["not (i==0 && j==0)", "not (i == 0 && j == 0)", "(i,j) /= (0,0)", "(i, j) /= (0, 0)", "i/=0 || j/=0", "i /= 0 || j /= 0"]] },
   predict: { code: "neighbours (x,y) = [ (x+i,y+j) | i <- [-1..1], j <- [-1..1], not (i==0 && j==0) ]", expr: "length (neighbours (0,0))" },
   explain: "`i <- [-1..1]` and `j <- [-1..1]` are two nested loops (j inside i): 3 x 3 = 9 pairs. `not (i==0 && j==0)` throws out the cell itself, leaving 8." },
 

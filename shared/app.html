@@ -26,6 +26,7 @@
   --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+.tick .wp{font-weight:400;opacity:.75;font-size:.9em}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
 .wrap{max-width:760px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
 header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
@@ -258,7 +259,7 @@ function hl(src){
     .replace(/(&quot;|"[^"\n]*")/g, m => `<span class="st">${m}</span>`)
     .replace(/\b(where|case|of|if|then|else|let|in|data|type|instance|class|deriving|otherwise)\b/g, '<span class="kw">$1</span>');
 }
-function md(s){ return esc(s).replace(/`([^`]+)`/g, (_,c)=>`<code>${c}</code>`); }
+function md(s){ return esc(s).replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, a, b) => `<code>${a ?? b}</code>`); }
 
 // ---------- persistence ----------
 // Progress lives in three places, and the newest copy always wins:
@@ -509,6 +510,14 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 
 // ---------- scheduling ----------
 function V(s){ return mode === "twin" && TWINS[s.id] ? Object.assign({}, s, TWINS[s.id], { id: s.id, week: s.week, topic: s.topic }) : s; }
+// The "Write it" box starts with only what the question gives (types, data, helper functions).
+// The function's own type signature is part of the answer, as in the exam.
+function starterOf(s){
+  const lines = s.write.starter.split("\n"), sig = /^([a-z_][\w']*)\s*::/;
+  const given = new Set(lines.filter(l => !sig.test(l) && /^[a-z_]/.test(l)).map(l => l.split(/\s/)[0]));
+  const out = lines.filter(l => { const m = l.match(sig); return !m || given.has(m[1]); }).join("\n").replace(/\n{3,}/g, "\n\n");
+  return out.trim() ? out.replace(/\s*$/, "\n\n") : "";
+}
 function sk(id){ return state.skills[id] || (state.skills[id] = { lvl:3, box:0, due:0, notBefore:0, streak:0, seen:false }); }
 function allSkills(){ return DECK.concat(state.generated || []); }
 function inWeek(s){ return weeksSel.has(Number(s.week)); }
@@ -523,26 +532,28 @@ function pick(){
   const ready = pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.due <= now && x.notBefore <= state.shown; });
   const learning = ready.filter(s => state.skills[s.id].lvl < 3);
   if (learning.length) return learning.sort((a,b)=>state.skills[a.id].due - state.skills[b.id].due)[0];
-  const activeLearning = pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.lvl < 3; }).length;
   const fresh = pool.find(s => !(state.skills[s.id] && state.skills[s.id].seen));
   if (ready.length) return ready.sort((a,b)=>state.skills[a.id].due - state.skills[b.id].due)[0];
-  if (fresh && activeLearning < 4) return fresh;
-  // something is cooling down: wait for it rather than ending the session
+  // new exercises come before repeating ones that are still cooling down
+  if (fresh) return fresh;
   const cooling = pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.due <= now; });
   if (cooling.length) return cooling.sort((a,b)=>state.skills[a.id].notBefore - state.skills[b.id].notBefore)[0];
-  if (fresh) return fresh;
   return null;
 }
 function grade(ok, retried){
   const x = sk(current.s.id);
   lastUndo = { id: current.s.id, prev: JSON.parse(JSON.stringify(x)), today: state.today, todayKey: state.todayKey };
   $("undo").disabled = false;
+  const first = !x.seen;
   x.seen = true;
   const now = Date.now();
   if (ok && retried) {
-    x.due = now; x.notBefore = state.shown + 3;
+    x.due = now; x.notBefore = state.shown + 5;
+  } else if (ok && first && x.lvl === 3) {
+    // written right the very first time: you already know it, so it skips the 10-minute repeat
+    x.box = 2; x.due = now + INTERVALS[1]; x.notBefore = 0;
   } else if (ok) {
-    if (x.lvl < 3) { x.lvl++; x.due = now; x.notBefore = state.shown + 2; }
+    if (x.lvl < 3) { x.lvl++; x.due = now; x.notBefore = state.shown + 3; }
     else { x.box = Math.min(x.box + 1, INTERVALS.length - 1); x.due = now + INTERVALS[x.box - 1 < 0 ? 0 : x.box - 1]; x.notBefore = 0; }
   } else {
     x.lvl = Math.max(1, x.lvl - 1); x.box = 0; x.due = now; x.notBefore = state.shown + 2;
@@ -555,7 +566,20 @@ function grade(ok, retried){
 }
 
 // ---------- rendering ----------
+// each week's tick box shows how many of its exercises you can already write from memory
+function renderWeekProgress(){
+  document.querySelectorAll(".tick input[data-week]").forEach(el => {
+    const w = Number(el.dataset.week), list = DECK.filter(s => Number(s.week) === w);
+    if (!list.length) return;
+    const can = list.filter(s => (state.skills[s.id]?.box || 0) >= 1).length;
+    let span = el.parentNode.querySelector(".wp");
+    if (!span) { span = document.createElement("span"); span.className = "wp"; el.parentNode.appendChild(span); }
+    span.textContent = can === list.length ? " ✓ done" : ` ${can}/${list.length}`;
+    span.title = `${can} of ${list.length} written from memory at least once`;
+  });
+}
 function renderStats(){
+  renderWeekProgress();
   const pool = allSkills().filter(inWeek);
   $("sDue").textContent = dueList().length;
   const key = new Date().toDateString();
@@ -590,7 +614,7 @@ function renderDone(){
   const pool = allSkills().filter(inWeek);
   const next = pool.map(s => state.skills[s.id]).filter(Boolean).map(x=>x.due).sort((a,b)=>a-b)[0];
   const when = next ? new Date(next).toLocaleString(undefined,{weekday:"short",hour:"2-digit",minute:"2-digit"}) : "not scheduled";
-  $("card").innerHTML = `<div class="done"><h2>All caught up</h2><p>Nothing is due in this set right now. Next review: <b>${when}</b>.</p><div class="actions" style="justify-content:center">${sample ? '<button class="btn primary" id="genMore">Generate new questions</button>' : ''}<button class="btn${sample ? '' : ' primary'}" id="anyway">Practise the weakest one anyway</button></div>${sample ? '' : '<p class="note">Want fresh questions? Open "Smart features" below.</p>'}</div>`;
+  $("card").innerHTML = `<div class="done"><h2>All caught up</h2><p>Nothing is due in this set right now. Next review: <b>${when}</b>.</p>${document.querySelector(".tick input[data-week]:not(:checked)") ? '<p>Tick the next week above to carry on with new exercises.</p>' : ''}<div class="actions" style="justify-content:center">${sample ? '<button class="btn primary" id="genMore">Generate new questions</button>' : ''}<button class="btn${sample ? '' : ' primary'}" id="anyway">Practise the weakest one anyway</button></div>${sample ? '' : '<p class="note">Want fresh questions? Open "Smart features" below.</p>'}</div>`;
   if ($("genMore")) $("genMore").onclick = () => { $("aiBox").open = true; generate(); };
   $("anyway").onclick = () => {
     const weakest = pool.slice().sort((a,b)=>(state.skills[a.id]?.box??0)-(state.skills[b.id]?.box??0))[0];
@@ -605,7 +629,7 @@ function renderCard(){
   if (lvl === 3) {
     body = `<p class="task">${md(s.write.task)}</p>
       <label class="label" for="code">Your code</label>
-      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off">${esc(s.write.starter)}</textarea>
+      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Write the type signature and the function">${esc(starterOf(s))}</textarea>
       <p class="hint">Write only the function (no <code>main</code> needed). Ctrl+Enter to check.</p>`;
   } else if (lvl === 2) {
     let i = 0;
@@ -655,6 +679,11 @@ function readInputs(){
 function restoreDraft(){
   const d = state.drafts && state.drafts[draftKey()];
   if (!d) return;
+  const s = V(current.s);
+  if (d.code != null && $("code") && norm(d.code) !== norm(starterOf(s))) {
+    $("res").innerHTML = `<p class="hint">This is what you typed last time, kept for you. <button class="btn" id="startBlank">Start blank</button></p>`;
+    $("startBlank").onclick = () => { $("code").value = starterOf(s); $("res").innerHTML = ""; if (state.drafts) delete state.drafts[draftKey()]; save(); $("code").focus(); };
+  }
   if (d.code != null && $("code")) $("code").value = d.code;
   if (d.pred != null && $("pred")) $("pred").value = d.pred;
   if (d.blanks) document.querySelectorAll(".blank").forEach((el, i) => { if (d.blanks[i] != null) el.value = d.blanks[i]; });
@@ -745,7 +774,10 @@ function cleanGhc(s){
 }
 function withContext(code, s){
   // gap code can leave out type and import lines that the solution declares
-  const ctx = s.sol.split("\n").filter(l => /^(type|data|import) /.test(l) && !code.includes(l));
+  // (and "Write it" answers can leave out the types the question gives)
+  const defines = l => (l.match(/^(?:type|data|newtype)\s+([A-Z][\w']*)/) || [])[1];
+  const ctx = s.sol.split("\n").filter(l => /^(type|data|newtype|import) /.test(l) && !code.includes(l)
+    && !(defines(l) && new RegExp("^(type|data|newtype)\\s+" + defines(l) + "\\b", "m").test(code)));
   return (ctx.length ? ctx.join("\n") + "\n" : "") + code;
 }
 function testProgram(code, s){
@@ -835,7 +867,7 @@ function checkCached(code, s){
   return p;
 }
 function attemptCode(s){
-  if ($("code")) { const c = $("code").value; return (norm(c) === norm(s.write.starter) || !c.includes("=")) ? null : c; }
+  if ($("code")) { const c = $("code").value; return (norm(c) === norm(starterOf(s)) || !c.includes("=")) ? null : c; }
   if (!s.fill || !document.querySelector(".blank")) return null;
   const vals = s.fill.blanks.map((_, i) => $("b"+i).value);
   if (vals.some(v => !v.trim())) return null;
@@ -849,7 +881,7 @@ function precompileSoon(){
     const s = current && V(current.s);
     if (!s || s.gen || checked || runnerOk === false) return;
     const c = attemptCode(s);
-    if (c && !($("code") && sameAsModel(c, s))) checkCached(c, s).catch(() => {});
+    if (c && !($("code") && sameAsModel(c, s))) checkCached($("code") ? withContext(c, s) : c, s).catch(() => {});
   }, 1200);
 }
 function instantMsg(s){ return `Correct: it's the model answer, which passes every test (${s.checks.map(c => esc(c[0])).join(", ")}).`; }
@@ -880,11 +912,11 @@ async function check(){
     return aiGrade(filled, true);
   }
   const code = $("code").value;
-  if (norm(code) === norm(s.write.starter)) return $("code").focus();
+  if (norm(code) === norm(starterOf(s))) return $("code").focus();
   if (!s.gen && sameAsModel(code, s)) return finish(true, instantMsg(s), code, current.tries > 0);
   if (runnerOk !== false && !s.gen) {
     running();
-    const r = await checkCached(code, s);
+    const r = await checkCached(withContext(code, s), s);
     if (!r && runnerSlow) return slowAgain();
     if (r) return r.ok ? finish(true, r.msg, code, current.tries > 0) : (setBusy(false), retry(r.msg));
     setBusy(false); $("res").innerHTML = "";
