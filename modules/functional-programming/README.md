@@ -8,7 +8,7 @@
 - Week 4: list comprehensions (Problem Sheet 4), `map`/`filter`/`foldr` rewrites, `Maybe`, `Either`, binary trees (`Data1`)
 - Week 5: binary search trees, merge sort, rose trees, expression trees (`Data2`)
 
-`practice-tests/` has timed practice tests in the usual vLab format: fill in the `undefined`s, then run `checks` in ghci.
+`practice-tests/` has a timed practice test in the vLab format (fill in the `undefined`s, then run `checks`) and a paper-style mock (`paper-1.md`, with `paper-1-answers.md`): types, evaluation, functions by hand, data types and an induction proof. Their PDFs are in `docs/functional-programming/papers/`.
 
 Check and build:
 

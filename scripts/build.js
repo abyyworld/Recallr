@@ -4,7 +4,8 @@
 const fs = require("fs"), path = require("path");
 const root = path.resolve(__dirname, "..");
 const template = fs.readFileSync(path.join(root, "shared/app.html"), "utf8");
-const rows = fs.readFileSync(path.join(root, "shared/rows.js"), "utf8");
+// languages other than Haskell (shared/langs.js uses the result formatting in shared/rows.js)
+const langs = ["rows.js", "langs.js"].map(f => fs.readFileSync(path.join(root, "shared", f), "utf8")).join("\n");
 const site = JSON.parse(fs.readFileSync(path.join(root, "site.json"), "utf8"));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -40,15 +41,16 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
   const chips = mod.weeks.map(w => `    <label class="tick"><input type="checkbox" data-week="${w}" checked> Week ${w}</label>`).join("\n");
   const json = v => JSON.stringify(v).replace(/</g, "\\u003c");
   const html = template
+    .replace("__LANGS_JS__", () => langs)
+    .split("__DEFAULT_LANG__").join(mod.lang || "haskell")
     .split("__MODULE_NAME__").join(esc(mod.name))
     .split("__MODULE_ICON__").join(esc(mod.icon))
     .split("__MODULE_SCOPE__").join(esc(mod.scope))
     .split("__MODULE_ID__").join(mod.id)
     .split("__LANG__").join(mod.language)
     .split("__COMPILER__").join(mod.compiler)
-    .split("__DEFAULT_LANG__").join(mod.lang || "haskell")
+    .split("__RUNNER_LANG__").join(JSON.stringify(mod.runner || null))
     // functions, so a "$$" or "$1" in the content is not read as a replacement pattern
-    .replace("__ROWS_JS__", () => rows)
     .replace("__WEEK_CHIPS__", () => chips)
     .replace("__SUPPORT__", () => support)
     .replace("__DECK__", () => json(DECK))
@@ -77,7 +79,8 @@ ${pwaHead("")}
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
 :root{--bg:#f6f7f3;--surface:#fff;--ink:#1d2421;--muted:#5f6b66;--line:#dfe4de;--accent:#2c7a57;--accent-ink:#fff;--soft:#e3f1ea}
-@media (prefers-color-scheme:dark){:root{--bg:#121614;--surface:#1a201d;--ink:#e7ece9;--muted:#9aa7a1;--line:#2c3531;--accent:#5cc492;--accent-ink:#0d1210;--soft:#1f3a2d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121614;--surface:#1a201d;--ink:#e7ece9;--muted:#9aa7a1;--line:#2c3531;--accent:#5cc492;--accent-ink:#0d1210;--soft:#1f3a2d;color-scheme:dark}
+.theme{position:absolute;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));font:600 13px "Source Sans 3",system-ui,sans-serif;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Source Sans 3",system-ui,sans-serif}
 main{max-width:720px;margin:0 auto;padding:56px max(18px,env(safe-area-inset-right)) 56px max(18px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:28px}
@@ -97,7 +100,9 @@ h1 span{color:var(--accent)}
 .note{color:var(--muted);font-size:15px;margin:0}
 @media (max-width:480px){.go{display:none}.ladder li{flex-direction:column;gap:2px}}
 @media (prefers-reduced-motion:reduce){.mod{transition:none}}
-</style></head><body><main>
+</style>
+<script>(function(){ var t = "dark"; try { t = localStorage.getItem("recallr-theme") || "dark"; } catch(e) {} document.documentElement.setAttribute("data-theme", t); })();</script>
+</head><body><button class="theme" id="themeBtn">Light mode</button><main>
 <h1>Recall<span>r</span></h1>
 <p class="lede">Coding practice that adapts to you. Write it from memory, or step down until you can.</p>
 <div class="mods">
@@ -110,6 +115,13 @@ ${cards}
 </ol>
 <p class="note">Free. Your progress saves as you go. Install it as an app from your browser's menu ("Install Recallr" or "Add to Dock"). Spaced repetition brings each skill back after 10 minutes, then 1, 3, 7, 16 and 35 days.</p>
 ${support}
-</main></body></html>
+</main>
+<script>
+var b = document.getElementById("themeBtn");
+function label(){ b.textContent = document.documentElement.getAttribute("data-theme") === "light" ? "Dark mode" : "Light mode"; }
+b.onclick = function(){ var n = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light"; document.documentElement.setAttribute("data-theme", n); try { localStorage.setItem("recallr-theme", n); } catch(e) {} label(); };
+label();
+</script>
+</body></html>
 `);
 console.log("built docs/index.html");
