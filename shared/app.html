@@ -688,7 +688,8 @@ function retry(msg){
 // (offline, blocked, or inside Claude where the page can't call other sites), the app falls back to
 // the checker or self-marking.
 const RUNNER = "https://wandbox.org/api";
-let runnerOk = __RUNNER_LANG__ ? null : false, runnerCompiler = null;
+let runnerOk = __RUNNER_LANG__ ? null : false, runnerCompiler = null, runnerSlow = false;
+const RUN_LIMIT = 40; // seconds before giving up on the runner for this check
 async function pickCompiler(){
   if (runnerCompiler) return runnerCompiler;
   const list = await (await fetch(RUNNER + "/list.json")).json();
@@ -702,11 +703,16 @@ async function runCode(source){
   let j;
   try {
     const compiler = await pickCompiler();
-    const res = await fetch(RUNNER + "/compile.json", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ compiler, code: source, options: "", save: false }) });
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), RUN_LIMIT * 1000);
+    let res;
+    try {
+      res = await fetch(RUNNER + "/compile.json", { method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
+        body: JSON.stringify({ compiler, code: source, options: "", save: false }) });
+    } catch(e) { if (e.name === "AbortError") { runnerSlow = true; throw { code: "runner_slow" }; } throw e; }
+    finally { clearTimeout(timer); }
     if (!res.ok) { if (res.status >= 400 && res.status < 500) runnerOk = false; throw new Error("http " + res.status); }
     j = await res.json();
-  } catch(e) { if (runnerOk !== true) runnerOk = false; throw { code: "runner_off" }; }
+  } catch(e) { if (e && e.code === "runner_slow") throw e; if (runnerOk !== true) runnerOk = false; throw { code: "runner_off" }; }
   runnerOk = true;
   const errText = String(j.compiler_error || "");
   const compileFailed = /error:|error\]/.test(errText) && !j.program_output;
@@ -742,7 +748,17 @@ async function runAgainstChecks(code, s){
   }
   return { ok: true, msg: `Correct: it compiled and passed every test (${s.checks.map(c => `<code>${esc(c[0])}</code>`).join(", ")}).` };
 }
-function running(){ setBusy(true); $("res").innerHTML = `<div class="result meh"><h3>Running your code…</h3><p class="hint">Compiling with GHC. This takes a few seconds.</p></div>`; }
+let runTick = null;
+function running(){
+  setBusy(true); runnerSlow = false; clearInterval(runTick);
+  const t0 = Date.now();
+  $("res").innerHTML = `<div class="result meh"><h3>Running your code… <span id="runSecs">0s</span></h3><p class="hint">Compiling with GHC on Wandbox, a free service. Usually 5 to 20 seconds; it gives up after ${RUN_LIMIT}.</p></div>`;
+  runTick = setInterval(() => { const el = $("runSecs"); if (!el) return clearInterval(runTick); el.textContent = Math.round((Date.now() - t0) / 1000) + "s"; }, 1000);
+}
+function slowAgain(){
+  setBusy(false);
+  $("res").innerHTML = `<div class="result meh"><h3>The code runner is slow right now</h3><p class="hint">Wandbox didn't answer within ${RUN_LIMIT} seconds. Your answer is kept; press Check to try again. This doesn't count as an attempt.</p></div>`;
+}
 
 async function check(){
   if (checked) return;
@@ -762,6 +778,7 @@ async function check(){
     if (runnerOk !== false) {
       running();
       const r = await runAgainstChecks(withContext(filled, s), s);
+      if (!r && runnerSlow) return slowAgain();
       if (r) return r.ok ? finish(true, "Right: a different answer, but it compiles and passes every test.", null, current.tries > 0) : (setBusy(false), retry(r.msg));
       setBusy(false); $("res").innerHTML = "";
     }
@@ -773,6 +790,7 @@ async function check(){
   if (runnerOk !== false && !s.gen) {
     running();
     const r = await runAgainstChecks(code, s);
+    if (!r && runnerSlow) return slowAgain();
     if (r) return r.ok ? finish(true, r.msg, code, current.tries > 0) : (setBusy(false), retry(r.msg));
     setBusy(false); $("res").innerHTML = "";
   }
@@ -995,6 +1013,7 @@ async function runChecks(){
     let r = null;
     try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {}
     tBusy = false; $("tRun").disabled = false;
+    if (!r && runnerSlow) return termLines(`(Wandbox didn't answer within ${RUN_LIMIT} seconds. Press Run checks to try again.)`, []);
     if (r) {
       if (!r.compiled) return termLines(`<span class="no">${esc(r.error || "compile error")}</span>\nFailed, no modules loaded.`, []);
       lastRun = r.out;
