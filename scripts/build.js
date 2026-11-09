@@ -56,6 +56,7 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
     .split("__SMART_WHAT__").join(kind === "maths" ? "hints, explanations, new questions" : "marking, explanations, new questions")
     .split("__LANG__").join(mod.language)
     .split("__COMPILER__").join(mod.compiler || "")
+    .split("__RUNNER_LANG__").join(JSON.stringify(mod.runner || null))
     // functions as replacements, so a "$" in the content is never read as a replacement pattern
     .replace("__MATHS_LIB__", () => mathsLib.trim())
     .replace("__WEEK_CHIPS__", () => chips)
@@ -86,7 +87,8 @@ ${pwaHead("")}
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
 :root{--bg:#f6f7f3;--surface:#fff;--ink:#1d2421;--muted:#5f6b66;--line:#dfe4de;--accent:#2c7a57;--accent-ink:#fff;--soft:#e3f1ea}
-@media (prefers-color-scheme:dark){:root{--bg:#121614;--surface:#1a201d;--ink:#e7ece9;--muted:#9aa7a1;--line:#2c3531;--accent:#5cc492;--accent-ink:#0d1210;--soft:#1f3a2d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121614;--surface:#1a201d;--ink:#e7ece9;--muted:#9aa7a1;--line:#2c3531;--accent:#5cc492;--accent-ink:#0d1210;--soft:#1f3a2d;color-scheme:dark}
+.theme{position:absolute;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));font:600 13px "Source Sans 3",system-ui,sans-serif;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Source Sans 3",system-ui,sans-serif}
 main{max-width:720px;margin:0 auto;padding:56px max(18px,env(safe-area-inset-right)) 56px max(18px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:28px}
@@ -106,7 +108,9 @@ h1 span{color:var(--accent)}
 .note{color:var(--muted);font-size:15px;margin:0}
 @media (max-width:480px){.go{display:none}.ladder li{flex-direction:column;gap:2px}}
 @media (prefers-reduced-motion:reduce){.mod{transition:none}}
-</style></head><body><main>
+</style>
+<script>(function(){ var t = "dark"; try { t = localStorage.getItem("recallr-theme") || "dark"; } catch(e) {} document.documentElement.setAttribute("data-theme", t); })();</script>
+</head><body><button class="theme" id="themeBtn">Light mode</button><main>
 <h1>Recall<span>r</span></h1>
 <p class="lede">Practice that adapts to you. Write it or solve it from memory, or step down until you can.</p>
 <div class="mods">
@@ -119,6 +123,13 @@ ${cards}
 </ol>
 <p class="note">Free. Your progress saves as you go. Install it as an app from your browser's menu ("Install Recallr" or "Add to Dock"). Spaced repetition brings each skill back after 10 minutes, then 1, 3, 7, 16 and 35 days.</p>
 ${support}
-</main></body></html>
+</main>
+<script>
+var b = document.getElementById("themeBtn");
+function label(){ b.textContent = document.documentElement.getAttribute("data-theme") === "light" ? "Dark mode" : "Light mode"; }
+b.onclick = function(){ var n = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light"; document.documentElement.setAttribute("data-theme", n); try { localStorage.setItem("recallr-theme", n); } catch(e) {} label(); };
+label();
+</script>
+</body></html>
 `);
 console.log("built docs/index.html");

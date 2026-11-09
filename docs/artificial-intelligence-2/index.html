@@ -26,7 +26,8 @@
   --good:#5cc492; --good-soft:#1f3a2d; --bad:#ef8a72; --bad-soft:#3d2520; --warn:#e2b45a; --warn-soft:#3a3020;
   --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; color-scheme:dark}
 *{box-sizing:border-box}
-[hidden]{display:none !important}
+[hidden]{display:none!important}
+.tick .wp{font-weight:400;opacity:.75;font-size:.9em}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
 .wrap{max-width:760px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
 header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
@@ -82,6 +83,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .blank.wrong{border-bottom-color:var(--bad)}
 textarea.work{min-height:90px}
 .kind-maths pre.code{white-space:pre-wrap;overflow-wrap:anywhere}
+.btn.theme{padding:6px 12px;font-size:13px}
 .weeks{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .tick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer}
 .tick input{accent-color:var(--accent);width:16px;height:16px;margin:0}
@@ -104,12 +106,17 @@ textarea.work{min-height:90px}
 @media (prefers-reduced-motion:no-preference){.card{animation:in .18s ease-out}@keyframes in{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}}
 </style>
 
+<script>
+// dark by default; the toggle remembers your choice in this browser
+(function(){ var t = "dark"; try { t = localStorage.getItem("recallr-theme") || "dark"; } catch(e) {} document.documentElement.setAttribute("data-theme", t); })();
+</script>
 <div class="wrap kind-maths">
   <header>
     <div>
       <h1><span class="lam">∑</span> Recallr</h1>
       <p class="sub">Artificial Intelligence 2 · weeks 1-5 · solve it, or step down until you can</p>
     </div>
+    <button class="btn theme" id="themeBtn" aria-label="Switch between dark and light">Light mode</button>
     <div class="stats">
       <div class="stat"><b id="sDue">0</b><span>due</span></div>
       <div class="stat"><b id="sDone">0</b><span>today</span></div>
@@ -144,6 +151,26 @@ textarea.work{min-height:90px}
     <div class="skills" id="skills"></div>
   </details>
 
+  <details class="settings" id="syncBox">
+    <summary>Sync between your phone and laptop</summary>
+    <p class="note" id="syncStatus">Off. Progress stays in this browser only.</p>
+    <div id="syncForm">
+      <p class="note">Recallr has no server, so it syncs through your own GitHub account: your progress is kept in a private gist (a hidden file only you can see), and every device you connect reads and writes it.</p>
+      <ol class="note">
+        <li><a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=Recallr%20sync" target="_blank" rel="noopener">Create a GitHub token</a> with only the <b>gist</b> box ticked, set "Expiration" to what you like, and copy it.</li>
+        <li>Paste it here and press Connect. Do the same on your other device with the same token.</li>
+      </ol>
+      <div class="row">
+        <input id="syncToken" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_..." aria-label="GitHub token">
+        <button class="btn primary" id="syncConnect">Connect</button>
+      </div>
+    </div>
+    <div class="row" id="syncConnected" hidden>
+      <button class="btn" id="syncNow">Sync now</button>
+      <button class="btn" id="syncOff">Disconnect this device</button>
+    </div>
+  </details>
+
   <details class="settings" id="aiBox">
     <summary>Smart features: hints, explanations, new questions</summary>
     <p class="note" id="aiStatus">Checking what's available…</p>
@@ -170,7 +197,11 @@ textarea.work{min-height:90px}
   <div class="actions">
     <button class="btn" id="undo" disabled>Undo last mark</button>
     <button class="btn" id="reset">Reset all progress</button>
+    <button class="btn" id="backup">Back up progress</button>
+    <button class="btn" id="restoreBtn">Restore from a backup</button>
+    <input type="file" id="restoreFile" accept=".json,application/json" hidden>
   </div>
+  <p class="note" id="backupNote"></p>
   <div id="resetConfirm" hidden class="result bad"><p>Reset every skill back to new? This can't be undone.</p><div class="actions"><button class="btn primary" id="resetYes">Yes, reset</button><button class="btn" id="resetNo">Cancel</button></div></div>
   </div>
 
@@ -190,6 +221,7 @@ textarea.work{min-height:90px}
         <button class="btn" id="tReset">Start again with a blank file</button>
       </div>
       <div id="tResetConfirm" hidden class="result bad"><p>Clear your answers and your mark for this test?</p><div class="actions"><button class="btn primary" id="tResetYes">Yes, clear it</button><button class="btn" id="tResetNo">Cancel</button></div></div>
+      <p class="note" id="paperLinks">Exam on paper? Try the paper-style mock: <a href="papers/paper-mock-1.pdf" target="_blank" rel="noopener">questions (PDF)</a> and, afterwards, <a href="papers/paper-mock-1-answers.pdf" target="_blank" rel="noopener">answers and marking</a>.</p>
       <label class="label" for="tfile" id="tFileLabel">PracticeTest1.hs</label>
       <textarea id="tfile" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
       <div class="actions">
@@ -204,6 +236,7 @@ textarea.work{min-height:90px}
   </section>
 
   <p class="note" id="saveNote">Progress is saved in this browser.</p>
+  <p class="note">Your progress stays on your device. Recallr has no server and never sees it. To use another device, back it up and restore it there.</p>
   
 </div>
 
@@ -500,13 +533,13 @@ let sample = null, db = null, uid = null, saving = false, saveAgain = false;
 
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+// colours code in one pass, so a colour tag is never coloured again
 function hl(src){
-  if (IS_MATHS) return esc(src);
-  return esc(src)
-    .replace(/(&quot;|"[^"\n]*")/g, m => `<span class="st">${m}</span>`)
-    .replace(/\b(where|case|of|if|then|else|let|in|data|type|instance|class|deriving|otherwise)\b/g, '<span class="kw">$1</span>');
+  if (IS_MATHS) return esc(String(src));
+  return String(src).replace(/("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|\b(where|case|of|if|then|else|let|in|data|type|newtype|instance|class|deriving|otherwise|module|import)\b|([^"'a-z]+|[a-z_][\w']*|.)/gs,
+    (m, str, kw) => str ? `<span class="st">${esc(str)}</span>` : kw ? `<span class="kw">${kw}</span>` : esc(m));
 }
-function md(s){ return esc(s).replace(/`([^`]+)`/g, (_,c)=>`<code>${c}</code>`); }
+function md(s){ return esc(s).replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, a, b) => `<code>${a ?? b}</code>`); }
 // generated text: no long dashes as punctuation
 const plain = s => String(s).replace(/\s*[\u2014\u2013]\s*/g, ", ");
 
@@ -536,6 +569,70 @@ function persist(){
   state.updated = Date.now();
   saveLocal();
   if (db && uid) saveRemote();
+  syncPushSoon();
+}
+
+// ---------- sync through the viewer's own GitHub gist (no server) ----------
+const SYNC_STORE = "recallr-sync";
+const GIST_FILE = "recallr-progress.json";
+const GIST_DESC = "Recallr progress (synced between your devices)";
+let syncTimer = null, syncBusy = false, syncAgain = false, remoteAll = null;
+function syncInfo(){ try { const s = JSON.parse(localStorage.getItem(SYNC_STORE) || "null"); return s && s.token ? s : null; } catch(e) { return null; } }
+async function gh(path, info, opts){
+  const res = await fetch("https://api.github.com" + path, Object.assign({ cache: "no-store" }, opts || {}, {
+    headers: Object.assign({ "Authorization": "Bearer " + info.token, "Accept": "application/vnd.github+json" }, (opts && opts.body) ? { "Content-Type": "application/json" } : {})
+  }));
+  if (res.status === 401 || res.status === 403) throw { code: "bad_token" };
+  if (!res.ok) throw { code: "http_" + res.status };
+  return res.json();
+}
+async function findOrMakeGist(info){
+  for (let page = 1; page <= 5; page++) {
+    const list = await gh(`/gists?per_page=100&page=${page}`, info);
+    const g = list.find(x => x.files && x.files[GIST_FILE]);
+    if (g) return g.id;
+    if (list.length < 100) break;
+  }
+  const made = await gh("/gists", info, { method: "POST", body: JSON.stringify({ description: GIST_DESC, public: false, files: { [GIST_FILE]: { content: JSON.stringify({ app: "recallr", modules: {} }) } } }) });
+  return made.id;
+}
+async function syncPull(info){
+  const g = await gh(`/gists/${info.gist}`, info);
+  const f = g.files && g.files[GIST_FILE];
+  let content = f && f.content;
+  if (f && f.truncated && f.raw_url) content = await (await fetch(f.raw_url, { cache: "no-store" })).text();
+  remoteAll = content ? JSON.parse(content) : { app: "recallr", modules: {} };
+  remoteAll.modules = remoteAll.modules || {};
+  if (adopt(remoteAll.modules[MODULE_ID])) refreshAfterAdopt();
+}
+async function syncPush(){
+  const info = syncInfo(); if (!info || !info.gist) return;
+  if (syncBusy) { syncAgain = true; return; }
+  syncBusy = true;
+  try {
+    if (!remoteAll) await syncPull(info);
+    remoteAll.modules[MODULE_ID] = state;
+    await gh(`/gists/${info.gist}`, info, { method: "PATCH", body: JSON.stringify({ files: { [GIST_FILE]: { content: JSON.stringify(remoteAll) } } }) });
+    syncNote(`On. Last synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`);
+  } catch(e) { syncNote(e && e.code === "bad_token" ? "Your GitHub token stopped working (expired or deleted). Make a new one and connect again." : "Couldn't reach GitHub just now. Your progress is safe in this browser and will sync next time."); }
+  syncBusy = false;
+  if (syncAgain) { syncAgain = false; syncPush(); }
+}
+function syncPushSoon(){ if (!syncInfo()) return; clearTimeout(syncTimer); syncTimer = setTimeout(syncPush, 2500); }
+function syncNote(text){ const el = $("syncStatus"); if (el) el.textContent = text; }
+function renderSync(){
+  const info = syncInfo();
+  $("syncForm").hidden = !!info; $("syncConnected").hidden = !info;
+  if (!info) syncNote("Off. Progress stays in this browser only.");
+}
+async function syncStart(){
+  const info = syncInfo(); renderSync(); if (!info) return;
+  syncNote("Syncing…");
+  try {
+    if (!info.gist) { info.gist = await findOrMakeGist(info); try { localStorage.setItem(SYNC_STORE, JSON.stringify(info)); } catch(e) {} }
+    await syncPull(info);
+    await syncPush();
+  } catch(e) { syncNote(e && e.code === "bad_token" ? "GitHub didn't accept that token. Check it has the gist box ticked." : "Couldn't reach GitHub just now. Try Sync now in a moment."); }
 }
 function note(text){ $("saveNote").textContent = text; }
 async function saveRemote(){
@@ -558,7 +655,7 @@ function refreshAfterAdopt(){
 async function connect(){
   try {
     const [d, u] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
-    if (!d || !u) note("Progress saved in this browser. Sign in to Claude to keep it across devices.");
+    if (!d || !u) note(window.claude ? "Progress saved in this browser. Sign in to Claude to keep it across devices." : "Progress saved in this browser. To use another device, back it up below and restore it there.");
     const id = d && u ? await u.id() : null;
     if (d && u && !id) note("Progress saved in this browser. Sign in to Claude to keep it across devices.");
     if (id) {
@@ -749,8 +846,29 @@ Reply with only a JSON array of 5 objects.`;
 }
 $("genBtn").onclick = generate;
 
+// sync controls (the website only: inside Claude, your Claude account already syncs your devices)
+if (window.claude) { $("syncBox").hidden = true; $("paperLinks").hidden = true; }
+if (MODULE_ID !== "functional-programming") $("paperLinks").hidden = true;
+$("syncConnect").onclick = () => {
+  const token = $("syncToken").value.trim(); if (!token) { $("syncToken").focus(); return; }
+  try { localStorage.setItem(SYNC_STORE, JSON.stringify({ token })); } catch(e) {}
+  $("syncToken").value = ""; syncStart();
+};
+$("syncNow").onclick = syncStart;
+$("syncOff").onclick = () => { try { localStorage.removeItem(SYNC_STORE); } catch(e) {} remoteAll = null; renderSync(); };
+// coming back to the tab (say, after practising on your phone) picks up the newest progress
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && syncInfo() && syncInfo().gist) syncPull(syncInfo()).catch(() => {}); });
+
 // ---------- scheduling ----------
 function V(s){ return mode === "twin" && TWINS[s.id] ? Object.assign({}, s, TWINS[s.id], { id: s.id, week: s.week, topic: s.topic }) : s; }
+// The "Write it" box starts with only what the question gives (types, data, helper functions).
+// The function's own type signature is part of the answer, as in the exam.
+function starterOf(s){
+  const lines = s.write.starter.split("\n"), sig = /^([a-z_][\w']*)\s*::/;
+  const given = new Set(lines.filter(l => !sig.test(l) && /^[a-z_]/.test(l)).map(l => l.split(/\s/)[0]));
+  const out = lines.filter(l => { const m = l.match(sig); return !m || given.has(m[1]); }).join("\n").replace(/\n{3,}/g, "\n\n");
+  return out.trim() ? out.replace(/\s*$/, "\n\n") : "";
+}
 function sk(id){ return state.skills[id] || (state.skills[id] = { lvl:3, box:0, due:0, notBefore:0, streak:0, seen:false }); }
 function allSkills(){ return DECK.concat(state.generated || []); }
 function inWeek(s){ return weeksSel.has(Number(s.week)); }
@@ -765,26 +883,28 @@ function pick(){
   const ready = pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.due <= now && x.notBefore <= state.shown; });
   const learning = ready.filter(s => state.skills[s.id].lvl < 3);
   if (learning.length) return learning.sort((a,b)=>state.skills[a.id].due - state.skills[b.id].due)[0];
-  const activeLearning = pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.lvl < 3; }).length;
   const fresh = pool.find(s => !(state.skills[s.id] && state.skills[s.id].seen));
   if (ready.length) return ready.sort((a,b)=>state.skills[a.id].due - state.skills[b.id].due)[0];
-  if (fresh && activeLearning < 4) return fresh;
-  // something is cooling down: wait for it rather than ending the session
+  // new exercises come before repeating ones that are still cooling down
+  if (fresh) return fresh;
   const cooling = pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.due <= now; });
   if (cooling.length) return cooling.sort((a,b)=>state.skills[a.id].notBefore - state.skills[b.id].notBefore)[0];
-  if (fresh) return fresh;
   return null;
 }
 function grade(ok, retried){
   const x = sk(current.s.id);
   lastUndo = { id: current.s.id, prev: JSON.parse(JSON.stringify(x)), today: state.today, todayKey: state.todayKey };
   $("undo").disabled = false;
+  const first = !x.seen;
   x.seen = true;
   const now = Date.now();
   if (ok && retried) {
-    x.due = now; x.notBefore = state.shown + 3;
+    x.due = now; x.notBefore = state.shown + 5;
+  } else if (ok && first && x.lvl === 3) {
+    // written right the very first time: you already know it, so it skips the 10-minute repeat
+    x.box = 2; x.due = now + INTERVALS[1]; x.notBefore = 0;
   } else if (ok) {
-    if (x.lvl < 3) { x.lvl++; x.due = now; x.notBefore = state.shown + 2; }
+    if (x.lvl < 3) { x.lvl++; x.due = now; x.notBefore = state.shown + 3; }
     else { x.box = Math.min(x.box + 1, INTERVALS.length - 1); x.due = now + INTERVALS[x.box - 1 < 0 ? 0 : x.box - 1]; x.notBefore = 0; }
   } else {
     x.lvl = Math.max(1, x.lvl - 1); x.box = 0; x.due = now; x.notBefore = state.shown + 2;
@@ -797,7 +917,20 @@ function grade(ok, retried){
 }
 
 // ---------- rendering ----------
+// each week's tick box shows how many of its exercises you can already write (or solve) from memory
+function renderWeekProgress(){
+  document.querySelectorAll(".tick input[data-week]").forEach(el => {
+    const w = Number(el.dataset.week), list = DECK.filter(s => Number(s.week) === w);
+    if (!list.length) return;
+    const can = list.filter(s => (state.skills[s.id]?.box || 0) >= 1).length;
+    let span = el.parentNode.querySelector(".wp");
+    if (!span) { span = document.createElement("span"); span.className = "wp"; el.parentNode.appendChild(span); }
+    span.textContent = can === list.length ? " ✓ done" : ` ${can}/${list.length}`;
+    span.title = `${can} of ${list.length} ${IS_MATHS ? "solved" : "written"} from memory at least once`;
+  });
+}
 function renderStats(){
+  renderWeekProgress();
   const pool = allSkills().filter(inWeek);
   $("sDue").textContent = dueList().length;
   const key = new Date().toDateString();
@@ -832,7 +965,7 @@ function renderDone(){
   const pool = allSkills().filter(inWeek);
   const next = pool.map(s => state.skills[s.id]).filter(Boolean).map(x=>x.due).sort((a,b)=>a-b)[0];
   const when = next ? new Date(next).toLocaleString(undefined,{weekday:"short",hour:"2-digit",minute:"2-digit"}) : "not scheduled";
-  $("card").innerHTML = `<div class="done"><h2>All caught up</h2><p>Nothing is due in this set right now. Next review: <b>${when}</b>.</p><div class="actions" style="justify-content:center">${sample ? '<button class="btn primary" id="genMore">Generate new questions</button>' : ''}<button class="btn${sample ? '' : ' primary'}" id="anyway">Practise the weakest one anyway</button></div>${sample ? '' : '<p class="note">Want fresh questions? Open "Smart features" below.</p>'}</div>`;
+  $("card").innerHTML = `<div class="done"><h2>All caught up</h2><p>Nothing is due in this set right now. Next review: <b>${when}</b>.</p>${document.querySelector(".tick input[data-week]:not(:checked)") ? '<p>Tick the next week above to carry on with new exercises.</p>' : ''}<div class="actions" style="justify-content:center">${sample ? '<button class="btn primary" id="genMore">Generate new questions</button>' : ''}<button class="btn${sample ? '' : ' primary'}" id="anyway">Practise the weakest one anyway</button></div>${sample ? '' : '<p class="note">Want fresh questions? Open "Smart features" below.</p>'}</div>`;
   if ($("genMore")) $("genMore").onclick = () => { $("aiBox").open = true; generate(); };
   $("anyway").onclick = () => {
     const weakest = pool.slice().sort((a,b)=>(state.skills[a.id]?.box??0)-(state.skills[b.id]?.box??0))[0];
@@ -860,7 +993,7 @@ function renderCard(){
   } else if (lvl === 3) {
     body = `<p class="task">${md(s.write.task)}</p>
       <label class="label" for="code">Your code</label>
-      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off">${esc(s.write.starter)}</textarea>
+      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Write the type signature and the function">${esc(starterOf(s))}</textarea>
       <p class="hint">Write only the function (no <code>main</code> needed). Ctrl+Enter to check.</p>`;
   } else if (lvl === 2) {
     let i = 0;
@@ -898,6 +1031,10 @@ function renderCard(){
   const first = document.querySelector(".blank, #pred, #ans"); if (first) first.focus();
   restoreDraft();
   document.querySelectorAll("#code, .blank, #pred, #work, #ans").forEach(el => el.addEventListener("input", saveDraftSoon));
+  if (!IS_MATHS) {
+    document.querySelectorAll("#code, .blank").forEach(el => el.addEventListener("input", precompileSoon));
+    precompileSoon();
+  }
 }
 // what you've typed on the current card is saved as you type, and comes back if you close the page
 function draftKey(){ return `${current.s.id}:${current.lvl}:${mode}`; }
@@ -910,6 +1047,11 @@ function readInputs(){
 function restoreDraft(){
   const d = state.drafts && state.drafts[draftKey()];
   if (!d) return;
+  const s = V(current.s);
+  if (d.code != null && $("code") && norm(d.code) !== norm(starterOf(s))) {
+    $("res").innerHTML = `<p class="hint">This is what you typed last time, kept for you. <button class="btn" id="startBlank">Start blank</button></p>`;
+    $("startBlank").onclick = () => { $("code").value = starterOf(s); $("res").innerHTML = ""; if (state.drafts) delete state.drafts[draftKey()]; persist(); $("code").focus(); };
+  }
   if (d.code != null && $("code")) $("code").value = d.code;
   if (d.pred != null && $("pred")) $("pred").value = d.pred;
   if (d.work != null && $("work")) $("work").value = d.work;
@@ -1038,6 +1180,197 @@ Reply with only JSON: {"hint": "..."}`;
     retry("That's not the answer. Check each step of your working, or step down by pressing \"I give up\"." + (e && e.code === "bad_key" ? ' <span class="hint">(No hint: your API key was rejected. Check it in "Smart features" below.)</span>' : ""));
   }
 }
+// ---------- running real code ----------
+// The free Wandbox service (wandbox.org) compiles and runs the code with GHC. If it can't be reached
+// (offline, blocked, or inside Claude where the page can't call other sites), the app falls back to
+// the checker or self-marking.
+const RUNNER = "https://wandbox.org/api";
+let runnerOk = null ? null : false, runnerCompiler = null, runnerSlow = false;
+const RUN_LIMIT = 40; // seconds before giving up on the runner for this check
+async function pickCompiler(){
+  if (runnerCompiler) return runnerCompiler;
+  const list = await (await fetch(RUNNER + "/list.json")).json();
+  const ghc = list.filter(c => String(c.language).toLowerCase() === null && /^ghc-\d/.test(c.name))
+    .sort((a, b) => b.version.localeCompare(a.version, undefined, { numeric: true }));
+  if (!ghc.length) throw new Error("no compiler");
+  return (runnerCompiler = ghc[0].name);
+}
+// Wandbox sometimes fails on its own side ("OCI runtime error", "Resource temporarily unavailable").
+// That isn't the student's mistake: retry a couple of times, then say the runner is busy.
+const INFRA = /OCI runtime|crun:|runc:|Resource temporarily unavailable|Cannot allocate memory|fork: |resource exhausted/i;
+async function runCode(source){
+  for (let i = 0; ; i++) {
+    const r = await runOnce(source);
+    if (!r.infra) return r;
+    if (i >= 2) { runnerSlow = true; throw { code: "runner_slow" }; }
+    await new Promise(z => setTimeout(z, 1200 * (i + 1)));
+  }
+}
+async function runOnce(source){
+  if (runnerOk === false) throw { code: "runner_off" };
+  let j;
+  try {
+    const compiler = await pickCompiler();
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), RUN_LIMIT * 1000);
+    let res;
+    try {
+      res = await fetch(RUNNER + "/compile.json", { method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
+        body: JSON.stringify({ compiler, code: source, options: "", save: false }) });
+    } catch(e) { if (e.name === "AbortError") { runnerSlow = true; throw { code: "runner_slow" }; } throw e; }
+    finally { clearTimeout(timer); }
+    // a refusal (too many requests) or a server error is temporary: say "busy", never switch the runner off for it
+    if (!res.ok) { runnerSlow = true; throw { code: "runner_slow" }; }
+    j = await res.json();
+  } catch(e) {
+    if (e && e.code === "runner_slow") throw e;
+    // the site can't be reached at all (offline, or inside Claude where pages can't call other sites):
+    // switch off only if it has never worked in this visit; after that, treat it as a hiccup
+    if (runnerOk !== true) { runnerOk = false; throw { code: "runner_off" }; }
+    runnerSlow = true; throw { code: "runner_slow" };
+  }
+  runnerOk = true;
+  const errText = String(j.compiler_error || "");
+  const progErr = String(j.program_error || "") + String(j.signal || "");
+  if (INFRA.test(errText) || INFRA.test(progErr)) return { infra: true };
+  // a real GHC error always names the file; anything else on the compile side is Wandbox's problem
+  const compileFailed = /error/i.test(errText) && !j.program_output;
+  if (compileFailed && !/prog\.hs/.test(errText)) return { infra: true };
+  return {
+    compiled: !compileFailed,
+    error: cleanGhc(compileFailed ? errText : ""),
+    out: String(j.program_output || "").replace(/\s+$/, "").split("\n"),
+    crash: cleanGhc(String(j.status) !== "0" ? (j.program_error || j.signal || "") : ""),
+  };
+}
+function cleanGhc(s){
+  return String(s).split("\n").filter(l => !/^\[\d+ of \d+\]|^Linking /.test(l)).join("\n").replace(/\/home\/jail\/|prog\.hs:/g, m => m.endsWith(":") ? "line " : "").trim().split("\n").slice(0, 12).join("\n");
+}
+function withContext(code, s){
+  // gap code can leave out type and import lines that the solution declares
+  // (and "Write it" answers can leave out the types the question gives)
+  const defines = l => (l.match(/^(?:type|data|newtype)\s+([A-Z][\w']*)/) || [])[1];
+  const ctx = s.sol.split("\n").filter(l => /^(type|data|newtype|import) /.test(l) && !code.includes(l)
+    && !(defines(l) && new RegExp("^(type|data|newtype)\\s+" + defines(l) + "\\b", "m").test(code)));
+  return (ctx.length ? ctx.join("\n") + "\n" : "") + code;
+}
+function testProgram(code, s){
+  const lines = code.split("\n");
+  const imports = lines.filter(l => /^import /.test(l)), rest = lines.filter(l => !/^import /.test(l) && !/^main\s*(::|=)/.test(l) && !/^\s+print\b/.test(l));
+  return imports.concat(rest).join("\n") + "\n\nmain :: IO ()\nmain = do\n" + s.checks.map(c => `  print (${c[0]})`).join("\n") + "\n";
+}
+// Runs the code against the exercise's checks. Returns {ok, msg} or null when the runner isn't available.
+async function runAgainstChecks(code, s){
+  let r;
+  try { r = await runCode(testProgram(code, s)); } catch(e) { return null; }
+  if (!r.compiled) return { ok: false, msg: `It doesn't compile. GHC says:<pre class="term">${esc(r.error || "compile error")}</pre>` };
+  for (let i = 0; i < s.checks.length; i++) {
+    const got = r.out[i];
+    if (got === undefined) return { ok: false, msg: `It compiles, but <code>${esc(s.checks[i][0])}</code> crashed${r.crash ? `:<pre class="term">${esc(r.crash)}</pre>` : "."}` };
+    if (got !== s.checks[i][1]) return { ok: false, msg: `It compiles, but <code>${esc(s.checks[i][0])}</code> gave <code>${esc(got)}</code> instead of <code>${esc(s.checks[i][1])}</code>.` };
+  }
+  return { ok: true, msg: `Correct: it compiled and passed every test (${s.checks.map(c => `<code>${esc(c[0])}</code>`).join(", ")}).` };
+}
+let runTick = null;
+function running(){
+  setBusy(true); runnerSlow = false; clearInterval(runTick);
+  const t0 = Date.now();
+  $("res").innerHTML = `<div class="result meh"><h3>Running your code… <span id="runSecs">0s</span></h3><p class="hint">Compiling with GHC on Wandbox, a free service. Usually 5 to 20 seconds; it gives up after ${RUN_LIMIT}.</p>
+    <div class="actions"><button class="btn" id="trustMe">I'm sure it's right, move on</button></div></div>`;
+  // don't wait for the compiler: count it as correct straight away (the check keeps going in the background and is ignored)
+  $("trustMe").onclick = () => { clearInterval(runTick); finish(true, "Counted as correct: you marked it yourself without waiting for the compiler.", $("code")?.value ?? null); };
+  runTick = setInterval(() => { const el = $("runSecs"); if (!el) return clearInterval(runTick); el.textContent = Math.round((Date.now() - t0) / 1000) + "s"; }, 1000);
+}
+function slowAgain(){
+  setBusy(false);
+  $("res").innerHTML = `<div class="result meh"><h3>The code runner is busy right now</h3><p class="hint">Wandbox, the free service that compiles the code, didn't give a result (it was slow or had a problem on its side). Your answer is kept; press Check to try again. This doesn't count as an attempt.</p></div>`;
+}
+
+// ---------- making Check feel instant ----------
+// 1) Code that is the model answer apart from spacing and variable names is marked straight away.
+// 2) While you type, the code is compiled in the background, so the result is often ready when you press Check.
+// 3) Results are remembered, so the same code is never compiled twice.
+const PRELUDE = new Set(("map filter foldr foldl foldr1 foldl1 head tail init last null length reverse sum product maximum minimum " +
+  "elem notElem take drop takeWhile dropWhile span break splitAt zip zip3 zipWith unzip lookup concat concatMap and or any all " +
+  "iterate repeat replicate cycle lines words unlines unwords show read fst snd id const flip not otherwise even odd div mod quot rem " +
+  "abs signum negate gcd lcm max min succ pred fromIntegral toInteger realToFrac sqrt pi error undefined print putStrLn return fmap " +
+  "pure mapM_ sequence seq compare where let in case of if then else do maybe either curry uncurry until subtract floor ceiling round truncate").split(" "));
+function hsTokens(src){
+  src = src.replace(/\{-[\s\S]*?-\}/g, " ").replace(/--(?![!#$%&*+./<=>?@\\^|~:]).*$/gm, "");
+  const out = [];
+  for (const line of src.split("\n")) {
+    if (!line.trim()) continue;
+    if (!/^\s/.test(line)) out.push(";;");
+    const re = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])'|[a-z_][\w']*|[A-Z][\w']*|\d+(?:\.\d+)?|[!#$%&*+./<=>?@\\^|~:-]+|[()\[\],;`{}]/g;
+    let m; while ((m = re.exec(line))) out.push(m[0]);
+  }
+  return out;
+}
+function canon(src){
+  const decls = []; let cur = null;
+  for (const tk of hsTokens(src)) { if (tk === ";;") decls.push(cur = []); else { if (!cur) decls.push(cur = []); cur.push(tk); } }
+  const keep = decls.filter(d => d.length && !/^(data|type|newtype|import|module)$/.test(d[0]));
+  const tops = new Set(keep.filter(d => d[1] !== "::").map(d => d[0]));
+  const ren = new Map(), body = [], sigs = {};
+  const name = (map, pre, tk) => { if (!map.has(tk)) map.set(tk, pre + map.size); return map.get(tk); };
+  for (const d of keep) {
+    if (d[1] === "::") { const tv = new Map(); sigs[d[0]] = d.slice(2).map(tk => /^[a-z_]/.test(tk) ? name(tv, "t", tk) : tk).join(" "); continue; }
+    body.push(d.map(tk => /^[a-z_]/.test(tk) && !tops.has(tk) && !PRELUDE.has(tk) ? name(ren, "v", tk) : tk).join(" "));
+  }
+  return { body: body.join(" ;; "), sigs };
+}
+function sameAsModel(code, s){
+  try {
+    const a = canon(code), b = canon(s.sol);
+    if (!a.body || a.body !== b.body) return false;
+    return Object.keys(a.sigs).every(k => a.sigs[k] === b.sigs[k]);
+  } catch(e) { return false; }
+}
+const RUNS_KEY = "recallr-runs2", runCache = new Map();
+function runKey(code, s){ return s.id + "\u0001" + code.replace(/[ \t]+$/gm, "").trim(); }
+try { localStorage.removeItem("recallr-runs"); } catch(e) {}
+function savedRuns(){ try { return JSON.parse(localStorage.getItem(RUNS_KEY) || "{}"); } catch(e) { return {}; } }
+function storeRun(k, r){
+  try { const all = savedRuns(); all[k] = r; const ks = Object.keys(all); ks.slice(0, Math.max(0, ks.length - 300)).forEach(x => delete all[x]);
+    localStorage.setItem(RUNS_KEY, JSON.stringify(all)); } catch(e) {}
+}
+function checkCached(code, s){
+  const k = runKey(code, s);
+  if (runCache.has(k)) return runCache.get(k);
+  const saved = savedRuns()[k];
+  if (saved) return Promise.resolve(saved);
+  const p = runAgainstChecks(code, s).then(r => { if (r) storeRun(k, r); else runCache.delete(k); return r; });
+  runCache.set(k, p);
+  return p;
+}
+function attemptCode(s){
+  if ($("code")) { const c = $("code").value; return (norm(c) === norm(starterOf(s)) || !c.includes("=")) ? null : c; }
+  if (!s.fill || !document.querySelector(".blank")) return null;
+  const vals = s.fill.blanks.map((_, i) => $("b"+i).value);
+  if (vals.some(v => !v.trim())) return null;
+  let f = s.fill.code; vals.forEach(v => f = f.replace("___", v));
+  return withContext(f, s);
+}
+let preTimer = null, bgBusy = false, bgAgain = false;
+function precompileSoon(){
+  clearTimeout(preTimer);
+  preTimer = setTimeout(() => {
+    const s = current && V(current.s);
+    if (!s || s.gen || checked || runnerOk === false) return;
+    const c = attemptCode(s);
+    if (!c || ($("code") && (sameAsModel(c, s) || missingSigs(c, s).length))) return;
+    if (bgBusy) { bgAgain = true; return; }
+    bgBusy = true;
+    checkCached($("code") ? withContext(c, s) : c, s).catch(() => {}).finally(() => { bgBusy = false; if (bgAgain) { bgAgain = false; precompileSoon(); } });
+  }, 1500);
+}
+// functions whose type signature the model answer has, the question doesn't give, and the student left out
+function missingSigs(code, s){
+  const sigs = src => [...src.matchAll(/^([a-z_][\w']*)\s*::/gm)].map(m => m[1]);
+  const given = new Set(sigs(starterOf(s))), have = new Set(sigs(code));
+  return sigs(s.sol).filter(n => !given.has(n) && !have.has(n) && new RegExp("^" + n + "\\b", "m").test(code));
+}
+function instantMsg(s){ return `Correct: it's the model answer, which passes every test (${s.checks.map(c => esc(c[0])).join(", ")}).`; }
+
 async function check(){
   if (checked || busy) return;
   if (IS_MATHS) return checkMaths();
@@ -1053,12 +1386,33 @@ async function check(){
     if (vals.some(v => !v.trim())) return document.querySelector(".blank:placeholder-shown, .blank")?.focus();
     const exact = s.fill.blanks.every((acc, i) => acc.map(norm).includes(norm(vals[i])));
     if (exact) return finish(true, "Right.", null);
-    if (!sample) return retry("That doesn't match the expected answer. Check spelling and brackets.");
     let filled = s.fill.code; vals.forEach(v => filled = filled.replace("___", v));
+    if (runnerOk !== false) {
+      running();
+      const card = current;
+      const r = await checkCached(withContext(filled, s), s);
+      if (checked || current !== card) return;
+      if (!r && runnerSlow) return slowAgain();
+      if (r) return r.ok ? finish(true, "Right: a different answer, but it compiles and passes every test.", null, current.tries > 0) : (setBusy(false), retry(r.msg));
+      setBusy(false); $("res").innerHTML = "";
+    }
+    if (!sample) return retry("That doesn't match the expected answer. Check spelling and brackets.");
     return aiGrade(filled, true);
   }
   const code = $("code").value;
-  if (norm(code) === norm(s.write.starter)) return $("code").focus();
+  if (norm(code) === norm(starterOf(s))) return $("code").focus();
+  const noSig = missingSigs(code, s);
+  if (noSig.length) return retry(`Your function itself may be fine, but the type signature is missing: write the line <code>${esc(noSig[0])} :: ...</code> above it. The signature is part of the answer, and in the test it's what the marker checks first.`);
+  if (!s.gen && sameAsModel(code, s)) return finish(true, instantMsg(s), code, current.tries > 0);
+  if (runnerOk !== false && !s.gen) {
+    running();
+    const card = current;
+    const r = await checkCached(withContext(code, s), s);
+    if (checked || current !== card) return;
+    if (!r && runnerSlow) return slowAgain();
+    if (r) return r.ok ? finish(true, r.msg, code, current.tries > 0) : (setBusy(false), retry(r.msg));
+    setBusy(false); $("res").innerHTML = "";
+  }
   if (!sample) return selfGrade();
   return aiGrade(code, false);
 }
@@ -1116,9 +1470,9 @@ function selfGrade(){
   setBusy(true);
   $("res").innerHTML = `<div class="result meh"><h3>Compare with this</h3>
     <pre class="code">${hl(s.sol)}</pre>
-    <p class="hint">Test yours on jdoodle with the copy button, or compare line by line. Be honest: it only helps you.</p>
+    <p class="hint">The code runner isn't reachable right now, so compare yours line by line (or copy it into ghci). Be honest: it only helps you.</p>
     <div class="actions">
-      <button class="btn" id="copyRun">Copy mine for jdoodle</button>
+      <button class="btn" id="copyRun">Copy mine with tests</button>
       <button class="btn primary" id="selfYes">Mine works</button>
       <button class="btn" id="selfNo">Mine doesn't</button>
     </div></div>`;
@@ -1158,7 +1512,9 @@ function finish(ok, msg, attempt, retried){
     <h3>${ok ? "✓ Correct" : "✗ Not yet"}</h3>
     <p>${msg}</p>
     <p class="hint">${next}</p>
-    <div class="label">Answer</div>
+    ${!IS_MATHS && ok && attempt && norm(attempt) !== norm(s.sol) ? `<div class="label">Your code</div>
+    <pre class="code">${hl(attempt.trim())}</pre>
+    <div class="label">Model answer${sameAsModel(attempt, s) ? "" : " (yours is different, and both work)"}</div>` : `<div class="label">Answer</div>`}
     <pre class="code">${hl(s.sol)}</pre>
     <p>${md(s.explain)}</p>
     <div class="ai" id="aiExplain" hidden></div>
@@ -1208,6 +1564,7 @@ document.querySelectorAll(".chip.mode").forEach(c => c.onclick = () => {
   if (current && !checked) renderCard();
 });
 // ---------- mock test ----------
+let lastRun = null;
 let view = "practice", T = TESTS[0] || null, tickTimer = null, saveTimer = null, tBusy = false;
 function ts(){ state.tests = state.tests || {}; return state.tests[T.id] || (state.tests[T.id] = { file: T.template, start: 0, result: null }); }
 function setView(v){
@@ -1287,7 +1644,19 @@ async function runChecks(){
   if (tBusy) return;
   const file = $("tfile").value, und = undoneLocally(file);
   if (T.questions.every(q => und[q.id])) return termLines("Ok, one module loaded.", T.questions.map(q => `${q.id} ${q.fn}: <span class="no">not done yet (or crashed)</span>`));
-  if (!sample) return termLines("(Run checks needs Recallr inside Claude.)", ["Use \"Copy file for vLab or laptop\", then in a terminal:", "  ghci " + esc(T.file), "  checks"]);
+  if (runnerOk !== false) {
+    tBusy = true; $("tRun").disabled = true; termLines("Compiling…", []);
+    let r = null;
+    try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {}
+    tBusy = false; $("tRun").disabled = false;
+    if (!r && runnerSlow) return termLines(`(Wandbox, the code runner, is busy or slow right now. Press Run checks to try again.)`, []);
+    if (r) {
+      if (!r.compiled) return termLines(`<span class="no">${esc(r.error || "compile error")}</span>\nFailed, no modules loaded.`, []);
+      lastRun = r.out;
+      return termLines("Ok, one module loaded.", r.out.filter(Boolean).map(l => esc(l).replace(/: (ok)$/, ': <span class="ok">$1</span>').replace(/: (FAILED|not done yet \(or crashed\))$/, ': <span class="no">$1</span>')));
+    }
+  }
+  if (!sample) return termLines("(The code runner isn't reachable right now.)", ["Use \"Copy file for vLab or laptop\", then in a terminal:", "  ghci " + esc(T.file), "  checks"]);
   tBusy = true; $("tRun").disabled = true;
   termLines("Compiling…", []);
   try {
@@ -1309,7 +1678,19 @@ async function submitTest(){
   $("tSubmitConfirm").hidden = true;
   const file = $("tfile").value, und = undoneLocally(file), s = ts();
   s.file = file;
-  if (!sample) { s.result = { self: true, at: Date.now() }; persist(); return renderMark(); }
+  if (!sample) {
+    let r = null;
+    if (runnerOk !== false) { try { r = await runCode(fullFile(file).replace(/^module [^\n]*where\s*$/m, "module Main where") + "\nmain :: IO ()\nmain = checks\n"); } catch(e) {} }
+    if (r) {
+      const items = T.questions.map(q => {
+        const line = r.out.find(l => l.startsWith(q.id + " ")) || "";
+        const ok = r.compiled && /: ok$/.test(line);
+        return { id: q.id, fn: q.fn, marks: q.marks, awarded: ok ? q.marks : 0, feedback: !r.compiled ? "The file doesn't compile." : und[q.id] ? "Not attempted." : ok ? "Passes the tests." : "Doesn't pass the tests yet." };
+      });
+      s.result = { compiles: r.compiled, error: r.error, items, at: Date.now(), byTests: true };
+    } else s.result = { self: true, at: Date.now() };
+    persist(); return renderMark();
+  }
   tBusy = true; $("tSubmit").disabled = true; $("tRun").disabled = true;
   $("tMark").innerHTML = `<div class="result meh"><h3>Marking…</h3><p class="hint">This takes up to a minute.</p></div>`;
   try {
@@ -1349,7 +1730,7 @@ function renderMark(){
       <h3>${got} / ${total} (${pct}%, ${band})</h3>
       ${r.compiles ? "" : `<p><b>Your file doesn't compile</b>, so on the real test it would score 0. Fix this first: <code>${esc(r.error || "compile error")}</code>. The marks below are what each part would get once it compiles.</p>`}
       <div class="tablewrap"><table class="marks"><thead><tr><th>Part</th><th>Mark</th><th>Feedback</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <p class="hint">Marked by Recallr's checker, which can make mistakes.</p>
+      <p class="hint">${r.byTests ? "Marked by running your file with GHC against the tests: full marks for a part that passes, none otherwise. Real markers may also give partial credit." : "Marked by Recallr's checker, which can make mistakes."}</p>
       ${answers}</div>`;
   }
   $("tShowSol").onclick = () => { const el = $("tSol"); el.hidden = !el.hidden; $("tShowSol").textContent = el.hidden ? "Show model answers" : "Hide model answers"; };
@@ -1374,6 +1755,14 @@ if (T) {
 document.querySelectorAll(".chip.view").forEach(c => c.onclick = () => setView(c.dataset.view));
 // a module without mock tests (such as a maths module) has only the practice view
 if (!T) document.querySelectorAll(".chip.view").forEach(c => { c.closest(".chips").hidden = true; });
+function themeLabel(){ $("themeBtn").textContent = document.documentElement.getAttribute("data-theme") === "light" ? "Dark mode" : "Light mode"; }
+$("themeBtn").onclick = () => {
+  const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("recallr-theme", next); } catch(e) {}
+  themeLabel();
+};
+themeLabel();
 
 $("undo").onclick = () => {
   if (!lastUndo) return;
@@ -1382,6 +1771,39 @@ $("undo").onclick = () => {
   persist();
   const s = allSkills().find(d => d.id === id);
   current = { s, lvl: sk(id).lvl }; checked = false; renderCard(); renderStats();
+};
+// Moving progress to another device or browser, with no server: save a backup file, open it on the other one.
+$("backup").onclick = async () => {
+  const text = JSON.stringify({ app: "recallr", module: MODULE_ID, saved: new Date().toISOString(), state });
+  const name = `recallr-${MODULE_ID}-${new Date().toISOString().slice(0,10)}.json`;
+  const dl = await (window.claude?.use?.("downloads") ?? null);
+  if (dl) {
+    try { await dl.save({ filename: name, data: text }); $("backupNote").textContent = `Saved ${name}. On your other device, open Recallr and press "Restore from a backup".`; }
+    catch(e) { $("backupNote").textContent = "The backup wasn't saved."; }
+    return;
+  }
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    $("backupNote").textContent = `Saved ${name}. On your other device, open Recallr and press "Restore from a backup".`;
+  } catch(e) {
+    try { navigator.clipboard.writeText(text).then(() => { $("backupNote").textContent = "Copied your progress. Paste it into a file ending in .json to keep it."; }); } catch(e2) {}
+  }
+};
+$("restoreBtn").onclick = () => $("restoreFile").click();
+$("restoreFile").onchange = async () => {
+  const f = $("restoreFile").files[0]; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    const s = data && data.app === "recallr" ? data.state : null;
+    if (!s || !s.skills) throw new Error("not a Recallr backup");
+    if (data.module && data.module !== MODULE_ID) throw new Error("that backup is for another module");
+    state = Object.assign({ skills:{}, shown:0, todayKey:"", today:0, updated:0, tests:{} }, s);
+    persist(); refreshAfterAdopt();
+    $("backupNote").textContent = `Restored your progress from ${f.name}.`;
+  } catch(e) { $("backupNote").textContent = `Couldn't restore: ${e.message}.`; }
+  $("restoreFile").value = "";
 };
 $("reset").onclick = () => { $("resetConfirm").hidden = false; $("resetYes").focus(); };
 $("resetNo").onclick = () => { $("resetConfirm").hidden = true; };
@@ -1413,6 +1835,7 @@ if (window.claude?.hot?.ready) window.claude.hot.ready(data => { if (adopt(data 
 window.addEventListener("pagehide", saveLocal);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveLocal(); });
 connect();
+if (!window.claude) syncStart();
 </script>
 
 </body></html>
