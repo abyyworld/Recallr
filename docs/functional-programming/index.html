@@ -806,7 +806,10 @@ let runTick = null;
 function running(){
   setBusy(true); runnerSlow = false; clearInterval(runTick);
   const t0 = Date.now();
-  $("res").innerHTML = `<div class="result meh"><h3>Running your code… <span id="runSecs">0s</span></h3><p class="hint">Compiling with GHC on Wandbox, a free service. Usually 5 to 20 seconds; it gives up after ${RUN_LIMIT}.</p></div>`;
+  $("res").innerHTML = `<div class="result meh"><h3>Running your code… <span id="runSecs">0s</span></h3><p class="hint">Compiling with GHC on Wandbox, a free service. Usually 5 to 20 seconds; it gives up after ${RUN_LIMIT}.</p>
+    <div class="actions"><button class="btn" id="trustMe">I'm sure it's right, move on</button></div></div>`;
+  // don't wait for the compiler: count it as correct straight away (the check keeps going in the background and is ignored)
+  $("trustMe").onclick = () => { clearInterval(runTick); finish(true, "Counted as correct: you marked it yourself without waiting for the compiler.", $("code")?.value ?? null); };
   runTick = setInterval(() => { const el = $("runSecs"); if (!el) return clearInterval(runTick); el.textContent = Math.round((Date.now() - t0) / 1000) + "s"; }, 1000);
 }
 function slowAgain(){
@@ -914,7 +917,9 @@ async function check(){
     let filled = s.fill.code; vals.forEach(v => filled = filled.replace("___", v));
     if (runnerOk !== false) {
       running();
+      const card = current;
       const r = await checkCached(withContext(filled, s), s);
+      if (checked || current !== card) return;
       if (!r && runnerSlow) return slowAgain();
       if (r) return r.ok ? finish(true, "Right: a different answer, but it compiles and passes every test.", null, current.tries > 0) : (setBusy(false), retry(r.msg));
       setBusy(false); $("res").innerHTML = "";
@@ -929,7 +934,9 @@ async function check(){
   if (!s.gen && sameAsModel(code, s)) return finish(true, instantMsg(s), code, current.tries > 0);
   if (runnerOk !== false && !s.gen) {
     running();
+    const card = current;
     const r = await checkCached(withContext(code, s), s);
+    if (checked || current !== card) return;
     if (!r && runnerSlow) return slowAgain();
     if (r) return r.ok ? finish(true, r.msg, code, current.tries > 0) : (setBusy(false), retry(r.msg));
     setBusy(false); $("res").innerHTML = "";
