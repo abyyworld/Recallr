@@ -642,6 +642,8 @@ function renderCard(){
   const first = document.querySelector(".blank, #pred"); if (first) first.focus();
   restoreDraft();
   document.querySelectorAll("#code, .blank, #pred").forEach(el => el.addEventListener("input", saveDraftSoon));
+  document.querySelectorAll("#code, .blank").forEach(el => el.addEventListener("input", precompileSoon));
+  precompileSoon();
 }
 // what you've typed on the current card is saved as you type, and comes back if you close the page
 function draftKey(){ return `${current.s.id}:${current.lvl}:${mode}`; }
@@ -760,6 +762,82 @@ function slowAgain(){
   $("res").innerHTML = `<div class="result meh"><h3>The code runner is slow right now</h3><p class="hint">Wandbox didn't answer within ${RUN_LIMIT} seconds. Your answer is kept; press Check to try again. This doesn't count as an attempt.</p></div>`;
 }
 
+// ---------- making Check feel instant ----------
+// 1) Code that is the model answer apart from spacing and variable names is marked straight away.
+// 2) While you type, the code is compiled in the background, so the result is often ready when you press Check.
+// 3) Results are remembered, so the same code is never compiled twice.
+const PRELUDE = new Set(("map filter foldr foldl foldr1 foldl1 head tail init last null length reverse sum product maximum minimum " +
+  "elem notElem take drop takeWhile dropWhile span break splitAt zip zip3 zipWith unzip lookup concat concatMap and or any all " +
+  "iterate repeat replicate cycle lines words unlines unwords show read fst snd id const flip not otherwise even odd div mod quot rem " +
+  "abs signum negate gcd lcm max min succ pred fromIntegral toInteger realToFrac sqrt pi error undefined print putStrLn return fmap " +
+  "pure mapM_ sequence seq compare where let in case of if then else do maybe either curry uncurry until subtract floor ceiling round truncate").split(" "));
+function hsTokens(src){
+  src = src.replace(/\{-[\s\S]*?-\}/g, " ").replace(/--(?![!#$%&*+./<=>?@\\^|~:]).*$/gm, "");
+  const out = [];
+  for (const line of src.split("\n")) {
+    if (!line.trim()) continue;
+    if (!/^\s/.test(line)) out.push(";;");
+    const re = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])'|[a-z_][\w']*|[A-Z][\w']*|\d+(?:\.\d+)?|[!#$%&*+./<=>?@\\^|~:-]+|[()\[\],;`{}]/g;
+    let m; while ((m = re.exec(line))) out.push(m[0]);
+  }
+  return out;
+}
+function canon(src){
+  const decls = []; let cur = null;
+  for (const tk of hsTokens(src)) { if (tk === ";;") decls.push(cur = []); else { if (!cur) decls.push(cur = []); cur.push(tk); } }
+  const keep = decls.filter(d => d.length && !/^(data|type|newtype|import|module)$/.test(d[0]));
+  const tops = new Set(keep.filter(d => d[1] !== "::").map(d => d[0]));
+  const ren = new Map(), body = [], sigs = {};
+  const name = (map, pre, tk) => { if (!map.has(tk)) map.set(tk, pre + map.size); return map.get(tk); };
+  for (const d of keep) {
+    if (d[1] === "::") { const tv = new Map(); sigs[d[0]] = d.slice(2).map(tk => /^[a-z_]/.test(tk) ? name(tv, "t", tk) : tk).join(" "); continue; }
+    body.push(d.map(tk => /^[a-z_]/.test(tk) && !tops.has(tk) && !PRELUDE.has(tk) ? name(ren, "v", tk) : tk).join(" "));
+  }
+  return { body: body.join(" ;; "), sigs };
+}
+function sameAsModel(code, s){
+  try {
+    const a = canon(code), b = canon(s.sol);
+    if (!a.body || a.body !== b.body) return false;
+    return Object.keys(a.sigs).every(k => a.sigs[k] === b.sigs[k]);
+  } catch(e) { return false; }
+}
+const RUNS_KEY = "recallr-runs", runCache = new Map();
+function runKey(code, s){ return s.id + "\u0001" + code.replace(/[ \t]+$/gm, "").trim(); }
+function savedRuns(){ try { return JSON.parse(localStorage.getItem(RUNS_KEY) || "{}"); } catch(e) { return {}; } }
+function storeRun(k, r){
+  try { const all = savedRuns(); all[k] = r; const ks = Object.keys(all); ks.slice(0, Math.max(0, ks.length - 300)).forEach(x => delete all[x]);
+    localStorage.setItem(RUNS_KEY, JSON.stringify(all)); } catch(e) {}
+}
+function checkCached(code, s){
+  const k = runKey(code, s);
+  if (runCache.has(k)) return runCache.get(k);
+  const saved = savedRuns()[k];
+  if (saved) return Promise.resolve(saved);
+  const p = runAgainstChecks(code, s).then(r => { if (r) storeRun(k, r); else runCache.delete(k); return r; });
+  runCache.set(k, p);
+  return p;
+}
+function attemptCode(s){
+  if ($("code")) { const c = $("code").value; return (norm(c) === norm(s.write.starter) || !c.includes("=")) ? null : c; }
+  if (!s.fill || !document.querySelector(".blank")) return null;
+  const vals = s.fill.blanks.map((_, i) => $("b"+i).value);
+  if (vals.some(v => !v.trim())) return null;
+  let f = s.fill.code; vals.forEach(v => f = f.replace("___", v));
+  return withContext(f, s);
+}
+let preTimer = null;
+function precompileSoon(){
+  clearTimeout(preTimer);
+  preTimer = setTimeout(() => {
+    const s = current && V(current.s);
+    if (!s || s.gen || checked || runnerOk === false) return;
+    const c = attemptCode(s);
+    if (c && !($("code") && sameAsModel(c, s))) checkCached(c, s).catch(() => {});
+  }, 1200);
+}
+function instantMsg(s){ return `Correct: it's the model answer, which passes every test (${s.checks.map(c => esc(c[0])).join(", ")}).`; }
+
 async function check(){
   if (checked) return;
   const { lvl } = current; const s = V(current.s);
@@ -777,7 +855,7 @@ async function check(){
     let filled = s.fill.code; vals.forEach(v => filled = filled.replace("___", v));
     if (runnerOk !== false) {
       running();
-      const r = await runAgainstChecks(withContext(filled, s), s);
+      const r = await checkCached(withContext(filled, s), s);
       if (!r && runnerSlow) return slowAgain();
       if (r) return r.ok ? finish(true, "Right: a different answer, but it compiles and passes every test.", null, current.tries > 0) : (setBusy(false), retry(r.msg));
       setBusy(false); $("res").innerHTML = "";
@@ -787,9 +865,10 @@ async function check(){
   }
   const code = $("code").value;
   if (norm(code) === norm(s.write.starter)) return $("code").focus();
+  if (!s.gen && sameAsModel(code, s)) return finish(true, instantMsg(s), code, current.tries > 0);
   if (runnerOk !== false && !s.gen) {
     running();
-    const r = await runAgainstChecks(code, s);
+    const r = await checkCached(code, s);
     if (!r && runnerSlow) return slowAgain();
     if (r) return r.ok ? finish(true, r.msg, code, current.tries > 0) : (setBusy(false), retry(r.msg));
     setBusy(false); $("res").innerHTML = "";
