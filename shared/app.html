@@ -142,6 +142,26 @@ __WEEK_CHIPS__
     <div class="skills" id="skills"></div>
   </details>
 
+  <details class="settings" id="syncBox">
+    <summary>Sync between your phone and laptop</summary>
+    <p class="note" id="syncStatus">Off. Progress stays in this browser only.</p>
+    <div id="syncForm">
+      <p class="note">Recallr has no server, so it syncs through your own GitHub account: your progress is kept in a private gist (a hidden file only you can see), and every device you connect reads and writes it.</p>
+      <ol class="note">
+        <li><a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=Recallr%20sync" target="_blank" rel="noopener">Create a GitHub token</a> with only the <b>gist</b> box ticked, set "Expiration" to what you like, and copy it.</li>
+        <li>Paste it here and press Connect. Do the same on your other device with the same token.</li>
+      </ol>
+      <div class="row">
+        <input id="syncToken" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_..." aria-label="GitHub token">
+        <button class="btn primary" id="syncConnect">Connect</button>
+      </div>
+    </div>
+    <div class="row" id="syncConnected" hidden>
+      <button class="btn" id="syncNow">Sync now</button>
+      <button class="btn" id="syncOff">Disconnect this device</button>
+    </div>
+  </details>
+
   <details class="settings" id="aiBox">
     <summary>Smart features: marking, explanations, new questions</summary>
     <p class="note" id="aiStatus">Checking what's available…</p>
@@ -265,6 +285,70 @@ function persist(){
   state.updated = Date.now();
   saveLocal();
   if (db && uid) saveRemote();
+  syncPushSoon();
+}
+
+// ---------- sync through the viewer's own GitHub gist (no server) ----------
+const SYNC_STORE = "recallr-sync";
+const GIST_FILE = "recallr-progress.json";
+const GIST_DESC = "Recallr progress (synced between your devices)";
+let syncTimer = null, syncBusy = false, syncAgain = false, remoteAll = null;
+function syncInfo(){ try { const s = JSON.parse(localStorage.getItem(SYNC_STORE) || "null"); return s && s.token ? s : null; } catch(e) { return null; } }
+async function gh(path, info, opts){
+  const res = await fetch("https://api.github.com" + path, Object.assign({ cache: "no-store" }, opts || {}, {
+    headers: Object.assign({ "Authorization": "Bearer " + info.token, "Accept": "application/vnd.github+json" }, (opts && opts.body) ? { "Content-Type": "application/json" } : {})
+  }));
+  if (res.status === 401 || res.status === 403) throw { code: "bad_token" };
+  if (!res.ok) throw { code: "http_" + res.status };
+  return res.json();
+}
+async function findOrMakeGist(info){
+  for (let page = 1; page <= 5; page++) {
+    const list = await gh(`/gists?per_page=100&page=${page}`, info);
+    const g = list.find(x => x.files && x.files[GIST_FILE]);
+    if (g) return g.id;
+    if (list.length < 100) break;
+  }
+  const made = await gh("/gists", info, { method: "POST", body: JSON.stringify({ description: GIST_DESC, public: false, files: { [GIST_FILE]: { content: JSON.stringify({ app: "recallr", modules: {} }) } } }) });
+  return made.id;
+}
+async function syncPull(info){
+  const g = await gh(`/gists/${info.gist}`, info);
+  const f = g.files && g.files[GIST_FILE];
+  let content = f && f.content;
+  if (f && f.truncated && f.raw_url) content = await (await fetch(f.raw_url, { cache: "no-store" })).text();
+  remoteAll = content ? JSON.parse(content) : { app: "recallr", modules: {} };
+  remoteAll.modules = remoteAll.modules || {};
+  if (adopt(remoteAll.modules[MODULE_ID])) refreshAfterAdopt();
+}
+async function syncPush(){
+  const info = syncInfo(); if (!info || !info.gist) return;
+  if (syncBusy) { syncAgain = true; return; }
+  syncBusy = true;
+  try {
+    if (!remoteAll) await syncPull(info);
+    remoteAll.modules[MODULE_ID] = state;
+    await gh(`/gists/${info.gist}`, info, { method: "PATCH", body: JSON.stringify({ files: { [GIST_FILE]: { content: JSON.stringify(remoteAll) } } }) });
+    syncNote(`On. Last synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`);
+  } catch(e) { syncNote(e && e.code === "bad_token" ? "Your GitHub token stopped working (expired or deleted). Make a new one and connect again." : "Couldn't reach GitHub just now. Your progress is safe in this browser and will sync next time."); }
+  syncBusy = false;
+  if (syncAgain) { syncAgain = false; syncPush(); }
+}
+function syncPushSoon(){ if (!syncInfo()) return; clearTimeout(syncTimer); syncTimer = setTimeout(syncPush, 2500); }
+function syncNote(text){ const el = $("syncStatus"); if (el) el.textContent = text; }
+function renderSync(){
+  const info = syncInfo();
+  $("syncForm").hidden = !!info; $("syncConnected").hidden = !info;
+  if (!info) syncNote("Off. Progress stays in this browser only.");
+}
+async function syncStart(){
+  const info = syncInfo(); renderSync(); if (!info) return;
+  syncNote("Syncing…");
+  try {
+    if (!info.gist) { info.gist = await findOrMakeGist(info); try { localStorage.setItem(SYNC_STORE, JSON.stringify(info)); } catch(e) {} }
+    await syncPull(info);
+    await syncPush();
+  } catch(e) { syncNote(e && e.code === "bad_token" ? "GitHub didn't accept that token. Check it has the gist box ticked." : "Couldn't reach GitHub just now. Try Sync now in a moment."); }
 }
 function note(text){ $("saveNote").textContent = text; }
 async function saveRemote(){
@@ -408,6 +492,18 @@ Reply with only a JSON array of 5 objects.`;
   $("genBtn").disabled = !sample;
 }
 $("genBtn").onclick = generate;
+
+// sync controls (the website only: inside Claude, your Claude account already syncs your devices)
+if (window.claude) { $("syncBox").hidden = true; }
+$("syncConnect").onclick = () => {
+  const token = $("syncToken").value.trim(); if (!token) { $("syncToken").focus(); return; }
+  try { localStorage.setItem(SYNC_STORE, JSON.stringify({ token })); } catch(e) {}
+  $("syncToken").value = ""; syncStart();
+};
+$("syncNow").onclick = syncStart;
+$("syncOff").onclick = () => { try { localStorage.removeItem(SYNC_STORE); } catch(e) {} remoteAll = null; renderSync(); };
+// coming back to the tab (say, after practising on your phone) picks up the newest progress
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && syncInfo() && syncInfo().gist) syncPull(syncInfo()).catch(() => {}); });
 
 // ---------- scheduling ----------
 function V(s){ return mode === "twin" && TWINS[s.id] ? Object.assign({}, s, TWINS[s.id], { id: s.id, week: s.week, topic: s.topic }) : s; }
@@ -983,4 +1079,5 @@ if (window.claude?.hot?.ready) window.claude.hot.ready(data => { if (adopt(data 
 window.addEventListener("pagehide", saveLocal);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveLocal(); });
 connect();
+if (!window.claude) syncStart();
 </script>
