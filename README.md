@@ -32,9 +32,9 @@ Each exercise has a **course** version (labelled with where the idea comes from)
 
 | Module | Language | Covers |
 |---|---|---|
-| [Functional Programming](https://abyyworld.github.io/Recallr/functional-programming/) | Haskell | weeks 1-5: types, guards, pattern matching, recursion, higher-order functions, type classes, list comprehensions, Maybe and Either, binary trees, search trees, sorting, rose trees, expression trees |
-| [Artificial Intelligence 2](https://abyyworld.github.io/Recallr/artificial-intelligence-2/) | Maths | weeks 1-5: probability, maximum likelihood, logistic regression, naive Bayes, information theory, decision trees, confidence bounds, MAP estimation, Bayesian networks |
-| [Databases and Web Programming](https://abyyworld.github.io/Recallr/databases-and-web-programming/) | SQL, Cypher, JPA, JPQL, JDL | weeks 1-5: ER modelling in JDL, constraints and CRUD, normalisation, advanced SQL, joins, JPA and JPQL, Neo4j and Cypher |
+| [Functional Programming](https://abyyworld.github.io/Recallr/docs/functional-programming/) | Haskell | weeks 1-5: types, guards, pattern matching, recursion, higher-order functions, type classes, list comprehensions, Maybe and Either, binary trees, search trees, sorting, rose trees, expression trees |
+| [Artificial Intelligence 2](https://abyyworld.github.io/Recallr/docs/artificial-intelligence-2/) | Maths | weeks 1-5: probability, maximum likelihood, logistic regression, naive Bayes, information theory, decision trees, confidence bounds, MAP estimation, Bayesian networks |
+| [Databases and Web Programming](https://abyyworld.github.io/Recallr/docs/databases-and-web-programming/) | SQL, Cypher, JPA, JPQL, JDL | weeks 1-5: ER modelling in JDL, constraints and CRUD, normalisation, advanced SQL, joins, JPA and JPQL, Neo4j and Cypher |
 
 Pages are built into [`docs/`](docs) so they can be served with GitHub Pages.
 
