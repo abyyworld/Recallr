@@ -167,7 +167,11 @@ __WEEK_CHIPS__
   <div class="actions">
     <button class="btn" id="undo" disabled>Undo last mark</button>
     <button class="btn" id="reset">Reset all progress</button>
+    <button class="btn" id="backup">Back up progress</button>
+    <button class="btn" id="restoreBtn">Restore from a backup</button>
+    <input type="file" id="restoreFile" accept=".json,application/json" hidden>
   </div>
+  <p class="note" id="backupNote"></p>
   <div id="resetConfirm" hidden class="result bad"><p>Reset every skill back to new? This can't be undone.</p><div class="actions"><button class="btn primary" id="resetYes">Yes, reset</button><button class="btn" id="resetNo">Cancel</button></div></div>
   </div>
 
@@ -201,6 +205,7 @@ __WEEK_CHIPS__
   </section>
 
   <p class="note" id="saveNote">Progress is saved in this browser.</p>
+  <p class="note">Your progress stays on your device. Recallr has no server and never sees it. To use another device, back it up and restore it there.</p>
   __SUPPORT__
 </div>
 
@@ -913,6 +918,33 @@ $("undo").onclick = () => {
   persist();
   const s = allSkills().find(d => d.id === id);
   current = { s, lvl: sk(id).lvl }; checked = false; renderCard(); renderStats();
+};
+// Moving progress to another device or browser, with no server: save a backup file, open it on the other one.
+$("backup").onclick = () => {
+  const text = JSON.stringify({ app: "recallr", module: MODULE_ID, saved: new Date().toISOString(), state });
+  const name = `recallr-${MODULE_ID}-${new Date().toISOString().slice(0,10)}.json`;
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    $("backupNote").textContent = `Saved ${name}. On your other device, open Recallr and press "Restore from a backup".`;
+  } catch(e) {
+    try { navigator.clipboard.writeText(text).then(() => { $("backupNote").textContent = "Copied your progress. Paste it into a file ending in .json to keep it."; }); } catch(e2) {}
+  }
+};
+$("restoreBtn").onclick = () => $("restoreFile").click();
+$("restoreFile").onchange = async () => {
+  const f = $("restoreFile").files[0]; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    const s = data && data.app === "recallr" ? data.state : null;
+    if (!s || !s.skills) throw new Error("not a Recallr backup");
+    if (data.module && data.module !== MODULE_ID) throw new Error("that backup is for another module");
+    state = Object.assign({ skills:{}, shown:0, todayKey:"", today:0, updated:0, tests:{} }, s);
+    persist(); refreshAfterAdopt();
+    $("backupNote").textContent = `Restored your progress from ${f.name}.`;
+  } catch(e) { $("backupNote").textContent = `Couldn't restore: ${e.message}.`; }
+  $("restoreFile").value = "";
 };
 $("reset").onclick = () => { $("resetConfirm").hidden = false; $("resetYes").focus(); };
 $("resetNo").onclick = () => { $("resetConfirm").hidden = true; };

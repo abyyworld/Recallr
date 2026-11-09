@@ -51,6 +51,7 @@ Marking and progress:
 
 - Inside a Claude artifact, smart features use the viewer's Claude account and progress is also saved to their account.
 - On GitHub Pages or a local file, smart features need the viewer's own Anthropic API key (loaded through the official `@anthropic-ai/sdk`, pinned to 1.2.0); without one, the page falls back to self-marking with a "copy for jdoodle" button. Progress is saved in the browser.
+- Progress stays on the viewer's device (browser storage, plus their account inside Claude). There is no server. "Back up progress" saves a file and "Restore from a backup" loads it on another device.
 - Progress is never lost to an update: storage names don't change between versions, older names are read once and carried over, and the newest copy always wins.
 - `shared/pwa/`: the app manifest, icons and service worker that make the site installable. The service worker fetches from the network first, so updates show up straight away.
 
