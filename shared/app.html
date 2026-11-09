@@ -77,6 +77,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .done h2{font-size:26px}
 .note{font-size:13px;color:var(--muted)}
 .src{font-size:12px;color:var(--muted)}
+.btn.theme{padding:6px 12px;font-size:13px}
 .weeks{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .tick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer}
 .tick input{accent-color:var(--accent);width:16px;height:16px;margin:0}
@@ -99,12 +100,17 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 @media (prefers-reduced-motion:no-preference){.card{animation:in .18s ease-out}@keyframes in{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}}
 </style>
 
+<script>
+// dark by default; the toggle remembers your choice in this browser
+(function(){ var t = "dark"; try { t = localStorage.getItem("recallr-theme") || "dark"; } catch(e) {} document.documentElement.setAttribute("data-theme", t); })();
+</script>
 <div class="wrap">
   <header>
     <div>
       <h1><span class="lam">__MODULE_ICON__</span> Recallr</h1>
       <p class="sub">__MODULE_NAME__ · __MODULE_SCOPE__ · write it, or step down until you can</p>
     </div>
+    <button class="btn theme" id="themeBtn" aria-label="Switch between dark and light">Light mode</button>
     <div class="stats">
       <div class="stat"><b id="sDue">0</b><span>due</span></div>
       <div class="stat"><b id="sDone">0</b><span>today</span></div>
@@ -891,6 +897,14 @@ if (T) {
   };
 }
 document.querySelectorAll(".chip.view").forEach(c => c.onclick = () => setView(c.dataset.view));
+function themeLabel(){ $("themeBtn").textContent = document.documentElement.getAttribute("data-theme") === "light" ? "Dark mode" : "Light mode"; }
+$("themeBtn").onclick = () => {
+  const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("recallr-theme", next); } catch(e) {}
+  themeLabel();
+};
+themeLabel();
 
 $("undo").onclick = () => {
   if (!lastUndo) return;
