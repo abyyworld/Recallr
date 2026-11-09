@@ -1,0 +1,3732 @@
+{
+  "course": {
+    "eventSpace": {
+      "type": "number",
+      "value": 32,
+      "show": "32"
+    },
+    "additionRule": {
+      "type": "number",
+      "value": 0.75,
+      "show": "0.75"
+    },
+    "conditional": {
+      "type": "number",
+      "value": 0.833333333333,
+      "show": "0.8333"
+    },
+    "productRule": {
+      "type": "number",
+      "value": 0.333333333333,
+      "show": "0.3333"
+    },
+    "totalProbability": {
+      "type": "number",
+      "value": 0.032,
+      "show": "0.032"
+    },
+    "bayesRule": {
+      "type": "number",
+      "value": 0.7,
+      "show": "0.7"
+    },
+    "independence": {
+      "type": "number",
+      "value": 0.2,
+      "show": "0.2"
+    },
+    "jointTable": {
+      "type": "number",
+      "value": 0.8,
+      "show": "0.8"
+    },
+    "pmfCount": {
+      "type": "number",
+      "value": 0.25,
+      "show": "0.25"
+    },
+    "cdfValue": {
+      "type": "number",
+      "value": 0.7,
+      "show": "0.7"
+    },
+    "binomial": {
+      "type": "number",
+      "value": 0.24576,
+      "show": "0.2458"
+    },
+    "geometric": {
+      "type": "number",
+      "value": 0.147,
+      "show": "0.147"
+    },
+    "uniformPdf": {
+      "type": "number",
+      "value": 0.375,
+      "show": "0.375"
+    },
+    "expectation": {
+      "type": "number",
+      "value": 1.94444444444,
+      "show": "1.944"
+    },
+    "variance": {
+      "type": "number",
+      "value": 0.49,
+      "show": "0.49"
+    },
+    "conditionalPmf": {
+      "type": "number",
+      "value": 0.3,
+      "show": "0.3"
+    },
+    "logLikelihood": {
+      "type": "number",
+      "value": -6.95594088094,
+      "show": "-6.956"
+    },
+    "mleBernoulli": {
+      "type": "number",
+      "value": 0.375,
+      "show": "0.375"
+    },
+    "mleCoinFormula": {
+      "type": "number",
+      "value": 0.65,
+      "show": "0.65"
+    },
+    "mlePoisson": {
+      "type": "number",
+      "value": 3,
+      "show": "3"
+    },
+    "logisticPredict": {
+      "type": "number",
+      "value": 0.777299861175,
+      "show": "0.7773"
+    },
+    "logOddsCoefficient": {
+      "type": "number",
+      "value": 0.6487212707,
+      "show": "0.6487"
+    },
+    "sigmoidDerivative": {
+      "type": "number",
+      "value": 0.196611933241,
+      "show": "0.1966"
+    },
+    "logisticGradient": {
+      "type": "number",
+      "value": -2,
+      "show": "-2"
+    },
+    "naiveBayesPosterior": {
+      "type": "number",
+      "value": 0.6,
+      "show": "0.6"
+    },
+    "naiveBayesSpam": {
+      "type": "number",
+      "value": 0.8,
+      "show": "0.8"
+    },
+    "laplaceSmoothing": {
+      "type": "number",
+      "value": 0.05,
+      "show": "0.05"
+    },
+    "posteriorOdds": {
+      "type": "number",
+      "value": 0.5,
+      "show": "0.5"
+    },
+    "nbTrainCounts": {
+      "type": "number",
+      "value": 0.6,
+      "show": "0.6"
+    },
+    "selfInformation": {
+      "type": "number",
+      "value": 4,
+      "show": "4"
+    },
+    "entropyCoin": {
+      "type": "number",
+      "value": 0.721928094887,
+      "show": "0.7219"
+    },
+    "entropyDistribution": {
+      "type": "number",
+      "value": 1.75,
+      "show": "1.75"
+    },
+    "jointEntropy": {
+      "type": "number",
+      "value": 1.90563906223,
+      "show": "1.906"
+    },
+    "conditionalEntropy": {
+      "type": "number",
+      "value": 0.891541406656,
+      "show": "0.8915"
+    },
+    "klDivergence": {
+      "type": "number",
+      "value": 0.326466250649,
+      "show": "0.3265"
+    },
+    "mutualInformation": {
+      "type": "number",
+      "value": 0.311278124459,
+      "show": "0.3113"
+    },
+    "giniIndex": {
+      "type": "number",
+      "value": 0.62,
+      "show": "0.62"
+    },
+    "nodeEntropy": {
+      "type": "number",
+      "value": 0.811278124459,
+      "show": "0.8113"
+    },
+    "splitEntropy": {
+      "type": "number",
+      "value": 0.40563906223,
+      "show": "0.4056"
+    },
+    "informationGain": {
+      "type": "number",
+      "value": 0.654857545827,
+      "show": "0.6549"
+    },
+    "bestSplit": {
+      "type": "text",
+      "accept": [
+        "S",
+        "sunny",
+        "sunny spot",
+        "the sunny spot",
+        "feature S"
+      ],
+      "show": "S"
+    },
+    "mrmrScore": {
+      "type": "number",
+      "value": 0.25,
+      "show": "0.25"
+    },
+    "observedError": {
+      "type": "number",
+      "value": 0.25,
+      "show": "0.25"
+    },
+    "binomialTail": {
+      "type": "number",
+      "value": 0.73728,
+      "show": "0.7373"
+    },
+    "testSetBound": {
+      "type": "number",
+      "value": 0.179928845911,
+      "show": "0.1799"
+    },
+    "testSetSize": {
+      "type": "number",
+      "value": 600,
+      "show": "600",
+      "whole": true
+    },
+    "unionBound": {
+      "type": "number",
+      "value": 0.135871356469,
+      "show": "0.1359"
+    },
+    "occamBound": {
+      "type": "number",
+      "value": 0.135970518244,
+      "show": "0.136"
+    },
+    "betaPosterior": {
+      "type": "text",
+      "accept": [
+        "Beta(7, 4)",
+        "7, 4",
+        "7 and 4",
+        "B(7, 4)"
+      ],
+      "show": "Beta(7, 4)"
+    },
+    "mapBeta": {
+      "type": "number",
+      "value": 0.6875,
+      "show": "0.6875"
+    },
+    "mapFormula": {
+      "type": "number",
+      "value": 0.695652173913,
+      "show": "0.6957"
+    },
+    "posteriorMean": {
+      "type": "number",
+      "value": 0.6,
+      "show": "0.6"
+    },
+    "priorPenalty": {
+      "type": "number",
+      "value": 2,
+      "show": "2"
+    },
+    "biasOfEstimator": {
+      "type": "number",
+      "value": 0.05,
+      "show": "0.05"
+    },
+    "mseDecomposition": {
+      "type": "number",
+      "value": 0.01,
+      "show": "0.01"
+    },
+    "bnParameters": {
+      "type": "number",
+      "value": 19,
+      "show": "19"
+    },
+    "bnJoint": {
+      "type": "number",
+      "value": 0.084,
+      "show": "0.084"
+    },
+    "dSeparation": {
+      "type": "text",
+      "accept": [
+        "no",
+        "not independent",
+        "dependent",
+        "no, not independent",
+        "no, dependent",
+        "they are not independent",
+        "they are dependent",
+        "no, they are not independent",
+        "no, they are dependent",
+        "they're not independent",
+        "no, they're not independent",
+        "they're dependent",
+        "no, they're dependent",
+        "conditionally dependent",
+        "no, conditionally dependent",
+        "they are conditionally dependent",
+        "no, they are conditionally dependent",
+        "they're conditionally dependent",
+        "no, they're conditionally dependent",
+        "not conditionally independent",
+        "no, not conditionally independent"
+      ],
+      "show": "no"
+    },
+    "markovBlanket": {
+      "type": "number",
+      "value": 5,
+      "show": "5"
+    },
+    "bnMarginal": {
+      "type": "number",
+      "value": 0.56,
+      "show": "0.56"
+    },
+    "bnInference": {
+      "type": "number",
+      "value": 0.53,
+      "show": "0.53"
+    },
+    "cptFromCounts": {
+      "type": "number",
+      "value": 0.75,
+      "show": "0.75"
+    }
+  },
+  "variation": {
+    "eventSpace": {
+      "type": "number",
+      "value": 64,
+      "show": "64"
+    },
+    "additionRule": {
+      "type": "number",
+      "value": 0.5,
+      "show": "0.5"
+    },
+    "conditional": {
+      "type": "number",
+      "value": 0.666666666667,
+      "show": "0.6667"
+    },
+    "productRule": {
+      "type": "number",
+      "value": 0.291666666667,
+      "show": "0.2917"
+    },
+    "totalProbability": {
+      "type": "number",
+      "value": 0.16,
+      "show": "0.16"
+    },
+    "bayesRule": {
+      "type": "number",
+      "value": 0.6,
+      "show": "0.6"
+    },
+    "independence": {
+      "type": "number",
+      "value": 0.166666666667,
+      "show": "0.1667"
+    },
+    "jointTable": {
+      "type": "number",
+      "value": 0.375,
+      "show": "0.375"
+    },
+    "pmfCount": {
+      "type": "number",
+      "value": 0.1875,
+      "show": "0.1875"
+    },
+    "cdfValue": {
+      "type": "number",
+      "value": 0.55,
+      "show": "0.55"
+    },
+    "binomial": {
+      "type": "number",
+      "value": 0.4096,
+      "show": "0.4096"
+    },
+    "geometric": {
+      "type": "number",
+      "value": 0.144,
+      "show": "0.144"
+    },
+    "uniformPdf": {
+      "type": "number",
+      "value": 0.2,
+      "show": "0.2"
+    },
+    "expectation": {
+      "type": "number",
+      "value": 1.6,
+      "show": "1.6"
+    },
+    "variance": {
+      "type": "number",
+      "value": 0.6,
+      "show": "0.6"
+    },
+    "conditionalPmf": {
+      "type": "number",
+      "value": 0.4,
+      "show": "0.4"
+    },
+    "logLikelihood": {
+      "type": "number",
+      "value": -11.3943428319,
+      "show": "-11.39"
+    },
+    "mleBernoulli": {
+      "type": "number",
+      "value": 0.72,
+      "show": "0.72"
+    },
+    "mleCoinFormula": {
+      "type": "number",
+      "value": 0.25,
+      "show": "0.25"
+    },
+    "mlePoisson": {
+      "type": "number",
+      "value": 2,
+      "show": "2"
+    },
+    "logisticPredict": {
+      "type": "number",
+      "value": 0.880797077978,
+      "show": "0.8808"
+    },
+    "logOddsCoefficient": {
+      "type": "number",
+      "value": 0.496585303791,
+      "show": "0.4966"
+    },
+    "sigmoidDerivative": {
+      "type": "number",
+      "value": 0.104993585404,
+      "show": "0.105"
+    },
+    "logisticGradient": {
+      "type": "number",
+      "value": 1.2449186624,
+      "show": "1.245"
+    },
+    "naiveBayesPosterior": {
+      "type": "number",
+      "value": 0.25,
+      "show": "0.25"
+    },
+    "naiveBayesSpam": {
+      "type": "number",
+      "value": 0.75,
+      "show": "0.75"
+    },
+    "laplaceSmoothing": {
+      "type": "number",
+      "value": 0.2,
+      "show": "0.2"
+    },
+    "posteriorOdds": {
+      "type": "number",
+      "value": 1,
+      "show": "1"
+    },
+    "nbTrainCounts": {
+      "type": "number",
+      "value": 0.75,
+      "show": "0.75"
+    },
+    "selfInformation": {
+      "type": "number",
+      "value": 5,
+      "show": "5"
+    },
+    "entropyCoin": {
+      "type": "number",
+      "value": 0.811278124459,
+      "show": "0.8113"
+    },
+    "entropyDistribution": {
+      "type": "number",
+      "value": 1.76096404744,
+      "show": "1.761"
+    },
+    "jointEntropy": {
+      "type": "number",
+      "value": 2.5,
+      "show": "2.5"
+    },
+    "conditionalEntropy": {
+      "type": "number",
+      "value": 0.90563906223,
+      "show": "0.9056"
+    },
+    "klDivergence": {
+      "type": "number",
+      "value": 0.625,
+      "show": "0.625"
+    },
+    "mutualInformation": {
+      "type": "number",
+      "value": 0.278071905113,
+      "show": "0.2781"
+    },
+    "giniIndex": {
+      "type": "number",
+      "value": 0.32,
+      "show": "0.32"
+    },
+    "nodeEntropy": {
+      "type": "number",
+      "value": 1.75,
+      "show": "1.75"
+    },
+    "splitEntropy": {
+      "type": "number",
+      "value": 0.65563906223,
+      "show": "0.6556"
+    },
+    "informationGain": {
+      "type": "number",
+      "value": 0.311278124459,
+      "show": "0.3113"
+    },
+    "bestSplit": {
+      "type": "text",
+      "accept": [
+        "J",
+        "job",
+        "has a job",
+        "feature J"
+      ],
+      "show": "J"
+    },
+    "mrmrScore": {
+      "type": "text",
+      "accept": [
+        "L",
+        "contract length",
+        "length",
+        "feature L"
+      ],
+      "show": "L"
+    },
+    "observedError": {
+      "type": "number",
+      "value": 0.07,
+      "show": "0.07"
+    },
+    "binomialTail": {
+      "type": "number",
+      "value": 0.6875,
+      "show": "0.6875"
+    },
+    "testSetBound": {
+      "type": "number",
+      "value": 0.137861404244,
+      "show": "0.1379"
+    },
+    "testSetSize": {
+      "type": "number",
+      "value": 231,
+      "show": "231",
+      "whole": true
+    },
+    "unionBound": {
+      "type": "number",
+      "value": 0.103649150657,
+      "show": "0.1036"
+    },
+    "occamBound": {
+      "type": "number",
+      "value": 0.0990439456597,
+      "show": "0.09904"
+    },
+    "betaPosterior": {
+      "type": "text",
+      "accept": [
+        "Beta(3, 8)",
+        "3, 8",
+        "3 and 8",
+        "B(3, 8)"
+      ],
+      "show": "Beta(3, 8)"
+    },
+    "mapBeta": {
+      "type": "number",
+      "value": 0.833333333333,
+      "show": "0.8333"
+    },
+    "mapFormula": {
+      "type": "number",
+      "value": 0.16,
+      "show": "0.16"
+    },
+    "posteriorMean": {
+      "type": "number",
+      "value": 0.175,
+      "show": "0.175"
+    },
+    "priorPenalty": {
+      "type": "number",
+      "value": 8,
+      "show": "8"
+    },
+    "biasOfEstimator": {
+      "type": "number",
+      "value": -0.04,
+      "show": "-0.04"
+    },
+    "mseDecomposition": {
+      "type": "number",
+      "value": 1.05,
+      "show": "1.05"
+    },
+    "bnParameters": {
+      "type": "number",
+      "value": 52,
+      "show": "52"
+    },
+    "bnJoint": {
+      "type": "number",
+      "value": 0.0135,
+      "show": "0.0135"
+    },
+    "dSeparation": {
+      "type": "text",
+      "accept": [
+        "no",
+        "not independent",
+        "dependent",
+        "no, not independent",
+        "no, dependent",
+        "they are not independent",
+        "they are dependent",
+        "no, they are not independent",
+        "no, they are dependent",
+        "they're not independent",
+        "no, they're not independent",
+        "they're dependent",
+        "no, they're dependent",
+        "conditionally dependent",
+        "no, conditionally dependent",
+        "they are conditionally dependent",
+        "no, they are conditionally dependent",
+        "they're conditionally dependent",
+        "no, they're conditionally dependent",
+        "not conditionally independent",
+        "no, not conditionally independent"
+      ],
+      "show": "no"
+    },
+    "markovBlanket": {
+      "type": "number",
+      "value": 6,
+      "show": "6"
+    },
+    "bnMarginal": {
+      "type": "number",
+      "value": 0.52,
+      "show": "0.52"
+    },
+    "bnInference": {
+      "type": "number",
+      "value": 0.65,
+      "show": "0.65"
+    },
+    "cptFromCounts": {
+      "type": "number",
+      "value": 0.6,
+      "show": "0.6"
+    }
+  },
+  "write": {
+    "course": {
+      "eventSpace": {
+        "type": "number",
+        "value": 32,
+        "show": "32"
+      },
+      "additionRule": {
+        "type": "number",
+        "value": 0.75,
+        "show": "0.75"
+      },
+      "conditional": {
+        "type": "number",
+        "value": 0.833333333333,
+        "show": "5/6"
+      },
+      "productRule": {
+        "type": "number",
+        "value": 0.333333333333,
+        "show": "1/3"
+      },
+      "totalProbability": {
+        "type": "number",
+        "value": 0.032,
+        "show": "0.032"
+      },
+      "bayesRule": {
+        "type": "number",
+        "value": 0.7,
+        "show": "0.7"
+      },
+      "independence": {
+        "type": "text",
+        "accept": [
+          "no",
+          "not independent",
+          "dependent",
+          "no, not independent",
+          "no, dependent",
+          "they are not independent",
+          "they are dependent",
+          "no, they are not independent",
+          "no, they are dependent",
+          "they're not independent",
+          "no, they're not independent",
+          "they're dependent",
+          "no, they're dependent"
+        ],
+        "show": "No"
+      },
+      "jointTable": {
+        "type": "number",
+        "value": 0.8,
+        "show": "0.8"
+      },
+      "pmfCount": {
+        "type": "number",
+        "value": 0.25,
+        "show": "1/4"
+      },
+      "cdfValue": {
+        "type": "number",
+        "value": 0.7,
+        "show": "0.7"
+      },
+      "binomial": {
+        "type": "number",
+        "value": 0.24576,
+        "show": "0.2458"
+      },
+      "geometric": {
+        "type": "number",
+        "value": 0.147,
+        "show": "0.147"
+      },
+      "uniformPdf": {
+        "type": "number",
+        "value": 0.375,
+        "show": "3/8"
+      },
+      "expectation": {
+        "type": "number",
+        "value": 1.94444444444,
+        "show": "35/18"
+      },
+      "variance": {
+        "type": "number",
+        "value": 0.49,
+        "show": "0.49"
+      },
+      "conditionalPmf": {
+        "type": "number",
+        "value": 0.3,
+        "show": "0.3"
+      },
+      "logLikelihood": {
+        "type": "number",
+        "value": -6.95594088094,
+        "show": "-6.956"
+      },
+      "mleBernoulli": {
+        "type": "number",
+        "value": 0.375,
+        "show": "3/8"
+      },
+      "mleCoinFormula": {
+        "type": "expr",
+        "ref": "k/n",
+        "vars": {
+          "k": [
+            1,
+            20,
+            true
+          ],
+          "n": [
+            21,
+            60,
+            true
+          ]
+        },
+        "show": "k/n"
+      },
+      "mlePoisson": {
+        "type": "number",
+        "value": 3,
+        "show": "3"
+      },
+      "logisticPredict": {
+        "type": "number",
+        "value": 0.777299861175,
+        "show": "0.777"
+      },
+      "logOddsCoefficient": {
+        "type": "number",
+        "value": 1.6487212707,
+        "show": "1.649"
+      },
+      "sigmoidDerivative": {
+        "type": "number",
+        "value": 0.196611933241,
+        "show": "0.1966"
+      },
+      "logisticGradient": {
+        "type": "number",
+        "value": -2,
+        "show": "-2"
+      },
+      "naiveBayesPosterior": {
+        "type": "number",
+        "value": 0.6,
+        "show": "0.6"
+      },
+      "naiveBayesSpam": {
+        "type": "number",
+        "value": 0.8,
+        "show": "0.8"
+      },
+      "laplaceSmoothing": {
+        "type": "number",
+        "value": 0.05,
+        "show": "0.05"
+      },
+      "posteriorOdds": {
+        "type": "number",
+        "value": 0.5,
+        "show": "0.5"
+      },
+      "nbTrainCounts": {
+        "type": "number",
+        "value": 0.6,
+        "show": "0.6"
+      },
+      "selfInformation": {
+        "type": "number",
+        "value": 4,
+        "show": "4"
+      },
+      "entropyCoin": {
+        "type": "number",
+        "value": 0.721928094887,
+        "show": "0.722"
+      },
+      "entropyDistribution": {
+        "type": "number",
+        "value": 1.75,
+        "show": "1.75"
+      },
+      "jointEntropy": {
+        "type": "number",
+        "value": 1.90563906223,
+        "show": "1.906"
+      },
+      "conditionalEntropy": {
+        "type": "number",
+        "value": 0.891541406656,
+        "show": "0.892"
+      },
+      "klDivergence": {
+        "type": "number",
+        "value": 0.326466250649,
+        "show": "0.326"
+      },
+      "mutualInformation": {
+        "type": "number",
+        "value": 0.311278124459,
+        "show": "0.311"
+      },
+      "giniIndex": {
+        "type": "number",
+        "value": 0.62,
+        "show": "0.62"
+      },
+      "nodeEntropy": {
+        "type": "number",
+        "value": 0.811278124459,
+        "show": "0.811"
+      },
+      "splitEntropy": {
+        "type": "number",
+        "value": 0.40563906223,
+        "show": "0.406"
+      },
+      "informationGain": {
+        "type": "number",
+        "value": 0.654857545827,
+        "show": "0.655"
+      },
+      "bestSplit": {
+        "type": "text",
+        "accept": [
+          "S",
+          "sunny",
+          "sunny spot",
+          "the sunny spot",
+          "feature S"
+        ],
+        "show": "S"
+      },
+      "mrmrScore": {
+        "type": "number",
+        "value": 0.25,
+        "show": "0.25"
+      },
+      "observedError": {
+        "type": "number",
+        "value": 0.25,
+        "show": "0.25"
+      },
+      "binomialTail": {
+        "type": "number",
+        "value": 0.73728,
+        "show": "0.737"
+      },
+      "testSetBound": {
+        "type": "number",
+        "value": 0.179928845911,
+        "show": "0.180"
+      },
+      "testSetSize": {
+        "type": "number",
+        "value": 600,
+        "show": "600",
+        "whole": true
+      },
+      "unionBound": {
+        "type": "number",
+        "value": 0.135871356469,
+        "show": "0.136"
+      },
+      "occamBound": {
+        "type": "number",
+        "value": 0.135970518244,
+        "show": "0.136"
+      },
+      "betaPosterior": {
+        "type": "text",
+        "accept": [
+          "Beta(7, 4)",
+          "7, 4",
+          "7 and 4",
+          "B(7, 4)"
+        ],
+        "show": "Beta(7, 4)"
+      },
+      "mapBeta": {
+        "type": "number",
+        "value": 0.6875,
+        "show": "11/16"
+      },
+      "mapFormula": {
+        "type": "expr",
+        "ref": "(k+2)/(n+3)",
+        "vars": {
+          "k": [
+            1,
+            20,
+            true
+          ],
+          "n": [
+            21,
+            60,
+            true
+          ]
+        },
+        "show": "(k + 2) / (n + 3)"
+      },
+      "posteriorMean": {
+        "type": "number",
+        "value": 0.6,
+        "show": "0.6"
+      },
+      "priorPenalty": {
+        "type": "number",
+        "value": 2,
+        "show": "2"
+      },
+      "biasOfEstimator": {
+        "type": "number",
+        "value": 0.05,
+        "show": "0.05"
+      },
+      "mseDecomposition": {
+        "type": "number",
+        "value": 0.01,
+        "show": "0.01"
+      },
+      "bnParameters": {
+        "type": "number",
+        "value": 19,
+        "show": "19"
+      },
+      "bnJoint": {
+        "type": "number",
+        "value": 0.084,
+        "show": "0.084"
+      },
+      "dSeparation": {
+        "type": "text",
+        "accept": [
+          "no",
+          "not independent",
+          "dependent",
+          "no, not independent",
+          "no, dependent",
+          "they are not independent",
+          "they are dependent",
+          "no, they are not independent",
+          "no, they are dependent",
+          "they're not independent",
+          "no, they're not independent",
+          "they're dependent",
+          "no, they're dependent",
+          "conditionally dependent",
+          "no, conditionally dependent",
+          "they are conditionally dependent",
+          "no, they are conditionally dependent",
+          "they're conditionally dependent",
+          "no, they're conditionally dependent",
+          "not conditionally independent",
+          "no, not conditionally independent"
+        ],
+        "show": "No"
+      },
+      "markovBlanket": {
+        "type": "number",
+        "value": 5,
+        "show": "5"
+      },
+      "bnMarginal": {
+        "type": "number",
+        "value": 0.56,
+        "show": "0.56"
+      },
+      "bnInference": {
+        "type": "number",
+        "value": 0.53,
+        "show": "0.53"
+      },
+      "cptFromCounts": {
+        "type": "number",
+        "value": 0.75,
+        "show": "0.75"
+      }
+    },
+    "variation": {
+      "eventSpace": {
+        "type": "number",
+        "value": 64,
+        "show": "64"
+      },
+      "additionRule": {
+        "type": "number",
+        "value": 0.5,
+        "show": "1/2"
+      },
+      "conditional": {
+        "type": "number",
+        "value": 0.666666666667,
+        "show": "2/3"
+      },
+      "productRule": {
+        "type": "number",
+        "value": 0.291666666667,
+        "show": "7/24"
+      },
+      "totalProbability": {
+        "type": "number",
+        "value": 0.16,
+        "show": "0.16"
+      },
+      "bayesRule": {
+        "type": "number",
+        "value": 0.6,
+        "show": "0.6"
+      },
+      "independence": {
+        "type": "text",
+        "accept": [
+          "yes",
+          "independent",
+          "yes, independent",
+          "they are independent",
+          "yes, they are independent",
+          "they're independent",
+          "yes, they're independent"
+        ],
+        "show": "Yes"
+      },
+      "jointTable": {
+        "type": "number",
+        "value": 0.375,
+        "show": "3/8"
+      },
+      "pmfCount": {
+        "type": "number",
+        "value": 0.1875,
+        "show": "3/16"
+      },
+      "cdfValue": {
+        "type": "number",
+        "value": 0.55,
+        "show": "0.55"
+      },
+      "binomial": {
+        "type": "number",
+        "value": 0.4096,
+        "show": "0.4096"
+      },
+      "geometric": {
+        "type": "number",
+        "value": 0.144,
+        "show": "0.144"
+      },
+      "uniformPdf": {
+        "type": "number",
+        "value": 0.2,
+        "show": "0.2"
+      },
+      "expectation": {
+        "type": "number",
+        "value": 1.6,
+        "show": "1.6"
+      },
+      "variance": {
+        "type": "number",
+        "value": 0.6,
+        "show": "0.6"
+      },
+      "conditionalPmf": {
+        "type": "number",
+        "value": 0.4,
+        "show": "0.4"
+      },
+      "logLikelihood": {
+        "type": "number",
+        "value": -11.3943428319,
+        "show": "-11.394"
+      },
+      "mleBernoulli": {
+        "type": "number",
+        "value": 0.72,
+        "show": "0.72"
+      },
+      "mleCoinFormula": {
+        "type": "expr",
+        "ref": "s/m",
+        "vars": {
+          "s": [
+            1,
+            20,
+            true
+          ],
+          "m": [
+            21,
+            60,
+            true
+          ]
+        },
+        "show": "s/m"
+      },
+      "mlePoisson": {
+        "type": "number",
+        "value": 2,
+        "show": "2"
+      },
+      "logisticPredict": {
+        "type": "number",
+        "value": 0.880797077978,
+        "show": "0.881"
+      },
+      "logOddsCoefficient": {
+        "type": "number",
+        "value": 0.496585303791,
+        "show": "0.497"
+      },
+      "sigmoidDerivative": {
+        "type": "number",
+        "value": 0.104993585404,
+        "show": "0.1050"
+      },
+      "logisticGradient": {
+        "type": "number",
+        "value": 1.2449186624,
+        "show": "1.245"
+      },
+      "naiveBayesPosterior": {
+        "type": "number",
+        "value": 0.25,
+        "show": "0.25"
+      },
+      "naiveBayesSpam": {
+        "type": "number",
+        "value": 0.75,
+        "show": "0.75"
+      },
+      "laplaceSmoothing": {
+        "type": "number",
+        "value": 0.2,
+        "show": "0.2"
+      },
+      "posteriorOdds": {
+        "type": "number",
+        "value": 1,
+        "show": "1"
+      },
+      "nbTrainCounts": {
+        "type": "number",
+        "value": 0.75,
+        "show": "0.75"
+      },
+      "selfInformation": {
+        "type": "number",
+        "value": 5,
+        "show": "5"
+      },
+      "entropyCoin": {
+        "type": "number",
+        "value": 0.811278124459,
+        "show": "0.811"
+      },
+      "entropyDistribution": {
+        "type": "number",
+        "value": 1.76096404744,
+        "show": "1.761"
+      },
+      "jointEntropy": {
+        "type": "number",
+        "value": 2.5,
+        "show": "2.5"
+      },
+      "conditionalEntropy": {
+        "type": "number",
+        "value": 0.90563906223,
+        "show": "0.906"
+      },
+      "klDivergence": {
+        "type": "number",
+        "value": 0.625,
+        "show": "0.625"
+      },
+      "mutualInformation": {
+        "type": "number",
+        "value": 0.278071905113,
+        "show": "0.278"
+      },
+      "giniIndex": {
+        "type": "number",
+        "value": 0.32,
+        "show": "0.32"
+      },
+      "nodeEntropy": {
+        "type": "number",
+        "value": 1.75,
+        "show": "1.75"
+      },
+      "splitEntropy": {
+        "type": "number",
+        "value": 0.65563906223,
+        "show": "0.656"
+      },
+      "informationGain": {
+        "type": "number",
+        "value": 0.311278124459,
+        "show": "0.311"
+      },
+      "bestSplit": {
+        "type": "text",
+        "accept": [
+          "J",
+          "job",
+          "has a job",
+          "feature J"
+        ],
+        "show": "J"
+      },
+      "mrmrScore": {
+        "type": "text",
+        "accept": [
+          "L",
+          "contract length",
+          "length",
+          "feature L"
+        ],
+        "show": "L"
+      },
+      "observedError": {
+        "type": "number",
+        "value": 0.07,
+        "show": "0.07"
+      },
+      "binomialTail": {
+        "type": "number",
+        "value": 0.6875,
+        "show": "11/16"
+      },
+      "testSetBound": {
+        "type": "number",
+        "value": 0.137861404244,
+        "show": "0.138"
+      },
+      "testSetSize": {
+        "type": "number",
+        "value": 231,
+        "show": "231",
+        "whole": true
+      },
+      "unionBound": {
+        "type": "number",
+        "value": 0.103649150657,
+        "show": "0.104"
+      },
+      "occamBound": {
+        "type": "number",
+        "value": 0.0990439456597,
+        "show": "0.099"
+      },
+      "betaPosterior": {
+        "type": "text",
+        "accept": [
+          "Beta(3, 8)",
+          "3, 8",
+          "3 and 8",
+          "B(3, 8)"
+        ],
+        "show": "Beta(3, 8)"
+      },
+      "mapBeta": {
+        "type": "number",
+        "value": 0.833333333333,
+        "show": "5/6"
+      },
+      "mapFormula": {
+        "type": "expr",
+        "ref": "(k+a-1)/(n+a+b-2)",
+        "vars": {
+          "k": [
+            1,
+            20,
+            true
+          ],
+          "n": [
+            21,
+            60,
+            true
+          ],
+          "a": [
+            2,
+            10,
+            true
+          ],
+          "b": [
+            2,
+            10,
+            true
+          ]
+        },
+        "show": "(k + a − 1) / (n + a + b − 2)"
+      },
+      "posteriorMean": {
+        "type": "number",
+        "value": 0.175,
+        "show": "7/40"
+      },
+      "priorPenalty": {
+        "type": "number",
+        "value": 8,
+        "show": "8"
+      },
+      "biasOfEstimator": {
+        "type": "number",
+        "value": -0.04,
+        "show": "−0.04"
+      },
+      "mseDecomposition": {
+        "type": "number",
+        "value": 1.05,
+        "show": "1.05"
+      },
+      "bnParameters": {
+        "type": "number",
+        "value": 52,
+        "show": "52"
+      },
+      "bnJoint": {
+        "type": "number",
+        "value": 0.0135,
+        "show": "0.0135"
+      },
+      "dSeparation": {
+        "type": "text",
+        "accept": [
+          "no",
+          "not independent",
+          "dependent",
+          "no, not independent",
+          "no, dependent",
+          "they are not independent",
+          "they are dependent",
+          "no, they are not independent",
+          "no, they are dependent",
+          "they're not independent",
+          "no, they're not independent",
+          "they're dependent",
+          "no, they're dependent",
+          "conditionally dependent",
+          "no, conditionally dependent",
+          "they are conditionally dependent",
+          "no, they are conditionally dependent",
+          "they're conditionally dependent",
+          "no, they're conditionally dependent",
+          "not conditionally independent",
+          "no, not conditionally independent"
+        ],
+        "show": "No"
+      },
+      "markovBlanket": {
+        "type": "number",
+        "value": 6,
+        "show": "6"
+      },
+      "bnMarginal": {
+        "type": "number",
+        "value": 0.52,
+        "show": "0.52"
+      },
+      "bnInference": {
+        "type": "number",
+        "value": 0.65,
+        "show": "0.65"
+      },
+      "cptFromCounts": {
+        "type": "number",
+        "value": 0.6,
+        "show": "0.6"
+      }
+    }
+  },
+  "fill": {
+    "course": {
+      "eventSpace": [
+        {
+          "type": "number",
+          "value": 5,
+          "show": "5"
+        },
+        {
+          "type": "number",
+          "value": 32,
+          "show": "32"
+        }
+      ],
+      "additionRule": [
+        {
+          "type": "number",
+          "value": 0.15,
+          "show": "0.15"
+        },
+        {
+          "type": "number",
+          "value": 0.75,
+          "show": "0.75"
+        }
+      ],
+      "conditional": [
+        {
+          "type": "number",
+          "value": 6,
+          "show": "6"
+        },
+        {
+          "type": "number",
+          "value": 0.833333333333,
+          "show": "5/6"
+        }
+      ],
+      "productRule": [
+        {
+          "type": "number",
+          "value": 5,
+          "show": "5"
+        },
+        {
+          "type": "number",
+          "value": 0.333333333333,
+          "show": "1/3"
+        }
+      ],
+      "totalProbability": [
+        {
+          "type": "number",
+          "value": 0.04,
+          "show": "0.04"
+        },
+        {
+          "type": "number",
+          "value": 0.012,
+          "show": "0.012"
+        },
+        {
+          "type": "number",
+          "value": 0.032,
+          "show": "0.032"
+        }
+      ],
+      "bayesRule": [
+        {
+          "type": "number",
+          "value": 0.75,
+          "show": "0.75"
+        },
+        {
+          "type": "number",
+          "value": 0.3,
+          "show": "0.3"
+        },
+        {
+          "type": "number",
+          "value": 0.7,
+          "show": "0.7"
+        }
+      ],
+      "independence": [
+        {
+          "type": "number",
+          "value": 0.2,
+          "show": "0.2"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "no",
+            "not independent",
+            "dependent",
+            "no, not independent",
+            "no, dependent",
+            "they are not independent",
+            "they are dependent",
+            "no, they are not independent",
+            "no, they are dependent",
+            "they're not independent",
+            "no, they're not independent",
+            "they're dependent",
+            "no, they're dependent"
+          ],
+          "show": "no"
+        }
+      ],
+      "jointTable": [
+        {
+          "type": "number",
+          "value": 8,
+          "show": "8"
+        },
+        {
+          "type": "number",
+          "value": 0.25,
+          "show": "0.25"
+        },
+        {
+          "type": "number",
+          "value": 0.8,
+          "show": "0.8"
+        }
+      ],
+      "pmfCount": [
+        {
+          "type": "number",
+          "value": 16,
+          "show": "16"
+        },
+        {
+          "type": "number",
+          "value": 4,
+          "show": "4"
+        },
+        {
+          "type": "number",
+          "value": 0.25,
+          "show": "1/4"
+        }
+      ],
+      "cdfValue": [
+        {
+          "type": "number",
+          "value": 3,
+          "show": "3"
+        },
+        {
+          "type": "number",
+          "value": 0.4,
+          "show": "0.4"
+        },
+        {
+          "type": "number",
+          "value": 0.7,
+          "show": "0.7"
+        }
+      ],
+      "binomial": [
+        {
+          "type": "number",
+          "value": 4,
+          "show": "4"
+        },
+        {
+          "type": "number",
+          "value": 15,
+          "show": "15"
+        },
+        {
+          "type": "number",
+          "value": 0.24576,
+          "show": "0.2458"
+        }
+      ],
+      "geometric": [
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "number",
+          "value": 0.49,
+          "show": "0.49"
+        },
+        {
+          "type": "number",
+          "value": 0.147,
+          "show": "0.147"
+        }
+      ],
+      "uniformPdf": [
+        {
+          "type": "number",
+          "value": 8,
+          "show": "8"
+        },
+        {
+          "type": "number",
+          "value": 3,
+          "show": "3"
+        },
+        {
+          "type": "number",
+          "value": 0.375,
+          "show": "3/8"
+        }
+      ],
+      "expectation": [
+        {
+          "type": "number",
+          "value": 6,
+          "show": "6"
+        },
+        {
+          "type": "number",
+          "value": 70,
+          "show": "70"
+        },
+        {
+          "type": "number",
+          "value": 1.94444444444,
+          "show": "35/18"
+        }
+      ],
+      "variance": [
+        {
+          "type": "number",
+          "value": 2.1,
+          "show": "2.1"
+        },
+        {
+          "type": "number",
+          "value": 4.9,
+          "show": "4.9"
+        },
+        {
+          "type": "number",
+          "value": 0.49,
+          "show": "0.49"
+        }
+      ],
+      "conditionalPmf": [
+        {
+          "type": "number",
+          "value": 0.15,
+          "show": "0.15"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.3,
+          "show": "0.3"
+        }
+      ],
+      "logLikelihood": [
+        {
+          "type": "number",
+          "value": 6,
+          "show": "6"
+        },
+        {
+          "type": "number",
+          "value": 0.7,
+          "show": "0.7"
+        },
+        {
+          "type": "number",
+          "value": -6.95594088094,
+          "show": "-6.956"
+        }
+      ],
+      "mleBernoulli": [
+        {
+          "type": "number",
+          "value": 6,
+          "show": "6"
+        },
+        {
+          "type": "number",
+          "value": 16,
+          "show": "16"
+        },
+        {
+          "type": "number",
+          "value": 0.375,
+          "show": "3/8"
+        }
+      ],
+      "mleCoinFormula": [
+        {
+          "type": "expr",
+          "ref": "n-k",
+          "vars": {
+            "k": [
+              1,
+              20,
+              true
+            ],
+            "n": [
+              21,
+              60,
+              true
+            ]
+          },
+          "show": "n-k"
+        },
+        {
+          "type": "expr",
+          "ref": "k/n",
+          "vars": {
+            "k": [
+              1,
+              20,
+              true
+            ],
+            "n": [
+              21,
+              60,
+              true
+            ]
+          },
+          "show": "k/n"
+        }
+      ],
+      "mlePoisson": [
+        {
+          "type": "number",
+          "value": 18,
+          "show": "18"
+        },
+        {
+          "type": "number",
+          "value": 6,
+          "show": "6"
+        },
+        {
+          "type": "number",
+          "value": 3,
+          "show": "3"
+        }
+      ],
+      "logisticPredict": [
+        {
+          "type": "number",
+          "value": 2.5,
+          "show": "2.5"
+        },
+        {
+          "type": "number",
+          "value": 1.25,
+          "show": "1.25"
+        },
+        {
+          "type": "number",
+          "value": 0.777299861175,
+          "show": "0.777"
+        }
+      ],
+      "logOddsCoefficient": [
+        {
+          "type": "number",
+          "value": 1,
+          "show": "1"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 1.6487212707,
+          "show": "1.649"
+        }
+      ],
+      "sigmoidDerivative": [
+        {
+          "type": "number",
+          "value": 0.73105857863,
+          "show": "0.7311"
+        },
+        {
+          "type": "number",
+          "value": 0.26894142137,
+          "show": "0.2689"
+        },
+        {
+          "type": "number",
+          "value": 0.196611933241,
+          "show": "0.1966"
+        }
+      ],
+      "logisticGradient": [
+        {
+          "type": "number",
+          "value": 0,
+          "show": "0"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": -2,
+          "show": "-2"
+        }
+      ],
+      "naiveBayesPosterior": [
+        {
+          "type": "number",
+          "value": 0.06,
+          "show": "0.06"
+        },
+        {
+          "type": "number",
+          "value": 0.048,
+          "show": "0.048"
+        },
+        {
+          "type": "number",
+          "value": 0.6,
+          "show": "0.6"
+        }
+      ],
+      "naiveBayesSpam": [
+        {
+          "type": "number",
+          "value": 0.015,
+          "show": "0.015"
+        },
+        {
+          "type": "number",
+          "value": 0.8,
+          "show": "0.8"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "spam"
+          ],
+          "show": "spam"
+        }
+      ],
+      "laplaceSmoothing": [
+        {
+          "type": "number",
+          "value": 1,
+          "show": "1"
+        },
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "number",
+          "value": 0.05,
+          "show": "0.05"
+        }
+      ],
+      "posteriorOdds": [
+        {
+          "type": "number",
+          "value": 12,
+          "show": "12"
+        },
+        {
+          "type": "number",
+          "value": 0.96,
+          "show": "0.96"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        }
+      ],
+      "nbTrainCounts": [
+        {
+          "type": "number",
+          "value": 0.625,
+          "show": "0.625"
+        },
+        {
+          "type": "number",
+          "value": 3,
+          "show": "3"
+        },
+        {
+          "type": "number",
+          "value": 0.6,
+          "show": "0.6"
+        }
+      ],
+      "selfInformation": [
+        {
+          "type": "number",
+          "value": 16,
+          "show": "16"
+        },
+        {
+          "type": "number",
+          "value": 4,
+          "show": "4"
+        }
+      ],
+      "entropyCoin": [
+        {
+          "type": "number",
+          "value": 0.25754247591,
+          "show": "0.2575"
+        },
+        {
+          "type": "number",
+          "value": 0.464385618977,
+          "show": "0.4644"
+        },
+        {
+          "type": "number",
+          "value": 0.721928094887,
+          "show": "0.722"
+        }
+      ],
+      "entropyDistribution": [
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.375,
+          "show": "0.375"
+        },
+        {
+          "type": "number",
+          "value": 1.75,
+          "show": "1.75"
+        }
+      ],
+      "jointEntropy": [
+        {
+          "type": "number",
+          "value": 0.375,
+          "show": "0.375"
+        },
+        {
+          "type": "number",
+          "value": 0.53063906223,
+          "show": "0.5306"
+        },
+        {
+          "type": "number",
+          "value": 1.90563906223,
+          "show": "1.906"
+        }
+      ],
+      "conditionalEntropy": [
+        {
+          "type": "number",
+          "value": 1.70281953111,
+          "show": "1.703"
+        },
+        {
+          "type": "number",
+          "value": 0.811278124459,
+          "show": "0.8113"
+        },
+        {
+          "type": "number",
+          "value": 0.891541406656,
+          "show": "0.892"
+        }
+      ],
+      "klDivergence": [
+        {
+          "type": "number",
+          "value": 1.5,
+          "show": "1.5"
+        },
+        {
+          "type": "number",
+          "value": -0.2,
+          "show": "-0.2"
+        },
+        {
+          "type": "number",
+          "value": 0.326466250649,
+          "show": "0.326"
+        }
+      ],
+      "mutualInformation": [
+        {
+          "type": "number",
+          "value": 0.811278124459,
+          "show": "0.8113"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.311278124459,
+          "show": "0.311"
+        }
+      ],
+      "giniIndex": [
+        {
+          "type": "number",
+          "value": 0.09,
+          "show": "0.09"
+        },
+        {
+          "type": "number",
+          "value": 0.38,
+          "show": "0.38"
+        },
+        {
+          "type": "number",
+          "value": 0.62,
+          "show": "0.62"
+        }
+      ],
+      "nodeEntropy": [
+        {
+          "type": "number",
+          "value": -2,
+          "show": "-2"
+        },
+        {
+          "type": "number",
+          "value": 0.311278124459,
+          "show": "0.311"
+        },
+        {
+          "type": "number",
+          "value": 0.811278124459,
+          "show": "0.811"
+        }
+      ],
+      "splitEntropy": [
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.40563906223,
+          "show": "0.406"
+        }
+      ],
+      "informationGain": [
+        {
+          "type": "number",
+          "value": 0,
+          "show": "0"
+        },
+        {
+          "type": "number",
+          "value": 0.345142454173,
+          "show": "0.345"
+        },
+        {
+          "type": "number",
+          "value": 0.654857545827,
+          "show": "0.655"
+        }
+      ],
+      "bestSplit": [
+        {
+          "type": "number",
+          "value": 0.390013452989,
+          "show": "0.39"
+        },
+        {
+          "type": "number",
+          "value": 0.609986547011,
+          "show": "0.61"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "S",
+            "sunny",
+            "sunny spot",
+            "the sunny spot",
+            "feature S"
+          ],
+          "show": "S"
+        }
+      ],
+      "mrmrScore": [
+        {
+          "type": "number",
+          "value": 0.3,
+          "show": "0.3"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.25,
+          "show": "0.25"
+        }
+      ],
+      "observedError": [
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "number",
+          "value": 8,
+          "show": "8"
+        },
+        {
+          "type": "number",
+          "value": 0.25,
+          "show": "0.25"
+        }
+      ],
+      "binomialTail": [
+        {
+          "type": "number",
+          "value": 5,
+          "show": "5"
+        },
+        {
+          "type": "number",
+          "value": 0.4096,
+          "show": "0.4096"
+        },
+        {
+          "type": "number",
+          "value": 0.73728,
+          "show": "0.737"
+        }
+      ],
+      "testSetBound": [
+        {
+          "type": "number",
+          "value": 0.08,
+          "show": "0.08"
+        },
+        {
+          "type": "number",
+          "value": 300,
+          "show": "300"
+        },
+        {
+          "type": "number",
+          "value": 0.179928845911,
+          "show": "0.180"
+        }
+      ],
+      "testSetSize": [
+        {
+          "type": "number",
+          "value": 0.0025,
+          "show": "0.0025"
+        },
+        {
+          "type": "number",
+          "value": 599.146454711,
+          "show": "599.1"
+        },
+        {
+          "type": "number",
+          "value": 600,
+          "show": "600",
+          "whole": true
+        }
+      ],
+      "unionBound": [
+        {
+          "type": "number",
+          "value": 0.01,
+          "show": "0.01"
+        },
+        {
+          "type": "number",
+          "value": 100,
+          "show": "100"
+        },
+        {
+          "type": "number",
+          "value": 0.135871356469,
+          "show": "0.136"
+        }
+      ],
+      "occamBound": [
+        {
+          "type": "number",
+          "value": 500,
+          "show": "500"
+        },
+        {
+          "type": "number",
+          "value": 1000,
+          "show": "1000"
+        },
+        {
+          "type": "number",
+          "value": 0.135970518244,
+          "show": "0.136"
+        }
+      ],
+      "betaPosterior": [
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "number",
+          "value": 7,
+          "show": "7"
+        },
+        {
+          "type": "number",
+          "value": 4,
+          "show": "4"
+        }
+      ],
+      "mapBeta": [
+        {
+          "type": "number",
+          "value": 11,
+          "show": "11"
+        },
+        {
+          "type": "number",
+          "value": 16,
+          "show": "16"
+        },
+        {
+          "type": "number",
+          "value": 0.6875,
+          "show": "11/16"
+        }
+      ],
+      "mapFormula": [
+        {
+          "type": "expr",
+          "ref": "n+3",
+          "vars": {
+            "k": [
+              1,
+              20,
+              true
+            ],
+            "n": [
+              21,
+              60,
+              true
+            ]
+          },
+          "show": "n+3"
+        },
+        {
+          "type": "expr",
+          "ref": "(k+2)/(n+3)",
+          "vars": {
+            "k": [
+              1,
+              20,
+              true
+            ],
+            "n": [
+              21,
+              60,
+              true
+            ]
+          },
+          "show": "(k+2)/(n+3)"
+        }
+      ],
+      "posteriorMean": [
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "number",
+          "value": 12,
+          "show": "12"
+        },
+        {
+          "type": "number",
+          "value": 0.6,
+          "show": "0.6"
+        }
+      ],
+      "priorPenalty": [
+        {
+          "type": "number",
+          "value": 10,
+          "show": "10"
+        },
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "L2",
+            "L₂",
+            "L2 norm",
+            "L2 regularisation",
+            "L2 regularization",
+            "ridge"
+          ],
+          "show": "L2"
+        }
+      ],
+      "biasOfEstimator": [
+        {
+          "type": "number",
+          "value": 0,
+          "show": "0"
+        },
+        {
+          "type": "number",
+          "value": 0.3,
+          "show": "0.3"
+        },
+        {
+          "type": "number",
+          "value": 0.05,
+          "show": "0.05"
+        }
+      ],
+      "mseDecomposition": [
+        {
+          "type": "number",
+          "value": 0.05,
+          "show": "0.05"
+        },
+        {
+          "type": "number",
+          "value": 0.0025,
+          "show": "0.0025"
+        },
+        {
+          "type": "number",
+          "value": 0.01,
+          "show": "0.01"
+        }
+      ],
+      "bnParameters": [
+        {
+          "type": "number",
+          "value": 31,
+          "show": "31"
+        },
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "number",
+          "value": 19,
+          "show": "19"
+        }
+      ],
+      "bnJoint": [
+        {
+          "type": "number",
+          "value": 0.8,
+          "show": "0.8"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.084,
+          "show": "0.084"
+        }
+      ],
+      "dSeparation": [
+        {
+          "type": "text",
+          "accept": [
+            "collider",
+            "common effect",
+            "v-structure"
+          ],
+          "show": "collider"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "open",
+            "unblocked",
+            "not blocked",
+            "active"
+          ],
+          "show": "open"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "no",
+            "not independent",
+            "dependent",
+            "no, not independent",
+            "no, dependent",
+            "they are not independent",
+            "they are dependent",
+            "no, they are not independent",
+            "no, they are dependent",
+            "they're not independent",
+            "no, they're not independent",
+            "they're dependent",
+            "no, they're dependent",
+            "conditionally dependent",
+            "no, conditionally dependent",
+            "they are conditionally dependent",
+            "no, they are conditionally dependent",
+            "they're conditionally dependent",
+            "no, they're conditionally dependent",
+            "not conditionally independent",
+            "no, not conditionally independent"
+          ],
+          "show": "no"
+        }
+      ],
+      "markovBlanket": [
+        {
+          "type": "text",
+          "accept": [
+            "D"
+          ],
+          "show": "D"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "no"
+          ],
+          "show": "no"
+        },
+        {
+          "type": "number",
+          "value": 5,
+          "show": "5"
+        }
+      ],
+      "bnMarginal": [
+        {
+          "type": "number",
+          "value": 0.18,
+          "show": "0.18"
+        },
+        {
+          "type": "number",
+          "value": 0.56,
+          "show": "0.56"
+        }
+      ],
+      "bnInference": [
+        {
+          "type": "number",
+          "value": 0.4,
+          "show": "0.4"
+        },
+        {
+          "type": "number",
+          "value": 0.18,
+          "show": "0.18"
+        },
+        {
+          "type": "number",
+          "value": 0.53,
+          "show": "0.53"
+        }
+      ],
+      "cptFromCounts": [
+        {
+          "type": "number",
+          "value": 12,
+          "show": "12"
+        },
+        {
+          "type": "number",
+          "value": 9,
+          "show": "9"
+        },
+        {
+          "type": "number",
+          "value": 0.75,
+          "show": "0.75"
+        }
+      ]
+    },
+    "variation": {
+      "eventSpace": [
+        {
+          "type": "number",
+          "value": 6,
+          "show": "6"
+        },
+        {
+          "type": "number",
+          "value": 64,
+          "show": "64"
+        }
+      ],
+      "additionRule": [
+        {
+          "type": "number",
+          "value": 12,
+          "show": "12"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "1/2"
+        }
+      ],
+      "conditional": [
+        {
+          "type": "number",
+          "value": 4,
+          "show": "4"
+        },
+        {
+          "type": "number",
+          "value": 0.666666666667,
+          "show": "2/3"
+        }
+      ],
+      "productRule": [
+        {
+          "type": "number",
+          "value": 5,
+          "show": "5"
+        },
+        {
+          "type": "number",
+          "value": 0.291666666667,
+          "show": "7/24"
+        }
+      ],
+      "totalProbability": [
+        {
+          "type": "number",
+          "value": 0.6,
+          "show": "0.6"
+        },
+        {
+          "type": "number",
+          "value": 0.06,
+          "show": "0.06"
+        },
+        {
+          "type": "number",
+          "value": 0.16,
+          "show": "0.16"
+        }
+      ],
+      "bayesRule": [
+        {
+          "type": "number",
+          "value": 0.8,
+          "show": "0.8"
+        },
+        {
+          "type": "number",
+          "value": 0.3,
+          "show": "0.3"
+        },
+        {
+          "type": "number",
+          "value": 0.6,
+          "show": "0.6"
+        }
+      ],
+      "independence": [
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "number",
+          "value": 0.166666666667,
+          "show": "1/6"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "yes",
+            "independent",
+            "yes, independent",
+            "they are independent",
+            "yes, they are independent",
+            "they're independent",
+            "yes, they're independent"
+          ],
+          "show": "yes"
+        }
+      ],
+      "jointTable": [
+        {
+          "type": "number",
+          "value": 9,
+          "show": "9"
+        },
+        {
+          "type": "number",
+          "value": 0.4,
+          "show": "0.4"
+        },
+        {
+          "type": "number",
+          "value": 0.375,
+          "show": "3/8"
+        }
+      ],
+      "pmfCount": [
+        {
+          "type": "number",
+          "value": 16,
+          "show": "16"
+        },
+        {
+          "type": "number",
+          "value": 3,
+          "show": "3"
+        },
+        {
+          "type": "number",
+          "value": 0.1875,
+          "show": "3/16"
+        }
+      ],
+      "cdfValue": [
+        {
+          "type": "number",
+          "value": 0,
+          "show": "0"
+        },
+        {
+          "type": "number",
+          "value": 0.35,
+          "show": "0.35"
+        },
+        {
+          "type": "number",
+          "value": 0.55,
+          "show": "0.55"
+        }
+      ],
+      "binomial": [
+        {
+          "type": "number",
+          "value": 1,
+          "show": "1"
+        },
+        {
+          "type": "number",
+          "value": 4,
+          "show": "4"
+        },
+        {
+          "type": "number",
+          "value": 0.4096,
+          "show": "0.4096"
+        }
+      ],
+      "geometric": [
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "number",
+          "value": 0.36,
+          "show": "0.36"
+        },
+        {
+          "type": "number",
+          "value": 0.144,
+          "show": "0.144"
+        }
+      ],
+      "uniformPdf": [
+        {
+          "type": "number",
+          "value": 0.05,
+          "show": "0.05"
+        },
+        {
+          "type": "number",
+          "value": 4,
+          "show": "4"
+        },
+        {
+          "type": "number",
+          "value": 0.2,
+          "show": "0.2"
+        }
+      ],
+      "expectation": [
+        {
+          "type": "number",
+          "value": 0.2,
+          "show": "0.2"
+        },
+        {
+          "type": "number",
+          "value": 0.6,
+          "show": "0.6"
+        },
+        {
+          "type": "number",
+          "value": 1.6,
+          "show": "1.6"
+        }
+      ],
+      "variance": [
+        {
+          "type": "number",
+          "value": 1,
+          "show": "1"
+        },
+        {
+          "type": "number",
+          "value": 1.6,
+          "show": "1.6"
+        },
+        {
+          "type": "number",
+          "value": 0.6,
+          "show": "0.6"
+        }
+      ],
+      "conditionalPmf": [
+        {
+          "type": "number",
+          "value": 0.3,
+          "show": "0.3"
+        },
+        {
+          "type": "number",
+          "value": 0.4,
+          "show": "0.4"
+        }
+      ],
+      "logLikelihood": [
+        {
+          "type": "number",
+          "value": 15,
+          "show": "15"
+        },
+        {
+          "type": "number",
+          "value": 0.8,
+          "show": "0.8"
+        },
+        {
+          "type": "number",
+          "value": -11.3943428319,
+          "show": "-11.394"
+        }
+      ],
+      "mleBernoulli": [
+        {
+          "type": "number",
+          "value": 18,
+          "show": "18"
+        },
+        {
+          "type": "number",
+          "value": 25,
+          "show": "25"
+        },
+        {
+          "type": "number",
+          "value": 0.72,
+          "show": "0.72"
+        }
+      ],
+      "mleCoinFormula": [
+        {
+          "type": "expr",
+          "ref": "m-s",
+          "vars": {
+            "s": [
+              1,
+              20,
+              true
+            ],
+            "m": [
+              21,
+              60,
+              true
+            ]
+          },
+          "show": "m-s"
+        },
+        {
+          "type": "expr",
+          "ref": "s/m",
+          "vars": {
+            "s": [
+              1,
+              20,
+              true
+            ],
+            "m": [
+              21,
+              60,
+              true
+            ]
+          },
+          "show": "s/m"
+        }
+      ],
+      "mlePoisson": [
+        {
+          "type": "number",
+          "value": 16,
+          "show": "16"
+        },
+        {
+          "type": "number",
+          "value": 8,
+          "show": "8"
+        },
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        }
+      ],
+      "logisticPredict": [
+        {
+          "type": "number",
+          "value": 4,
+          "show": "4"
+        },
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "number",
+          "value": 0.880797077978,
+          "show": "0.881"
+        }
+      ],
+      "logOddsCoefficient": [
+        {
+          "type": "number",
+          "value": -0.7,
+          "show": "-0.7"
+        },
+        {
+          "type": "number",
+          "value": 0.496585303791,
+          "show": "0.497"
+        },
+        {
+          "type": "number",
+          "value": 0.503414696209,
+          "show": "0.503"
+        }
+      ],
+      "sigmoidDerivative": [
+        {
+          "type": "number",
+          "value": 0.119202922022,
+          "show": "0.1192"
+        },
+        {
+          "type": "number",
+          "value": 0.880797077978,
+          "show": "0.8808"
+        },
+        {
+          "type": "number",
+          "value": 0.104993585404,
+          "show": "0.1050"
+        }
+      ],
+      "logisticGradient": [
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.622459331202,
+          "show": "0.6225"
+        },
+        {
+          "type": "number",
+          "value": 1.2449186624,
+          "show": "1.245"
+        }
+      ],
+      "naiveBayesPosterior": [
+        {
+          "type": "number",
+          "value": 0.2,
+          "show": "0.2"
+        },
+        {
+          "type": "number",
+          "value": 0.96,
+          "show": "0.96"
+        },
+        {
+          "type": "number",
+          "value": 0.25,
+          "show": "0.25"
+        }
+      ],
+      "naiveBayesSpam": [
+        {
+          "type": "number",
+          "value": 0.024,
+          "show": "0.024"
+        },
+        {
+          "type": "number",
+          "value": 0.75,
+          "show": "0.75"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "urgent"
+          ],
+          "show": "urgent"
+        }
+      ],
+      "laplaceSmoothing": [
+        {
+          "type": "number",
+          "value": 1,
+          "show": "1"
+        },
+        {
+          "type": "number",
+          "value": 3,
+          "show": "3"
+        },
+        {
+          "type": "number",
+          "value": 0.2,
+          "show": "0.2"
+        }
+      ],
+      "posteriorOdds": [
+        {
+          "type": "number",
+          "value": 19,
+          "show": "19"
+        },
+        {
+          "type": "number",
+          "value": 0.0526315789474,
+          "show": "1/19"
+        },
+        {
+          "type": "number",
+          "value": 1,
+          "show": "1"
+        }
+      ],
+      "nbTrainCounts": [
+        {
+          "type": "number",
+          "value": 0.571428571429,
+          "show": "0.571"
+        },
+        {
+          "type": "number",
+          "value": 3,
+          "show": "3"
+        },
+        {
+          "type": "number",
+          "value": 0.75,
+          "show": "0.75"
+        }
+      ],
+      "selfInformation": [
+        {
+          "type": "number",
+          "value": 2,
+          "show": "2"
+        },
+        {
+          "type": "number",
+          "value": 3,
+          "show": "3"
+        },
+        {
+          "type": "number",
+          "value": 5,
+          "show": "5"
+        }
+      ],
+      "entropyCoin": [
+        {
+          "type": "number",
+          "value": -2,
+          "show": "-2"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.811278124459,
+          "show": "0.811"
+        }
+      ],
+      "entropyDistribution": [
+        {
+          "type": "number",
+          "value": 0.928771237955,
+          "show": "0.9288"
+        },
+        {
+          "type": "number",
+          "value": 0.332192809489,
+          "show": "0.3322"
+        },
+        {
+          "type": "number",
+          "value": 1.76096404744,
+          "show": "1.761"
+        }
+      ],
+      "jointEntropy": [
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.375,
+          "show": "0.375"
+        },
+        {
+          "type": "number",
+          "value": 2.5,
+          "show": "2.5"
+        }
+      ],
+      "conditionalEntropy": [
+        {
+          "type": "number",
+          "value": 1.90563906223,
+          "show": "1.906"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.90563906223,
+          "show": "0.906"
+        }
+      ],
+      "klDivergence": [
+        {
+          "type": "number",
+          "value": 1,
+          "show": "1"
+        },
+        {
+          "type": "number",
+          "value": 0,
+          "show": "0"
+        },
+        {
+          "type": "number",
+          "value": 0.625,
+          "show": "0.625"
+        }
+      ],
+      "mutualInformation": [
+        {
+          "type": "number",
+          "value": 1,
+          "show": "1"
+        },
+        {
+          "type": "number",
+          "value": 0.721928094887,
+          "show": "0.7219"
+        },
+        {
+          "type": "number",
+          "value": 0.278071905113,
+          "show": "0.278"
+        }
+      ],
+      "giniIndex": [
+        {
+          "type": "number",
+          "value": 0.64,
+          "show": "0.64"
+        },
+        {
+          "type": "number",
+          "value": 0.68,
+          "show": "0.68"
+        },
+        {
+          "type": "number",
+          "value": 0.32,
+          "show": "0.32"
+        }
+      ],
+      "nodeEntropy": [
+        {
+          "type": "number",
+          "value": -3,
+          "show": "-3"
+        },
+        {
+          "type": "number",
+          "value": 0.75,
+          "show": "0.75"
+        },
+        {
+          "type": "number",
+          "value": 1.75,
+          "show": "1.75"
+        }
+      ],
+      "splitEntropy": [
+        {
+          "type": "number",
+          "value": 0,
+          "show": "0"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.65563906223,
+          "show": "0.656"
+        }
+      ],
+      "informationGain": [
+        {
+          "type": "number",
+          "value": 0.811278124459,
+          "show": "0.811"
+        },
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.311278124459,
+          "show": "0.311"
+        }
+      ],
+      "bestSplit": [
+        {
+          "type": "number",
+          "value": 0.5,
+          "show": "0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.311278124459,
+          "show": "0.3113"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "J",
+            "job",
+            "has a job",
+            "feature J"
+          ],
+          "show": "J"
+        }
+      ],
+      "mrmrScore": [
+        {
+          "type": "number",
+          "value": 0.25,
+          "show": "0.25"
+        },
+        {
+          "type": "number",
+          "value": 0.16,
+          "show": "0.16"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "L",
+            "contract length",
+            "length",
+            "feature L"
+          ],
+          "show": "L"
+        }
+      ],
+      "observedError": [
+        {
+          "type": "number",
+          "value": 28,
+          "show": "28"
+        },
+        {
+          "type": "number",
+          "value": 0.07,
+          "show": "0.07"
+        }
+      ],
+      "binomialTail": [
+        {
+          "type": "number",
+          "value": 4,
+          "show": "4"
+        },
+        {
+          "type": "number",
+          "value": 6,
+          "show": "6"
+        },
+        {
+          "type": "number",
+          "value": 0.6875,
+          "show": "11/16"
+        }
+      ],
+      "testSetBound": [
+        {
+          "type": "number",
+          "value": 0.01,
+          "show": "0.01"
+        },
+        {
+          "type": "number",
+          "value": 0.0678614042442,
+          "show": "0.0679"
+        },
+        {
+          "type": "number",
+          "value": 0.137861404244,
+          "show": "0.138"
+        }
+      ],
+      "testSetSize": [
+        {
+          "type": "number",
+          "value": 100,
+          "show": "100"
+        },
+        {
+          "type": "number",
+          "value": 230.258509299,
+          "show": "230.26"
+        },
+        {
+          "type": "number",
+          "value": 231,
+          "show": "231",
+          "whole": true
+        }
+      ],
+      "unionBound": [
+        {
+          "type": "number",
+          "value": 0.05,
+          "show": "0.05"
+        },
+        {
+          "type": "number",
+          "value": 1600,
+          "show": "1600"
+        },
+        {
+          "type": "number",
+          "value": 0.103649150657,
+          "show": "0.104"
+        }
+      ],
+      "occamBound": [
+        {
+          "type": "number",
+          "value": 10,
+          "show": "10"
+        },
+        {
+          "type": "number",
+          "value": 7.84776253747,
+          "show": "7.848"
+        },
+        {
+          "type": "number",
+          "value": 0.0990439456597,
+          "show": "0.099"
+        }
+      ],
+      "betaPosterior": [
+        {
+          "type": "number",
+          "value": 5,
+          "show": "5"
+        },
+        {
+          "type": "number",
+          "value": 3,
+          "show": "3"
+        },
+        {
+          "type": "number",
+          "value": 8,
+          "show": "8"
+        }
+      ],
+      "mapBeta": [
+        {
+          "type": "number",
+          "value": 10,
+          "show": "10"
+        },
+        {
+          "type": "number",
+          "value": 12,
+          "show": "12"
+        },
+        {
+          "type": "number",
+          "value": 0.833333333333,
+          "show": "5/6"
+        }
+      ],
+      "mapFormula": [
+        {
+          "type": "expr",
+          "ref": "n-k+b-1",
+          "vars": {
+            "k": [
+              1,
+              20,
+              true
+            ],
+            "n": [
+              21,
+              60,
+              true
+            ],
+            "a": [
+              2,
+              10,
+              true
+            ],
+            "b": [
+              2,
+              10,
+              true
+            ]
+          },
+          "show": "n-k+b-1"
+        },
+        {
+          "type": "expr",
+          "ref": "(k+a-1)/(n+a+b-2)",
+          "vars": {
+            "k": [
+              1,
+              20,
+              true
+            ],
+            "n": [
+              21,
+              60,
+              true
+            ],
+            "a": [
+              2,
+              10,
+              true
+            ],
+            "b": [
+              2,
+              10,
+              true
+            ]
+          },
+          "show": "(k+a-1)/(n+a+b-2)"
+        }
+      ],
+      "posteriorMean": [
+        {
+          "type": "number",
+          "value": 33,
+          "show": "33"
+        },
+        {
+          "type": "number",
+          "value": 40,
+          "show": "40"
+        },
+        {
+          "type": "number",
+          "value": 0.175,
+          "show": "0.175"
+        }
+      ],
+      "priorPenalty": [
+        {
+          "type": "number",
+          "value": 4,
+          "show": "4"
+        },
+        {
+          "type": "number",
+          "value": 8,
+          "show": "8"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "L1",
+            "L₁",
+            "L1 norm",
+            "L1 regularisation",
+            "L1 regularization",
+            "lasso"
+          ],
+          "show": "L1"
+        }
+      ],
+      "biasOfEstimator": [
+        {
+          "type": "number",
+          "value": 0,
+          "show": "0"
+        },
+        {
+          "type": "number",
+          "value": 20,
+          "show": "20"
+        },
+        {
+          "type": "number",
+          "value": -0.04,
+          "show": "−0.04"
+        }
+      ],
+      "mseDecomposition": [
+        {
+          "type": "number",
+          "value": -0.5,
+          "show": "−0.5"
+        },
+        {
+          "type": "number",
+          "value": 0.25,
+          "show": "0.25"
+        },
+        {
+          "type": "number",
+          "value": 1.05,
+          "show": "1.05"
+        }
+      ],
+      "bnParameters": [
+        {
+          "type": "number",
+          "value": 63,
+          "show": "63"
+        },
+        {
+          "type": "number",
+          "value": 10,
+          "show": "10"
+        },
+        {
+          "type": "number",
+          "value": 52,
+          "show": "52"
+        }
+      ],
+      "bnJoint": [
+        {
+          "type": "number",
+          "value": 0.3,
+          "show": "0.3"
+        },
+        {
+          "type": "number",
+          "value": 0.9,
+          "show": "0.9"
+        },
+        {
+          "type": "number",
+          "value": 0.0135,
+          "show": "0.0135"
+        }
+      ],
+      "dSeparation": [
+        {
+          "type": "text",
+          "accept": [
+            "collider",
+            "common effect",
+            "v-structure"
+          ],
+          "show": "collider"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "open",
+            "unblocked",
+            "not blocked",
+            "active"
+          ],
+          "show": "open"
+        },
+        {
+          "type": "text",
+          "accept": [
+            "no",
+            "not independent",
+            "dependent",
+            "no, not independent",
+            "no, dependent",
+            "they are not independent",
+            "they are dependent",
+            "no, they are not independent",
+            "no, they are dependent",
+            "they're not independent",
+            "no, they're not independent",
+            "they're dependent",
+            "no, they're dependent",
+            "conditionally dependent",
+            "no, conditionally dependent",
+            "they are conditionally dependent",
+            "no, they are conditionally dependent",
+            "they're conditionally dependent",
+            "no, they're conditionally dependent",
+            "not conditionally independent",
+            "no, not conditionally independent"
+          ],
+          "show": "no"
+        }
+      ],
+      "markovBlanket": [
+        {
+          "type": "text",
+          "accept": [
+            "R"
+          ],
+          "show": "R"
+        },
+        {
+          "type": "number",
+          "value": 6,
+          "show": "6"
+        }
+      ],
+      "bnMarginal": [
+        {
+          "type": "number",
+          "value": 0.12,
+          "show": "0.12"
+        },
+        {
+          "type": "number",
+          "value": 0.52,
+          "show": "0.52"
+        }
+      ],
+      "bnInference": [
+        {
+          "type": "number",
+          "value": 0.108,
+          "show": "0.108"
+        },
+        {
+          "type": "number",
+          "value": 0.504,
+          "show": "0.504"
+        },
+        {
+          "type": "number",
+          "value": 0.65,
+          "show": "0.65"
+        }
+      ],
+      "cptFromCounts": [
+        {
+          "type": "number",
+          "value": 15,
+          "show": "15"
+        },
+        {
+          "type": "number",
+          "value": 0.6,
+          "show": "0.6"
+        }
+      ]
+    }
+  }
+}

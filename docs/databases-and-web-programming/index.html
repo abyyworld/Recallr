@@ -80,6 +80,9 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .done h2{font-size:26px}
 .note{font-size:13px;color:var(--muted)}
 .src{font-size:12px;color:var(--muted)}
+.blank.wrong{border-bottom-color:var(--bad)}
+textarea.work{min-height:90px}
+.kind-maths pre.code{white-space:pre-wrap;overflow-wrap:anywhere}
 .btn.theme{padding:6px 12px;font-size:13px}
 .weeks{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .tick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer}
@@ -107,7 +110,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 // dark by default; the toggle remembers your choice in this browser
 (function(){ var t = "dark"; try { t = localStorage.getItem("recallr-theme") || "dark"; } catch(e) {} document.documentElement.setAttribute("data-theme", t); })();
 </script>
-<div class="wrap">
+<div class="wrap kind-code">
   <header>
     <div>
       <h1><span class="lam">DB</span> Recallr</h1>
@@ -144,7 +147,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 
   <details id="ladderBox">
     <summary>All skills and where you are</summary>
-    <p class="note">Each skill starts at <b>Write it</b>. Get it wrong and it steps down to <b>Fill the gaps</b>, then <b>Predict</b>. Get it wrong and you can try again as often as you like; the answer only appears when you give up. Get it right first time and it climbs back up. A skill you can write comes back after 10 minutes, then 1, 3, 7, 16 and 35 days. "Mastered" means you wrote it correctly three times in a row, spread over days.</p>
+    <p class="note">Each skill starts at <b class="lv3">Write it</b>. Get it wrong and it steps down to <b class="lv2">Fill the gaps</b>, then <b class="lv1">Predict</b>. Get it wrong and you can try again as often as you like; the answer only appears when you give up. Get it right first time and it climbs back up. A skill you can <span class="lvVerb">write</span> comes back after 10 minutes, then 1, 3, 7, 16 and 35 days. "Mastered" means you <span class="lvPast">wrote</span> it correctly three times in a row, spread over days.</p>
     <div class="skills" id="skills"></div>
   </details>
 
@@ -242,6 +245,276 @@ const DECK = [{"id":"w1entityTypes","week":1,"topic":"JDL entities and field typ
 const TWINS = {"w1entityTypes":{"lang":"jdl","title":"a library borrower","sol":"entity Borrower {\n  fullName String,\n  joined LocalDate,\n  loans Integer,\n  overdue Boolean,\n  balance BigDecimal\n}","checks":[["entities","Borrower"],["fields Borrower","fullName String, joined LocalDate, loans Integer, overdue Boolean, balance BigDecimal"]],"write":{"task":"Write a JDL entity `Borrower` with these fields, in this order: `fullName` (text), `joined` (a date with no time), `loans` (a whole number), `overdue` (true or false) and `balance` (an exact money amount). Use each of the JDL types `String`, `Integer`, `LocalDate`, `Boolean` and `BigDecimal` once. No validations.","starter":"entity Borrower {\n"},"fill":{"code":"entity Borrower {\n  fullName String,\n  joined LocalDate,\n  loans ___,\n  overdue ___,\n  balance BigDecimal\n}","blanks":[["Integer"],["Boolean"]]},"predict":{"code":"entity Song {\n  name String,\n  plays Long,\n  rating Double\n}","expr":"fields Song","ask":"What does `fields Song` list? Write each field as `name Type`, separated by commas, in order.","answer":"name String, plays Long, rating Double"},"explain":"Each line inside an entity is `fieldName Type`. `Integer` holds whole numbers, `Boolean` holds true or false, `LocalDate` a date with no time and `BigDecimal` an exact decimal such as a balance."},"w1validations":{"lang":"jdl","title":"hotel rooms","sol":"entity HotelRoom {\n  number String required unique maxlength(4),\n  floor Integer required min(0) max(20),\n  beds Integer min(1)\n}","checks":[["fields HotelRoom","number String required unique maxlength(4), floor Integer required min(0) max(20), beds Integer min(1)"]],"write":{"task":"Write a JDL entity `HotelRoom` with these fields, in this order: `number` (String: required, unique, at most 4 characters long), `floor` (Integer: required, from 0 to 20) and `beds` (Integer: at least 1). Write each field's validations in the order given.","starter":"entity HotelRoom {\n"},"fill":{"code":"entity HotelRoom {\n  number String required unique maxlength(4),\n  floor Integer required ___(0) ___(20),\n  beds Integer min(1)\n}","blanks":[["min"],["max"]]},"predict":{"code":"entity Coupon {\n  code String unique minlength(6),\n  discount Integer max(50)\n}","expr":"fields Coupon","ask":"What does `fields Coupon` list? Write each field as `name Type validations`, separated by commas, in order.","answer":"code String unique minlength(6), discount Integer max(50)"},"explain":"`min` and `max` limit the value of a number, so `floor` must be between 0 and 20. For a String you limit its length instead, with `minlength` and `maxlength`."},"w1enum":{"lang":"jdl","title":"pizza sizes","sol":"enum Size {\n  SMALL,\n  MEDIUM,\n  LARGE\n}\n\nentity Pizza {\n  name String required,\n  size Size required\n}","checks":[["entities","Pizza"],["fields Pizza","name String required, size Size required"]],"write":{"task":"Write an enum `Size` with the values `SMALL`, `MEDIUM` and `LARGE`. Then write an entity `Pizza` with, in this order, a required `name` (String) and a required `size` whose type is `Size`.","starter":"enum Size {\n"},"fill":{"code":"___ Size {\n  SMALL,\n  MEDIUM,\n  LARGE\n}\n\nentity Pizza {\n  name String required,\n  size ___ required\n}","blanks":[["enum"],["Size"]]},"predict":{"code":"enum Fuel {\n  PETROL,\n  ELECTRIC\n}\n\nentity Car {\n  model String,\n  fuel Fuel\n}","expr":"fields Car","ask":"What does `fields Car` list? Write each field as `name Type`, separated by commas, in order.","answer":"model String, fuel Fuel"},"explain":"The enum's name becomes a type you can give a field, just like `String`. A pizza's `size` can then only be `SMALL`, `MEDIUM` or `LARGE`."},"w1oneToOne":{"lang":"jdl","title":"patients and records","sol":"entity Patient {\n  fullName String required\n}\n\nentity MedicalRecord {\n  recordNumber String required unique\n}\n\nrelationship OneToOne {\n  Patient{record} to MedicalRecord{patient}\n}","checks":[["entities","MedicalRecord, Patient"],["relationships","OneToOne Patient{record} to MedicalRecord{patient}"]],"write":{"task":"Write JDL for `Patient` (a required `fullName` String) and `MedicalRecord` (a `recordNumber` String that is required and unique). Each patient has exactly one record and each record belongs to one patient. Make it bidirectional and write it from `Patient` to `MedicalRecord`: `Patient` gets the field `record` and `MedicalRecord` gets the field `patient`.","starter":"entity Patient {\n"},"fill":{"code":"entity Patient {\n  fullName String required\n}\n\nentity MedicalRecord {\n  recordNumber String required unique\n}\n\nrelationship ___ {\n  Patient{___} to MedicalRecord{patient}\n}","blanks":[["OneToOne"],["record"]]},"predict":{"code":"entity Phone {\n  model String\n}\n\nentity Sim {\n  number String\n}\n\nrelationship OneToOne {\n  Phone{sim} to Sim{phone}\n}","expr":"relationships","ask":"What does the `relationships` check print? Write it as `Type From{field} to To{field}`.","answer":"OneToOne Phone{sim} to Sim{phone}"},"explain":"One on each side is `OneToOne`. With a name on both sides the link works both ways: `patient.getRecord()` and `record.getPatient()`. Leave one name out and only the named side can navigate."},"w1manyToOne":{"lang":"jdl","title":"pets and owners","sol":"entity Owner {\n  email String required unique\n}\n\nentity Pet {\n  name String required\n}\n\nrelationship ManyToOne {\n  Pet{owner} to Owner\n}","checks":[["entities","Owner, Pet"],["relationships","ManyToOne Pet{owner} to Owner"]],"write":{"task":"Write JDL for `Owner` (an `email` String that is required and unique) and `Pet` (a required `name` String). Many pets belong to one owner. Make it unidirectional from `Pet` to `Owner`: only `Pet` gets a field, called `owner`.","starter":"entity Owner {\n"},"fill":{"code":"entity Owner {\n  email String required unique\n}\n\nentity Pet {\n  name String required\n}\n\nrelationship ___ {\n  Pet{___} to Owner\n}","blanks":[["ManyToOne"],["owner"]]},"predict":{"code":"entity Album {\n  title String\n}\n\nentity Track {\n  title String\n}\n\nrelationship ManyToOne {\n  Track{album} to Album\n}","expr":"fields Album","ask":"What does `fields Album` list? Write each field as `name Type`.","answer":"title String"},"explain":"`Pet{owner} to Owner` reads: many pets, one owner, and only a pet can find its owner. A relationship never shows up in either entity's field list, so `Album` still has only `title`."},"w1oneToMany":{"lang":"jdl","title":"hospitals and wards","sol":"entity Hospital {\n  name String required unique\n}\n\nentity Ward {\n  beds Integer required min(1)\n}\n\nrelationship OneToMany {\n  Hospital{wards} to Ward{hospital}\n}","checks":[["entities","Hospital, Ward"],["relationships","OneToMany Hospital{wards} to Ward{hospital}"]],"write":{"task":"Write JDL for `Hospital` (a `name` String that is required and unique) and `Ward` (a `beds` Integer that is required and at least 1). One hospital has many wards and each ward is in one hospital. Write it from `Hospital` to `Ward`, with the field `wards` on `Hospital` and `hospital` on `Ward`.","starter":"entity Hospital {\n"},"fill":{"code":"entity Hospital {\n  name String required unique\n}\n\nentity Ward {\n  beds Integer required min(1)\n}\n\nrelationship ___ {\n  Hospital{wards} to Ward{___}\n}","blanks":[["OneToMany"],["hospital"]]},"predict":{"code":"entity Farm {\n  name String\n}\n\nentity Cow {\n  tag String required,\n  born LocalDate\n}\n\nrelationship OneToMany {\n  Farm{cows} to Cow{farm}\n}","expr":"fields Cow","ask":"What does `fields Cow` list? Write each field as `name Type validations`, separated by commas, in order.","answer":"tag String required, born LocalDate"},"explain":"One hospital, many wards: the one side comes first in `OneToMany`. `hospital.getWards()` gives a list and `ward.getHospital()` gives one hospital. The ward table stores the hospital's id, but JDL does not list it as a field."},"w1manyToMany":{"lang":"jdl","title":"playlists and songs","sol":"entity Playlist {\n  title String required\n}\n\nentity Song {\n  title String required\n}\n\nrelationship ManyToMany {\n  Playlist{songs} to Song{playlists}\n}","checks":[["entities","Playlist, Song"],["relationships","ManyToMany Playlist{songs} to Song{playlists}"]],"write":{"task":"Write JDL for `Playlist` (a required `title` String) and `Song` (a required `title` String). A playlist has many songs and a song can be on many playlists. Write it from `Playlist` to `Song`, with the field `songs` on `Playlist` and `playlists` on `Song`.","starter":"entity Playlist {\n"},"fill":{"code":"entity Playlist {\n  title String required\n}\n\nentity Song {\n  title String required\n}\n\nrelationship ___ {\n  Playlist{___} to Song{playlists}\n}","blanks":[["ManyToMany"],["songs"]]},"predict":{"code":"entity Doctor {\n  name String\n}\n\nentity Clinic {\n  city String\n}\n\nrelationship ManyToMany {\n  Doctor{clinics} to Clinic{doctors}\n}","expr":"entities","ask":"The database gets a join table for this relationship. Which entity names does the JDL declare? Write them sorted A to Z, separated by commas.","answer":"Clinic, Doctor"},"explain":"Both `playlist.getSongs()` and `song.getPlaylists()` return lists, so this is `ManyToMany`. The join table that links them is made for you; it is not an entity you write."},"w1noLists":{"lang":"jdl","title":"albums and tracks","sol":"entity Album {\n  title String required\n}\n\nentity Track {\n  name String required,\n  seconds Integer min(1)\n}\n\nrelationship OneToMany {\n  Album{tracks} to Track{album}\n}","checks":[["entities","Album, Track"],["fields Album","title String required"],["relationships","OneToMany Album{tracks} to Track{album}"]],"write":{"task":"An `Album` has a required `title` (String) and a list of tracks. Each track has a required `name` (String) and a `seconds` Integer of at least 1. JDL cannot hold a list in a field, so make `Track` an entity and link it to `Album`. Write the link from `Album` to `Track`, with the field `tracks` on `Album` and `album` on `Track`.","starter":"entity Album {\n"},"fill":{"code":"entity Album {\n  title String required\n}\n\n___ Track {\n  name String required,\n  seconds Integer min(1)\n}\n\nrelationship ___ {\n  Album{tracks} to Track{album}\n}","blanks":[["entity"],["OneToMany"]]},"predict":{"code":"entity Garden {\n  name String\n}\n\nentity Plant {\n  species String\n}\n\nrelationship OneToMany {\n  Garden{plants} to Plant{garden}\n}","expr":"entities","ask":"A garden needs a list of plants. Which entity names does this declare? Write them sorted A to Z, separated by commas.","answer":"Garden, Plant"},"explain":"There is no `List\u003cTrack>` field in JDL. The tracks become their own entity and the `OneToMany` relationship holds the list, so `album.getTracks()` still works in the generated code."},"w1miniModel":{"lang":"jdl","title":"galleries, paintings and artists","sol":"entity Gallery {\n  city String required\n}\n\nentity Painting {\n  title String required\n}\n\nentity Artist {\n  name String required unique\n}\n\nrelationship OneToMany {\n  Gallery{paintings} to Painting{gallery}\n}\n\nrelationship ManyToOne {\n  Painting{artist} to Artist\n}","checks":[["entities","Artist, Gallery, Painting"],["relationships","ManyToOne Painting{artist} to Artist; OneToMany Gallery{paintings} to Painting{gallery}"]],"write":{"task":"Write JDL for `Gallery` (a required `city` String), `Painting` (a required `title` String) and `Artist` (a `name` String that is required and unique). A gallery holds many paintings and each painting is in one gallery: write it from `Gallery`, with `paintings` on `Gallery` and `gallery` on `Painting`. Many paintings are by one artist: make it unidirectional from `Painting` to `Artist`, with only the field `artist` on `Painting`.","starter":"entity Gallery {\n"},"fill":{"code":"entity Gallery {\n  city String required\n}\n\nentity Painting {\n  title String required\n}\n\nentity Artist {\n  name String required unique\n}\n\nrelationship ___ {\n  Gallery{paintings} to Painting{gallery}\n}\n\nrelationship ___ {\n  Painting{artist} to Artist\n}","blanks":[["OneToMany"],["ManyToOne"]]},"predict":{"code":"entity Port\nentity Ferry\nentity Sailor\n\nrelationship ManyToOne {\n  Ferry{port} to Port\n}\n\nrelationship ManyToMany {\n  Ferry{sailors} to Sailor{ferries}\n}","expr":"fields Ferry","ask":"What does `fields Ferry` list? If it has no fields, write `(none)`.","answer":"(none)"},"explain":"Use one `relationship` block per type, each starting from the side you name first. Both links here are \"one\" on one end and \"many\" on the other, but they are written from different ends, so one is `OneToMany` and the other is `ManyToOne`."},"w2createTable":{"title":"gym members table","sol":"CREATE TABLE member (\n  member_id SERIAL PRIMARY KEY,\n  full_name VARCHAR(60) NOT NULL,\n  phone     VARCHAR(20)\n);","checks":[["SELECT column_name, data_type, is_nullable\nFROM information_schema.columns\nWHERE table_name = 'member'\nORDER BY ordinal_position","member_id, integer, NO; full_name, character varying, NO; phone, character varying, YES"],["SELECT column_name\nFROM information_schema.key_column_usage\nWHERE table_name = 'member'","member_id"],["SELECT column_default LIKE 'nextval%'\nFROM information_schema.columns\nWHERE table_name = 'member' AND column_name = 'member_id'","true"]],"write":{"task":"Create a table `member` for a gym with three columns in this order: `member_id` (numbered automatically with `SERIAL`, the primary key), `full_name` (`VARCHAR(60)`, not null) and `phone` (`VARCHAR(20)`).","starter":"CREATE TABLE member (\n"},"fill":{"code":"CREATE TABLE member (\n  member_id ___ PRIMARY KEY,\n  full_name VARCHAR(60) ___,\n  phone     VARCHAR(20)\n);","blanks":[["SERIAL"],["NOT NULL"]]},"predict":{"code":"CREATE TABLE gym_class (\n  class_id SERIAL PRIMARY KEY,\n  title    VARCHAR(40) NOT NULL,\n  coach    VARCHAR(40)\n);\n\nINSERT INTO gym_class (title) VALUES ('Yoga');\n\nSELECT coach FROM gym_class;","ask":"The `INSERT` gives no value for `coach`. What does the `SELECT` return? Write `null` for an empty value.","answer":"null"},"explain":"`SERIAL` is a whole number that PostgreSQL fills in for you: 1 for the first row, 2 for the next, and so on. `VARCHAR(60)` is text of at most 60 characters. `NOT NULL` means a member must always have a name; a column without it, like `coach`, is simply left NULL when no value is given."},"w2insert":{"title":"log parcels","setup":"CREATE TABLE parcel (\n  parcel_id SERIAL PRIMARY KEY,\n  recipient VARCHAR(60) NOT NULL,\n  city      VARCHAR(40),\n  weight_kg NUMERIC(5,2)\n);\n\nINSERT INTO parcel (recipient, city, weight_kg)\nVALUES ('Ana Costa', 'York', 1.2);","sol":"INSERT INTO parcel (recipient, city, weight_kg)\nVALUES\n  ('Priya Shah', 'Leeds', 2.5),\n  ('Tom Reid', 'Bristol', 0.75);","checks":[["SELECT parcel_id, recipient, city, weight_kg\nFROM parcel\nORDER BY parcel_id","1, Ana Costa, York, 1.20; 2, Priya Shah, Leeds, 2.50; 3, Tom Reid, Bristol, 0.75"]],"write":{"task":"A courier logs parcels in `parcel`. Add two parcels: first one for `Priya Shah` in `Leeds` weighing 2.5 kg, then one for `Tom Reid` in `Bristol` weighing 0.75 kg. Name the columns you fill in, and let `SERIAL` set `parcel_id`.","starter":"INSERT INTO parcel\n"},"fill":{"code":"INSERT INTO parcel (___)\nVALUES\n  ('Priya Shah', 'Leeds', 2.5),\n  ('Tom Reid', 'Bristol', 0.75);","blanks":[["recipient, city, weight_kg","recipient,city,weight_kg"]]},"predict":{"code":"INSERT INTO parcel\nVALUES (10, 'Li Wei', 'Hull', 3);\n\nSELECT weight_kg FROM parcel WHERE parcel_id = 10;","ask":"There is no column list, so the values go in the table's column order. What does the `SELECT` return? Remember that `weight_kg` is `NUMERIC(5,2)`.","answer":"3.00"},"explain":"The column list says which columns the values are for, in that order, so `parcel_id` can be left to `SERIAL`. Without a list you must give every column in the table's own order. `NUMERIC(5,2)` always shows two decimal places, so 3 is stored as `3.00`."},"w2select":{"title":"flights with seats","setup":"CREATE TABLE flight (\n  flight_no   VARCHAR(8) PRIMARY KEY,\n  origin      VARCHAR(30),\n  destination VARCHAR(30),\n  seats_free  INT\n);\n\nINSERT INTO flight VALUES\n  ('BA101', 'Manchester', 'Rome', 12),\n  ('EZ220', 'Manchester', 'Paris', 0),\n  ('RY330', 'Bristol', 'Rome', 5),\n  ('BA415', 'Manchester', 'Lisbon', 3),\n  ('KL502', 'Bristol', 'Oslo', 0);","sol":"SELECT flight_no, destination\nFROM flight\nWHERE origin = 'Manchester' AND seats_free > 0;","checks":[["@result","BA101, Rome; BA415, Lisbon"]],"write":{"task":"Return two columns, `flight_no` then `destination`, for every flight from `Manchester` that still has free seats (`seats_free` above 0). For example, one row is `BA101, Rome`.","starter":"SELECT\n"},"fill":{"code":"___ flight_no, destination\n___ flight\nWHERE origin = 'Manchester' AND seats_free > 0;","blanks":[["SELECT"],["FROM"]]},"predict":{"code":"SELECT *\nFROM flight\nWHERE destination = 'Oslo';","answer":"KL502, Bristol, Oslo, 0"},"explain":"`SELECT *` returns every column; naming columns returns only those, in the order you list them. `WHERE` with `AND` keeps a row only when both tests are true."},"w2update":{"title":"improve a phone plan","setup":"CREATE TABLE phone_plan (\n  plan_id     INT PRIMARY KEY,\n  plan_name   VARCHAR(30) NOT NULL,\n  data_gb     INT,\n  monthly_fee NUMERIC(5,2)\n);\n\nINSERT INTO phone_plan VALUES\n  (1, 'Basic', 5, 8.00),\n  (2, 'Plus', 20, 15.00),\n  (3, 'Max', 100, 25.00);","sol":"UPDATE phone_plan\nSET data_gb = 50, monthly_fee = 18.00\nWHERE plan_id = 2;","checks":[["SELECT plan_id, data_gb, monthly_fee\nFROM phone_plan\nORDER BY plan_id","1, 5, 8.00; 2, 50, 18.00; 3, 100, 25.00"]],"write":{"task":"Plan 2 is being improved. In one `UPDATE`, set its `data_gb` to 50 and its `monthly_fee` to 18.00. Leave the other plans alone.","starter":"UPDATE phone_plan\n"},"fill":{"code":"UPDATE phone_plan\n___ data_gb = 50, monthly_fee = 18.00\n___;","blanks":[["SET"],["WHERE plan_id = 2"]]},"predict":{"code":"UPDATE phone_plan\nSET data_gb = 100;\n\nSELECT data_gb FROM phone_plan WHERE plan_id = 1;","ask":"This `UPDATE` has no `WHERE`. What does the `SELECT` return?","answer":"100"},"explain":"One `SET` can change several columns, separated by commas. The `WHERE` limits the change to the rows you mean; leave it out and every row in the table is updated."},"w2delete":{"title":"cancel short stays","setup":"CREATE TABLE booking (\n  booking_id INT PRIMARY KEY,\n  guest      VARCHAR(40) NOT NULL,\n  pitch      CHAR(1),\n  nights     INT\n);\n\nINSERT INTO booking VALUES\n  (1, 'Sam Holt', 'A', 1),\n  (2, 'Mia Grant', 'A', 4),\n  (3, 'Leo Park', 'B', 1),\n  (4, 'Zoe Lane', 'A', 1),\n  (5, 'Raj Iyer', 'C', 3);","sol":"DELETE FROM booking\nWHERE pitch = 'A' AND nights = 1;","checks":[["SELECT booking_id FROM booking","2; 3; 5"]],"write":{"task":"A campsite keeps its bookings in `booking`. Delete the bookings on pitch `A` that are for 1 night. Keep every other booking.","starter":"DELETE\n"},"fill":{"code":"DELETE FROM booking\n___ pitch = 'A' AND nights = 1;","blanks":[["WHERE"]]},"predict":{"code":"DELETE FROM booking\nWHERE nights = 1 OR pitch = 'C';\n\nSELECT guest FROM booking;","ask":"Which guests are left after the `DELETE`? Separate rows with semicolons, like `Ann Cole; Ben Ruiz`.","answer":"Mia Grant"},"explain":"`DELETE FROM booking WHERE ...` removes each row that matches the test. With `AND` both parts must be true; with `OR` either one is enough, so `OR` usually deletes more rows."},"w2updateAnomaly":{"title":"support phone change","setup":"CREATE TABLE staff (\n  staff_id   INT PRIMARY KEY,\n  staff_name VARCHAR(40) NOT NULL,\n  dept       VARCHAR(20),\n  dept_phone VARCHAR(15)\n);\n\nINSERT INTO staff VALUES\n  (1, 'Omar', 'Sales', '0121 111'),\n  (2, 'Lena', 'Sales', '0121 111'),\n  (3, 'Kofi', 'Support', '0121 222'),\n  (4, 'Ruth', 'Support', '0121 222');","sol":"UPDATE staff\nSET dept_phone = '0121 999'\nWHERE dept = 'Support';","checks":[["SELECT staff_id, dept_phone\nFROM staff\nORDER BY staff_id","1, 0121 111; 2, 0121 111; 3, 0121 999; 4, 0121 999"]],"write":{"task":"In `staff` each row repeats its department's phone number. The `Support` number is now `'0121 999'`. Write one `UPDATE` that sets `dept_phone` to it on every Support row.","starter":"UPDATE staff\n"},"fill":{"code":"UPDATE staff\nSET ___\nWHERE dept = 'Support';","blanks":[["dept_phone = '0121 999'"]]},"predict":{"code":"UPDATE staff\nSET dept_phone = '0121 999'\nWHERE staff_name = 'Kofi';\n\nSELECT staff_name, dept_phone\nFROM staff\nWHERE dept = 'Support';","ask":"The number was changed on Kofi's row only. What do the Support rows show now? Write each row as `name, phone`, with rows separated by semicolons.","answer":"Ruth, 0121 222; Kofi, 0121 999"},"explain":"The phone number belongs to the department, but it is repeated in every staff row. Updating only some of those rows leaves two different numbers for one department: an update anomaly. Storing it once in a department table avoids this."},"w2repeatingGroup":{"title":"split out subjects","setup":"CREATE TABLE tutor (\n  tutor_id   INT PRIMARY KEY,\n  tutor_name VARCHAR(40) NOT NULL,\n  subject1   VARCHAR(30),\n  subject2   VARCHAR(30),\n  subject3   VARCHAR(30)\n);\n\nINSERT INTO tutor VALUES\n  (1, 'Ali', 'Maths', 'Physics', NULL),\n  (2, 'Bea', 'French', 'Maths', 'Spanish'),\n  (3, 'Cy', 'Art', NULL, NULL);","sol":"CREATE TABLE tutor_subject (\n  tutor_id INT,\n  subject  VARCHAR(30),\n  PRIMARY KEY (tutor_id, subject)\n);","checks":[["SELECT column_name, data_type\nFROM information_schema.columns\nWHERE table_name = 'tutor_subject'\nORDER BY ordinal_position","tutor_id, integer; subject, character varying"],["SELECT k.column_name\nFROM information_schema.table_constraints t\nJOIN information_schema.key_column_usage k ON k.constraint_name = t.constraint_name\nWHERE t.table_name = 'tutor_subject' AND t.constraint_type = 'PRIMARY KEY'","tutor_id; subject"]],"write":{"task":"A tutoring agency keeps up to three subjects per tutor in `subject1` to `subject3`, a repeating group. Create a table `tutor_subject` with two columns in this order: `tutor_id` (`INT`) and `subject` (`VARCHAR(30)`), one row per subject a tutor teaches. Choose its primary key so a tutor can teach many subjects but never the same subject twice.","starter":"CREATE TABLE tutor_subject (\n"},"fill":{"code":"CREATE TABLE tutor_subject (\n  tutor_id INT,\n  subject  VARCHAR(30),\n  PRIMARY KEY (___)\n);","blanks":[["tutor_id, subject","tutor_id,subject","subject, tutor_id","subject,tutor_id"]]},"predict":{"code":"SELECT tutor_name\nFROM tutor\nWHERE subject1 = 'Maths';","ask":"This runs on `tutor`, before the split. Bea teaches Maths too. Which names does it return? Separate rows with semicolons if there are several.","answer":"Ali"},"explain":"With numbered columns a subject can sit in any of them, so `WHERE subject1 = 'Maths'` misses Bea, whose Maths is in `subject2`. In `tutor_subject` every subject is in the same column, so one test finds them all. The key is the pair: one tutor has many rows, but each (tutor, subject) appears only once."},"w2partialDependency":{"title":"rooms and stays","setup":"CREATE TABLE stay_flat (\n  room_no   INT,\n  night     DATE,\n  room_type VARCHAR(10),\n  guest     VARCHAR(40),\n  PRIMARY KEY (room_no, night)\n);\n\nINSERT INTO stay_flat VALUES\n  (12, '2026-05-01', 'Double', 'Ivy Moss'),\n  (12, '2026-05-02', 'Double', 'Ivy Moss'),\n  (15, '2026-05-01', 'Single', 'Tariq Aziz');","sol":"CREATE TABLE room (\n  room_no   INT PRIMARY KEY,\n  room_type VARCHAR(10)\n);\n\nCREATE TABLE stay (\n  room_no INT,\n  night   DATE,\n  guest   VARCHAR(40),\n  PRIMARY KEY (room_no, night)\n);","checks":[["SELECT table_name, column_name\nFROM information_schema.columns\nWHERE table_name IN ('room', 'stay')\nORDER BY table_name, ordinal_position","room, room_no; room, room_type; stay, room_no; stay, night; stay, guest"],["SELECT t.table_name, k.column_name\nFROM information_schema.table_constraints t\nJOIN information_schema.key_column_usage k ON k.constraint_name = t.constraint_name\nWHERE t.table_name IN ('room', 'stay') AND t.constraint_type = 'PRIMARY KEY'","room, room_no; stay, room_no; stay, night"]],"write":{"task":"A small hotel uses `stay_flat`, whose key is (`room_no`, `night`). `room_type` depends only on `room_no`, which breaks 2NF. Split it. First create `room` with `room_no` (`INT`) then `room_type` (`VARCHAR(10)`), keyed on the column that decides the type. Then create `stay` with `room_no` (`INT`), `night` (`DATE`) and `guest` (`VARCHAR(40)`), in that order, keyed on the pair (`room_no`, `night`).","starter":"CREATE TABLE room (\n"},"fill":{"code":"CREATE TABLE room (\n  room_no   INT ___,\n  room_type VARCHAR(10)\n);\n\nCREATE TABLE stay (\n  room_no INT,\n  night   DATE,\n  guest   VARCHAR(40),\n  PRIMARY KEY (___)\n);","blanks":[["PRIMARY KEY"],["room_no, night","room_no,night","night, room_no","night,room_no"]]},"predict":{"code":"CREATE TABLE room (\n  room_no   INT PRIMARY KEY,\n  room_type VARCHAR(10)\n);\n\nINSERT INTO room VALUES\n  (12, 'Double'), (15, 'Single'), (20, 'Suite');\n\nSELECT room_type\nFROM room\nWHERE room_no = 20;","ask":"Room 20 is new and nobody has stayed in it yet. After the split, what does the `SELECT` return?","answer":"Suite"},"explain":"In `stay_flat` a room could only be recorded with a night, because `night` is part of the key: you could not add room 20 until someone booked it (an insert anomaly). In the `room` table each room's type is stored once, with or without stays. `stay` keeps only `guest`, which needs both the room and the night."},"w2transitive":{"title":"gigs and venues","setup":"CREATE TABLE gig_flat (\n  gig_id         INT PRIMARY KEY,\n  band           VARCHAR(40) NOT NULL,\n  venue_name     VARCHAR(30),\n  venue_capacity INT\n);\n\nINSERT INTO gig_flat VALUES\n  (1, 'Copper Owls', 'Old Mill', 400),\n  (2, 'Velvet Foxes', 'Arena North', 5000),\n  (3, 'Glass Harbour', 'Old Mill', 400);","sol":"CREATE TABLE venue (\n  venue_name VARCHAR(30) PRIMARY KEY,\n  capacity   INT\n);\n\nCREATE TABLE gig (\n  gig_id     INT PRIMARY KEY,\n  band       VARCHAR(40) NOT NULL,\n  venue_name VARCHAR(30)\n);","checks":[["SELECT table_name, column_name, is_nullable\nFROM information_schema.columns\nWHERE table_name IN ('venue', 'gig')\nORDER BY table_name, ordinal_position","gig, gig_id, NO; gig, band, NO; gig, venue_name, YES; venue, venue_name, NO; venue, capacity, YES"],["SELECT t.table_name, k.column_name\nFROM information_schema.table_constraints t\nJOIN information_schema.key_column_usage k ON k.constraint_name = t.constraint_name\nWHERE t.table_name IN ('venue', 'gig') AND t.constraint_type = 'PRIMARY KEY'\nORDER BY 1","gig, gig_id; venue, venue_name"]],"write":{"task":"In `gig_flat`, `venue_capacity` depends on `venue_name`, not directly on `gig_id`. Split it into 3NF. First create `venue` with `venue_name` (`VARCHAR(30)`, primary key) then `capacity` (`INT`). Then create `gig` with `gig_id` (`INT`, primary key), `band` (`VARCHAR(40)`, not null) and `venue_name` (`VARCHAR(30)`), in that order.","starter":"CREATE TABLE venue (\n"},"fill":{"code":"CREATE TABLE venue (\n  venue_name VARCHAR(30) PRIMARY KEY,\n  ___ INT\n);\n\nCREATE TABLE gig (\n  gig_id     INT ___,\n  band       VARCHAR(40) NOT NULL,\n  venue_name VARCHAR(30)\n);","blanks":[["capacity"],["PRIMARY KEY"]]},"predict":{"code":"CREATE TABLE venue (\n  venue_name VARCHAR(30) PRIMARY KEY,\n  capacity   INT\n);\n\nINSERT INTO venue VALUES\n  ('Old Mill', 400),\n  ('Arena North', 5000);\n\nSELECT venue_name\nFROM venue\nWHERE capacity > 1000;","ask":"After the split, what does this return? (In `gig_flat`, Old Mill's capacity was stored twice.)","answer":"Arena North"},"explain":"A transitive dependency is a chain: the gig decides the venue, and the venue decides the capacity. 3NF breaks the chain by giving the venue its own table, so each capacity is stored once. The gig keeps `venue_name` as a foreign key to find it."},"w3copyCsv":{"title":"load flight times","setup":"CREATE TABLE flight (\n  flight_no   VARCHAR(8) PRIMARY KEY,\n  destination VARCHAR(40) NOT NULL,\n  seats       INT,\n  departs     DATE\n);","files":{"flights.csv":"flight_no,destination,seats,departs\nBA208,Lisbon,180,2026-12-01\nEZ114,Oslo,156,2026-12-03\nFR902,Porto,189,2026-12-03\nKL41,Amsterdam,,2026-12-05\n"},"sol":"\\copy flight FROM 'flights.csv' WITH (FORMAT csv, HEADER true)","checks":[["SELECT flight_no, destination, seats, departs\nFROM flight\nORDER BY flight_no","BA208, Lisbon, 180, 2026-12-01; EZ114, Oslo, 156, 2026-12-03; FR902, Porto, 189, 2026-12-03; KL41, Amsterdam, null, 2026-12-05"]],"write":{"task":"`flights.csv` starts with a header line, then has one flight per line, in the same order as the columns of `flight`. Load it into the empty table `flight` with psql's `\\copy`, written on one line.","starter":"\\copy flight "},"fill":{"code":"___ flight FROM 'flights.csv' WITH (___ csv, HEADER true)","blanks":[["\\copy"],["FORMAT"]]},"predict":{"code":"\\copy flight FROM 'flights.csv' WITH (FORMAT csv, HEADER true)\n\nSELECT COUNT(*) FROM flight WHERE departs = '2026-12-03';","answer":"2"},"explain":"`\\copy` is a psql command that reads a file from your computer into a table. The table must exist first, with columns in the same order as the file. `HEADER true` tells it the first line is column names, not data."},"w3addColumn":{"title":"albums get a year","setup":"CREATE TABLE album (\n  album_id INT PRIMARY KEY,\n  title    VARCHAR(80),\n  artist   VARCHAR(60)\n);\n\nINSERT INTO album VALUES\n  (1, 'Blue', 'Joni Mitchell'),\n  (2, 'Rumours', 'Fleetwood Mac');","sol":"ALTER TABLE album\nADD COLUMN release_year INT;","checks":[["SELECT column_name, data_type\nFROM information_schema.columns\nWHERE table_name = 'album'\nORDER BY ordinal_position","album_id, integer; title, character varying; artist, character varying; release_year, integer"],["SELECT COUNT(*) FROM album","2"]],"write":{"task":"Add a whole-number column `release_year` (type `INT`) to the existing table `album`, keeping its two rows.","starter":"ALTER TABLE album\n"},"fill":{"code":"___ TABLE album\n___ release_year INT;","blanks":[["ALTER"],["ADD COLUMN","ADD"]]},"predict":{"code":"ALTER TABLE album\nADD COLUMN copies_sold INT DEFAULT 0;\n\nSELECT copies_sold FROM album WHERE album_id = 1;","ask":"This new column has `DEFAULT 0`. What does the old row for album 1 hold in it?","answer":"0"},"explain":"`ALTER TABLE ... ADD COLUMN name type` adds a column to a table that already has data. Old rows get NULL in the new column, or the default if you give one."},"w3foreignKey":{"title":"link songs to artists","setup":"CREATE TABLE artist (\n  artist_id INT PRIMARY KEY,\n  name      VARCHAR(60)\n);\n\nCREATE TABLE song (\n  song_id   INT PRIMARY KEY,\n  title     VARCHAR(80),\n  artist_id INT\n);\n\nINSERT INTO artist VALUES (1, 'Adele'), (2, 'Burna Boy');\nINSERT INTO song VALUES (1, 'Hello', 1), (2, 'Last Last', 2);","sol":"ALTER TABLE song\nADD CONSTRAINT fk_song_artist\nFOREIGN KEY (artist_id) REFERENCES artist (artist_id);","checks":[["SELECT constraint_name\nFROM information_schema.table_constraints\nWHERE table_name = 'song' AND constraint_type = 'FOREIGN KEY'","fk_song_artist"],["SELECT table_name, column_name\nFROM information_schema.constraint_column_usage\nWHERE constraint_name = 'fk_song_artist'","artist, artist_id"]],"write":{"task":"Use `ALTER TABLE` to add a foreign key named `fk_song_artist`, so that `song.artist_id` must match an `artist_id` in `artist`.","starter":"ALTER TABLE song\n"},"fill":{"code":"ALTER TABLE song\nADD CONSTRAINT fk_song_artist\n___ (artist_id) ___ artist (artist_id);","blanks":[["FOREIGN KEY"],["REFERENCES"]]},"predict":{"code":"ALTER TABLE song\nADD CONSTRAINT fk_song_artist\nFOREIGN KEY (artist_id) REFERENCES artist (artist_id);\n\nINSERT INTO song VALUES (3, 'Demo', NULL);\n\nSELECT COUNT(*) FROM song;","ask":"The new song's `artist_id` is NULL. What does the count return?","answer":"3"},"explain":"`FOREIGN KEY (artist_id) REFERENCES artist (artist_id)` links the two tables: PostgreSQL now refuses a song whose `artist_id` is not in `artist`. NULL is still allowed, because it means no artist is known."},"w3setDefault":{"title":"normal priority","setup":"CREATE TABLE task (\n  task_id  INT PRIMARY KEY,\n  title    VARCHAR(60),\n  priority VARCHAR(10)\n);","sol":"ALTER TABLE task\nALTER COLUMN priority SET DEFAULT 'normal';","checks":[["INSERT INTO task (task_id, title) VALUES (1, 'Water plants');\nSELECT priority FROM task WHERE task_id = 1;","normal"]],"write":{"task":"Change the existing table `task` so that `priority` is `'normal'` whenever a new task leaves it out.","starter":"ALTER TABLE task\n"},"fill":{"code":"___ task\nALTER COLUMN priority ___ 'normal';","blanks":[["ALTER TABLE"],["SET DEFAULT"]]},"predict":{"code":"INSERT INTO task (task_id, title) VALUES (1, 'Pay rent');\n\nALTER TABLE task\nALTER COLUMN priority SET DEFAULT 'low';\n\nINSERT INTO task (task_id, title) VALUES (2, 'Tidy desk');\n\nSELECT task_id, priority FROM task ORDER BY task_id;","ask":"Task 1 was added before the default was set. What does the query return?","answer":"1, null; 2, low"},"explain":"`SET DEFAULT` gives a column a value to use when a new row leaves it out. It only affects rows added afterwards: rows that already exist keep what they had."},"w3countSum":{"title":"unpaid library fines","setup":"CREATE TABLE fine (\n  fine_id INT PRIMARY KEY,\n  member  VARCHAR(20),\n  amount  NUMERIC(5,2),\n  paid    BOOLEAN\n);\n\nINSERT INTO fine VALUES\n  (1, 'Asha', 2.50, true),\n  (2, 'Ben', 1.00, false),\n  (3, 'Asha', 4.00, false),\n  (4, 'Cleo', 0.50, false),\n  (5, 'Ben', 3.25, false);","sol":"SELECT COUNT(*), SUM(amount)\nFROM fine\nWHERE paid = false;","checks":[["@result","4, 8.75"]],"write":{"task":"Look only at fines with `paid = false`. Return one row with two columns: how many such fines there are, then their total `amount`.","starter":"SELECT\n"},"fill":{"code":"SELECT ___, ___(amount)\nFROM fine\nWHERE paid = false;","blanks":[["COUNT(*)","COUNT(fine_id)"],["SUM"]]},"predict":{"code":"SELECT SUM(amount)\nFROM fine\nWHERE member = 'Asha';","answer":"6.50"},"explain":"Aggregate functions turn many rows into one value: `COUNT(*)` gives the number of rows and `SUM` adds a column up. `WHERE` runs first, so only unpaid fines are counted and added."},"w3minMaxAvg":{"title":"Parkside room prices","setup":"CREATE TABLE room (\n  room_no INT PRIMARY KEY,\n  hotel   VARCHAR(30),\n  price   INT\n);\n\nINSERT INTO room VALUES\n  (101, 'Seaview', 95),\n  (102, 'Seaview', 120),\n  (201, 'Parkside', 70),\n  (202, 'Parkside', 88),\n  (203, 'Parkside', 65);","sol":"SELECT MIN(price), MAX(price), ROUND(AVG(price), 2)\nFROM room\nWHERE hotel = 'Parkside';","checks":[["@result","65, 88, 74.33"]],"write":{"task":"For the `Parkside` hotel only, return one row with three columns in this order: the lowest `price`, the highest `price`, and the average price rounded to 2 decimal places.","starter":"SELECT\n"},"fill":{"code":"SELECT ___(price), MAX(price), ROUND(___(price), 2)\nFROM room\nWHERE hotel = 'Parkside';","blanks":[["MIN"],["AVG"]]},"predict":{"code":"SELECT MAX(price) - MIN(price) AS price_gap\nFROM room;","answer":"55"},"explain":"You can put several aggregate functions in one `SELECT`; each gives one value for the rows that `WHERE` keeps. `AVG` of whole numbers can have many decimals, so `ROUND(..., 2)` cuts it to two."},"w3groupBy":{"title":"books per genre","setup":"CREATE TABLE book (\n  book_id INT PRIMARY KEY,\n  title   VARCHAR(60),\n  genre   VARCHAR(20)\n);\n\nINSERT INTO book VALUES\n  (1, 'Emma', 'Classic'),\n  (2, 'Dune', 'Sci-fi'),\n  (3, 'Persuasion', 'Classic'),\n  (4, 'Neuromancer', 'Sci-fi'),\n  (5, 'Middlemarch', 'Classic'),\n  (6, 'Rebecca', 'Mystery');","sol":"SELECT genre, COUNT(*) AS books\nFROM book\nGROUP BY genre\nORDER BY books DESC;","checks":[["@result","Classic, 3; Sci-fi, 2; Mystery, 1"]],"write":{"task":"Return two columns, `genre` and how many books it has, with one row per genre and the biggest count first. For example, the first row is `Classic, 3`.","starter":"SELECT genre,\n"},"fill":{"code":"SELECT genre, COUNT(*) AS books\nFROM book\n___ genre\nORDER BY books ___;","blanks":[["GROUP BY"],["DESC"]]},"predict":{"code":"SELECT genre\nFROM book\nGROUP BY genre\nORDER BY genre;","answer":"Classic; Mystery; Sci-fi"},"explain":"`GROUP BY genre` makes one group for each genre, and `COUNT(*)` counts the rows in each group. `ORDER BY books DESC` sorts by that count, biggest first; `books` is the name given to the count with `AS`."},"w3whereHaving":{"title":"late airlines to Paris","setup":"CREATE TABLE flight (\n  flight_id   INT PRIMARY KEY,\n  airline     VARCHAR(20),\n  destination VARCHAR(20),\n  delay_mins  INT\n);\n\nINSERT INTO flight VALUES\n  (1, 'SkyJet', 'Paris', 30),\n  (2, 'SkyJet', 'Paris', 10),\n  (3, 'AirLoop', 'Paris', 5),\n  (4, 'AirLoop', 'Rome', 60),\n  (5, 'AirLoop', 'Paris', 15),\n  (6, 'Northwind', 'Paris', 25),\n  (7, 'SkyJet', 'Rome', 0);","sol":"SELECT airline, ROUND(AVG(delay_mins), 1)\nFROM flight\nWHERE destination = 'Paris'\nGROUP BY airline\nHAVING AVG(delay_mins) > 15\nORDER BY airline;","checks":[["@result","Northwind, 25.0; SkyJet, 20.0"]],"write":{"task":"Use only flights to `Paris`. Return two columns, `airline` and its average `delay_mins` rounded to 1 decimal place, for airlines whose average is more than 15, sorted by airline.","starter":"SELECT airline,\n"},"fill":{"code":"SELECT airline, ROUND(AVG(delay_mins), 1)\nFROM flight\n___ destination = 'Paris'\nGROUP BY airline\nHAVING ___(delay_mins) > 15\nORDER BY airline;","blanks":[["WHERE"],["AVG"]]},"predict":{"code":"SELECT airline\nFROM flight\nGROUP BY airline\nHAVING MAX(delay_mins) >= 30\nORDER BY airline;","answer":"AirLoop; SkyJet"},"explain":"`WHERE destination = 'Paris'` throws away the Rome flights before any grouping. `HAVING AVG(delay_mins) > 15` then keeps only the airlines whose group average is high enough. A condition on an aggregate always goes in `HAVING`, never in `WHERE`."},"w3join":{"title":"Nigerian authors' books","setup":"CREATE TABLE author (\n  author_id INT PRIMARY KEY,\n  name      VARCHAR(40),\n  country   VARCHAR(30)\n);\n\nCREATE TABLE book (\n  book_id   INT PRIMARY KEY,\n  title     VARCHAR(60),\n  author_id INT REFERENCES author (author_id)\n);\n\nINSERT INTO author VALUES\n  (1, 'Chinua Achebe', 'Nigeria'),\n  (2, 'Zadie Smith', 'UK'),\n  (3, 'Ben Okri', 'Nigeria');\nINSERT INTO book VALUES\n  (1, 'Things Fall Apart', 1),\n  (2, 'White Teeth', 2),\n  (3, 'The Famished Road', 3),\n  (4, 'Arrow of God', 1),\n  (5, 'Swing Time', 2);","sol":"SELECT b.title, a.name\nFROM book b\nJOIN author a ON b.author_id = a.author_id\nWHERE a.country = 'Nigeria'\nORDER BY b.title;","checks":[["@result","Arrow of God, Chinua Achebe; The Famished Road, Ben Okri; Things Fall Apart, Chinua Achebe"]],"write":{"task":"Join `book` and `author` on `author_id`. Return two columns, the book's `title` and its author's `name`, for authors whose `country` is `Nigeria`, sorted by title.","starter":"SELECT b.title, a.name\n"},"fill":{"code":"SELECT b.title, a.name\nFROM book b\nJOIN author a ON ___\n___ a.country = 'Nigeria'\nORDER BY b.title;","blanks":[["b.author_id = a.author_id","a.author_id = b.author_id"],["WHERE"]]},"predict":{"code":"SELECT a.name, COUNT(*)\nFROM author a\nJOIN book b ON b.author_id = a.author_id\nGROUP BY a.name\nORDER BY a.name;","answer":"Ben Okri, 1; Chinua Achebe, 2; Zadie Smith, 2"},"explain":"The `ON` part says which rows belong together: a book and the author with the same `author_id`. After the join, each row has columns from both tables, so `WHERE` can filter on the author's country."},"w3view":{"title":"London staff view","setup":"CREATE TABLE staff (\n  staff_id INT PRIMARY KEY,\n  name     VARCHAR(30),\n  office   VARCHAR(20),\n  salary   INT\n);\n\nINSERT INTO staff VALUES\n  (1, 'Priya', 'London', 41000),\n  (2, 'Tom', 'Leeds', 35000),\n  (3, 'Ines', 'London', 52000),\n  (4, 'Kwame', 'Cardiff', 38000),\n  (5, 'Lena', 'London', 30000);","sol":"CREATE VIEW london_staff AS\nSELECT name, salary\nFROM staff\nWHERE office = 'London';\n\nSELECT name, salary\nFROM london_staff\nWHERE salary > 35000\nORDER BY name;","checks":[["@result","Ines, 52000; Priya, 41000"],["SELECT table_name FROM information_schema.views WHERE table_schema = 'public'","london_staff"],["SELECT column_name FROM information_schema.columns WHERE table_name = 'london_staff' ORDER BY ordinal_position","name; salary"]],"write":{"task":"Create a view `london_staff` with two columns, `name` and `salary`, for everyone whose `office` is `London`. Then query the view for the `name` and `salary` of London staff earning more than 35000, sorted by name.","starter":"CREATE VIEW london_staff AS\n"},"fill":{"code":"CREATE ___ london_staff AS\nSELECT name, salary\nFROM staff\nWHERE office = 'London';\n\nSELECT name, salary\nFROM ___\nWHERE salary > 35000\nORDER BY name;","blanks":[["VIEW"],["london_staff"]]},"predict":{"code":"CREATE VIEW london_staff AS\nSELECT name, salary\nFROM staff\nWHERE office = 'London';\n\nSELECT ROUND(AVG(salary))\nFROM london_staff;","answer":"41000"},"explain":"Once a view exists you can use it in `FROM` like a table, and add your own `WHERE` and `ORDER BY`. The view's query runs first, so only London staff are ever seen through it."},"w3prepare":{"title":"trains to a destination","setup":"CREATE TABLE train (\n  train_id    INT PRIMARY KEY,\n  destination VARCHAR(30),\n  platform    INT\n);\n\nINSERT INTO train VALUES\n  (1, 'Leeds', 4),\n  (2, 'Bristol', 2),\n  (3, 'Leeds', 7),\n  (4, 'Oxford', 1),\n  (5, 'Leeds', 2);","sol":"PREPARE trains_to (text) AS\nSELECT train_id, platform\nFROM train\nWHERE destination = $1\nORDER BY train_id;\n\nEXECUTE trains_to('Leeds');","checks":[["@result","1, 4; 3, 7; 5, 2"],["SELECT name FROM pg_prepared_statements WHERE from_sql","trains_to"]],"write":{"task":"Write a prepared statement `trains_to` that takes one `text` parameter and returns `train_id` and `platform` of the trains whose `destination` is `$1`, sorted by `train_id`. Then execute it with `'Leeds'`.","starter":"PREPARE trains_to (text) AS\n"},"fill":{"code":"PREPARE trains_to (___) AS\nSELECT train_id, platform\nFROM train\nWHERE destination = $1\nORDER BY train_id;\n\n___ trains_to('Leeds');","blanks":[["text","varchar"],["EXECUTE"]]},"predict":{"code":"PREPARE on_platform (int) AS\nSELECT destination\nFROM train\nWHERE platform = $1\nORDER BY train_id;\n\nEXECUTE on_platform(2);","answer":"Bristol; Leeds"},"explain":"The type in brackets after the name says what kind of value `$1` will be, here `text`. `EXECUTE trains_to('Leeds')` puts `'Leeds'` where `$1` is and runs the query."},"w3dropTruncate":{"title":"sensor clean-up","setup":"CREATE TABLE sensor (\n  sensor_id INT PRIMARY KEY,\n  room      VARCHAR(20)\n);\n\nCREATE TABLE reading (\n  reading_id INT PRIMARY KEY,\n  sensor_id  INT,\n  value      INT\n);\n\nCREATE TABLE import_tmp (\n  line TEXT\n);\n\nINSERT INTO sensor VALUES (1, 'Lab'), (2, 'Office');\nINSERT INTO reading VALUES (1, 1, 19), (2, 1, 22), (3, 2, 25), (4, 2, 18);\nINSERT INTO import_tmp VALUES ('1,19'), ('1,22');","sol":"DROP TABLE import_tmp;\nTRUNCATE TABLE reading;","checks":[["SELECT table_name\nFROM information_schema.tables\nWHERE table_schema = 'public'\nORDER BY table_name","reading; sensor"],["SELECT COUNT(*) FROM reading","0"],["SELECT COUNT(*) FROM sensor","2"]],"write":{"task":"The table `import_tmp` is no longer needed: remove it completely. Then remove every row from `reading` but keep the table. Leave `sensor` alone.","starter":""},"fill":{"code":"___ import_tmp;\n___ reading;","blanks":[["DROP TABLE"],["TRUNCATE TABLE","TRUNCATE"]]},"predict":{"code":"DELETE FROM reading\nWHERE value > 20;\n\nSELECT COUNT(*) FROM reading;","ask":"This uses `DELETE` with a `WHERE`, not `TRUNCATE`. How many readings are left?","answer":"2"},"explain":"`DROP TABLE` deletes the table and everything in it. `TRUNCATE TABLE` empties a table in one go but keeps its columns. `DELETE ... WHERE` removes only the rows that match."},"w3doBlock":{"title":"mark inactive members","setup":"CREATE TABLE gym_member (\n  member_id INT PRIMARY KEY,\n  name      VARCHAR(30),\n  visits    INT,\n  status    VARCHAR(10)\n);\n\nINSERT INTO gym_member VALUES\n  (1, 'Nia', 12, NULL),\n  (2, 'Raf', 0, NULL),\n  (3, 'Elle', 4, NULL),\n  (4, 'Gus', 0, NULL);","sol":"DO $$\nDECLARE\n  m RECORD;\nBEGIN\n  FOR m IN SELECT member_id, visits FROM gym_member LOOP\n    IF m.visits = 0 THEN\n      UPDATE gym_member SET status = 'inactive' WHERE member_id = m.member_id;\n    ELSE\n      UPDATE gym_member SET status = 'active' WHERE member_id = m.member_id;\n    END IF;\n  END LOOP;\nEND $$;","checks":[["SELECT member_id, status\nFROM gym_member\nORDER BY member_id","1, active; 2, inactive; 3, active; 4, inactive"]],"write":{"task":"Write a `DO` block that declares a `RECORD` variable and uses a `FOR` loop over the rows of `gym_member`. Use `IF ... ELSE` to set `status` to `'inactive'` when `visits` is 0 and to `'active'` otherwise.","starter":"DO $$\nDECLARE\n"},"fill":{"code":"DO $$\nDECLARE\n  m ___;\nBEGIN\n  FOR m IN SELECT member_id, visits FROM gym_member LOOP\n    IF m.visits = 0 THEN\n      UPDATE gym_member SET status = 'inactive' WHERE member_id = m.member_id;\n    ___\n      UPDATE gym_member SET status = 'active' WHERE member_id = m.member_id;\n    END IF;\n  END LOOP;\nEND $$;","blanks":[["RECORD"],["ELSE"]]},"predict":{"code":"DO $$\nDECLARE\n  m RECORD;\nBEGIN\n  FOR m IN SELECT member_id, visits FROM gym_member LOOP\n    IF m.visits > 5 THEN\n      UPDATE gym_member SET status = 'gold' WHERE member_id = m.member_id;\n    ELSE\n      UPDATE gym_member SET status = 'standard' WHERE member_id = m.member_id;\n    END IF;\n  END LOOP;\nEND $$;\n\nSELECT COUNT(*) FROM gym_member WHERE status = 'standard';","answer":"3"},"explain":"`m RECORD` declares a variable that holds one whole row, and the `FOR` loop fills it with each row in turn. `IF ... THEN ... ELSE ... END IF` picks one of two updates for that row, so every member ends up with a status."},"w4innerJoin":{"title":"pets and their owners","setup":"CREATE TABLE owner (\n  owner_id   INT PRIMARY KEY,\n  owner_name VARCHAR(30) NOT NULL\n);\n\nCREATE TABLE pet (\n  pet_id   INT PRIMARY KEY,\n  pet_name VARCHAR(30) NOT NULL,\n  owner_id INT REFERENCES owner (owner_id)\n);\n\nINSERT INTO owner VALUES\n  (1, 'Ana'), (2, 'Ben'), (3, 'Cleo');\n\nINSERT INTO pet VALUES\n  (1, 'Biscuit', 2), (2, 'Pip', 1), (3, 'Rex', NULL), (4, 'Mochi', 2), (5, 'Nala', 1), (6, 'Ziggy', NULL);","sol":"SELECT p.pet_name, o.owner_name\nFROM pet p\nINNER JOIN owner o ON p.owner_id = o.owner_id\nORDER BY p.pet_name;","checks":[["@result","Biscuit, Ben; Mochi, Ben; Nala, Ana; Pip, Ana"]],"write":{"task":"Use an `INNER JOIN` to return two columns, `pet_name` then the owner's `owner_name`, for pets that have an owner. Sort by `pet_name`. The first row is `Biscuit, Ben`.","starter":"SELECT\n"},"fill":{"code":"SELECT p.pet_name, o.owner_name\nFROM pet p\n___ owner o ___ p.owner_id = o.owner_id\nORDER BY p.pet_name;","blanks":[["INNER JOIN","JOIN"],["ON"]]},"predict":{"code":"SELECT COUNT(*)\nFROM pet NATURAL JOIN owner;","ask":"`NATURAL JOIN` joins on the columns that have the same name in both tables. What does this return?","answer":"4"},"explain":"The `ON` condition says which rows belong together: a pet and the owner with the same `owner_id`. An `INNER JOIN` drops Rex and Ziggy (no owner) and Cleo (no pets), because none of them has a partner."},"w4leftJoin":{"title":"cities and airports","setup":"CREATE TABLE city (\n  city_id   INT PRIMARY KEY,\n  city_name VARCHAR(30) NOT NULL\n);\n\nCREATE TABLE airport (\n  code    CHAR(3) PRIMARY KEY,\n  city_id INT REFERENCES city (city_id)\n);\n\nINSERT INTO city VALUES\n  (1, 'Bath'), (2, 'Belfast'), (3, 'Leeds'), (4, 'York');\n\nINSERT INTO airport VALUES\n  ('BFS', 2), ('BHD', 2), ('LBA', 3);","sol":"SELECT c.city_name, a.code\nFROM city c\nLEFT JOIN airport a ON a.city_id = c.city_id\nORDER BY c.city_name, a.code;","checks":[["@result","Bath, null; Belfast, BFS; Belfast, BHD; Leeds, LBA; York, null"]],"write":{"task":"Return two columns, every city's `city_name` then the `code` of its airport, sorted by `city_name` and then by `code`. Cities without an airport must still appear, with `null` as the code, for example `Bath, null`.","starter":"SELECT\n"},"fill":{"code":"SELECT c.city_name, a.code\nFROM city c\n___ airport a ON a.city_id = c.city_id\nORDER BY c.city_name, a.code;","blanks":[["LEFT JOIN","LEFT OUTER JOIN"]]},"predict":{"code":"SELECT COUNT(*), COUNT(a.code)\nFROM city c\nLEFT JOIN airport a ON a.city_id = c.city_id;","ask":"What does it return? Give both numbers, like `7, 5`.","answer":"5, 3"},"explain":"A `LEFT JOIN` keeps every city, even one with no airport, and puts NULL in the airport columns. Belfast has two airports, so it appears twice. `COUNT(a.code)` skips the NULL rows; `COUNT(*)` does not."},"w4noMatch":{"title":"rooms nobody booked","setup":"CREATE TABLE room (\n  room_no INT PRIMARY KEY,\n  floor   INT NOT NULL\n);\n\nCREATE TABLE booking (\n  booking_id INT PRIMARY KEY,\n  room_no    INT REFERENCES room (room_no),\n  guest      VARCHAR(30)\n);\n\nINSERT INTO room VALUES\n  (11, 1), (12, 1), (21, 2), (22, 2), (31, 3);\n\nINSERT INTO booking VALUES\n  (1, 12, 'Hope'), (2, 21, 'Ivan'), (3, 12, 'Jade');","sol":"SELECT r.room_no\nFROM room r\nLEFT JOIN booking b ON b.room_no = r.room_no\nWHERE b.booking_id IS NULL\nORDER BY r.room_no;","checks":[["@result","11; 22; 31"]],"write":{"task":"Return the `room_no` of every room that has no booking, sorted by `room_no`. Use a `LEFT JOIN` from `room r` to `booking b`, then keep only the rooms that the join found no booking for.","starter":"SELECT r.room_no\nFROM room r\n"},"fill":{"code":"SELECT r.room_no\nFROM room r\n___ booking b ON b.room_no = r.room_no\nWHERE b.booking_id ___\nORDER BY r.room_no;","blanks":[["LEFT JOIN","LEFT OUTER JOIN"],["IS NULL"]]},"predict":{"code":"SELECT COUNT(*)\nFROM room r\nLEFT JOIN booking b ON b.room_no = r.room_no\nWHERE b.booking_id IS NOT NULL;","answer":"3"},"explain":"The `LEFT JOIN` keeps every room. Rooms with no booking get NULL in the `booking` columns, and `IS NULL` picks out just those. `IS NOT NULL` does the opposite and keeps the rows that did match."},"w4fullJoin":{"title":"tutors and lessons","setup":"CREATE TABLE tutor (\n  tutor_id   INT PRIMARY KEY,\n  tutor_name VARCHAR(30) NOT NULL\n);\n\nCREATE TABLE lesson (\n  lesson_id INT PRIMARY KEY,\n  subject   VARCHAR(30) NOT NULL,\n  tutor_id  INT REFERENCES tutor (tutor_id)\n);\n\nINSERT INTO tutor VALUES\n  (1, 'Mia'), (2, 'Noah'), (3, 'Ola');\n\nINSERT INTO lesson VALUES\n  (1, 'Maths', 1), (2, 'Art', NULL), (3, 'French', 1);","sol":"SELECT t.tutor_name, l.subject\nFROM tutor t\nFULL OUTER JOIN lesson l ON l.tutor_id = t.tutor_id;","checks":[["@result","Mia, Maths; Mia, French; Noah, null; Ola, null; null, Art"]],"write":{"task":"Return two columns, `tutor_name` then the lesson's `subject`, for every tutor AND every lesson. A tutor with no lesson gets `null` as the subject (`Noah, null`); a lesson with no tutor gets `null` as the name (`null, Art`). Any row order.","starter":"SELECT t.tutor_name, l.subject\nFROM tutor t\n"},"fill":{"code":"SELECT t.tutor_name, l.subject\nFROM tutor t\n___ lesson l ON l.tutor_id = t.tutor_id;","blanks":[["FULL OUTER JOIN","FULL JOIN"]]},"predict":{"code":"SELECT COUNT(*)\nFROM lesson l\nRIGHT JOIN tutor t ON l.tutor_id = t.tutor_id;","answer":"4"},"explain":"A `FULL OUTER JOIN` is a left and a right join together: nothing from either table is lost, and the missing side is NULL. A `RIGHT JOIN` keeps every row of the table after `JOIN` (here `tutor`), so Mia counts twice and Noah and Ola once each."},"w4threeJoin":{"title":"items, aisles and stores","setup":"CREATE TABLE store (\n  store_id INT PRIMARY KEY,\n  town     VARCHAR(30) NOT NULL\n);\n\nCREATE TABLE aisle (\n  aisle_id INT PRIMARY KEY,\n  aisle_no INT NOT NULL,\n  store_id INT REFERENCES store (store_id)\n);\n\nCREATE TABLE item (\n  item_id   INT PRIMARY KEY,\n  item_name VARCHAR(30) NOT NULL,\n  aisle_id  INT REFERENCES aisle (aisle_id)\n);\n\nINSERT INTO store VALUES\n  (1, 'Hull'), (2, 'Ripon');\n\nINSERT INTO aisle VALUES\n  (1, 4, 1), (2, 7, 2), (3, 2, 2);\n\nINSERT INTO item VALUES\n  (1, 'Bread', 1), (2, 'Milk', 3), (3, 'Rice', 2), (4, 'Soap', NULL);","sol":"SELECT i.item_name, s.town\nFROM item i\nJOIN aisle a ON a.aisle_id = i.aisle_id\nJOIN store s ON s.store_id = a.store_id\nORDER BY i.item_name;","checks":[["@result","Bread, Hull; Milk, Ripon; Rice, Ripon"]],"write":{"task":"Each item is in an aisle, and each aisle is in a store. Return two columns, `item_name` then the `town` of the item's store, for items that have an aisle. Sort by `item_name`. The first row is `Bread, Hull`.","starter":"SELECT i.item_name, s.town\nFROM item i\n"},"fill":{"code":"SELECT i.item_name, s.town\nFROM item i\nJOIN aisle a ON a.aisle_id = i.aisle_id\n___ store s ON ___\nORDER BY i.item_name;","blanks":[["JOIN","INNER JOIN"],["s.store_id = a.store_id","a.store_id = s.store_id"]]},"predict":{"code":"SELECT s.town, COUNT(*)\nFROM item i\nJOIN aisle a ON a.aisle_id = i.aisle_id\nJOIN store s ON s.store_id = a.store_id\nGROUP BY s.town\nORDER BY s.town;","ask":"What does it return? Write each row as `town, count`, with rows separated by semicolons.","answer":"Hull, 1; Ripon, 2"},"explain":"There is no direct link from `item` to `store`, so you go through `aisle`: the first `JOIN` finds each item's aisle and the second finds that aisle's store. Soap has no aisle, so the inner joins drop it."},"w4entity":{"title":"a flight entity","sol":"@Entity\n@Table(name = \"flights\")\npublic class Flight {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String code;\n  private int seats;\n}","checks":[["tables:","flights"],["sql: SELECT column_name FROM information_schema.columns WHERE table_name = 'flights' ORDER BY column_name","code; id; seats"],["sql: SELECT is_identity FROM information_schema.columns WHERE table_name = 'flights' AND column_name = 'id'","YES"]],"write":{"task":"Write an entity class `Flight` stored in a table called `flights`. Give it three fields: `Long id`, the primary key, created by the database with the `IDENTITY` strategy; `String code`; and `int seats`.","starter":"@Entity\n"},"fill":{"code":"@___\n@Table(name = \"flights\")\npublic class Flight {\n  @___\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String code;\n  private int seats;\n}","blanks":[["Entity"],["Id"]]},"predict":{"code":"@Entity\npublic class BoardingPass {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String seat;\n}","expr":"tables:","ask":"This class has no `@Table`. What is the table called? (Spring Boot naming)","answer":"boarding_pass"},"explain":"`@Entity` turns the class into a table and `@Table(name = \"flights\")` chooses the name. `@Id` is the primary key; `@GeneratedValue(strategy = GenerationType.IDENTITY)` means the database fills it in. Without `@Table`, `BoardingPass` becomes `boarding_pass`."},"w4column":{"title":"product column rules","sol":"@Entity\npublic class Product {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  @Column(nullable = false, unique = true)\n  private String sku;\n\n  @Column(name = \"product_name\")\n  private String name;\n\n  private Integer stockLevel;\n}","checks":[["sql: SELECT column_name, is_nullable FROM information_schema.columns WHERE table_name = 'product' ORDER BY column_name","id, NO; product_name, YES; sku, NO; stock_level, YES"],["sql: SELECT k.column_name FROM information_schema.table_constraints c JOIN information_schema.key_column_usage k ON k.constraint_name = c.constraint_name WHERE c.table_name = 'product' AND c.constraint_type = 'UNIQUE'","sku"]],"write":{"task":"Write an entity `Product` (table name left as the default) with four fields: `Long id`, the primary key, generated with `IDENTITY`; `String sku`, which must never be NULL and must never repeat; `String name`, stored in a column called `product_name`; and `Integer stockLevel`, with no annotation.","starter":"@Entity\npublic class Product {\n"},"fill":{"code":"@Entity\npublic class Product {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  @Column(nullable = false, ___ = true)\n  private String sku;\n\n  @___(name = \"product_name\")\n  private String name;\n\n  private Integer stockLevel;\n}","blanks":[["unique"],["Column"]]},"predict":{"code":"@Entity\npublic class Ticket {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  @Column(nullable = false)\n  private String seat;\n}","expr":"sql: SELECT is_nullable FROM information_schema.columns WHERE table_name = 'ticket' AND column_name = 'seat'","ask":"May the `seat` column hold NULL? Answer `YES` or `NO`.","answer":"NO"},"explain":"`nullable = false` adds `NOT NULL` and `unique = true` adds a `UNIQUE` rule, just as you would write in `CREATE TABLE`. `name = \"product_name\"` overrides the column name; a field with no `@Column`, like `stockLevel`, gets the Spring Boot name `stock_level`."},"w4transient":{"title":"a parcel's label","sol":"@Entity\npublic class Parcel {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String trackingCode;\n  private int weightGrams;\n\n  @Transient\n  private String label;\n}","checks":[["tables:","parcel"],["sql: SELECT column_name FROM information_schema.columns WHERE table_name = 'parcel' ORDER BY column_name","id; tracking_code; weight_grams"]],"write":{"task":"Write an entity `Parcel` with four fields: `Long id`, the primary key, generated with `IDENTITY`; `String trackingCode`; `int weightGrams`; and `String label`, which is built in code for printing and must not be stored in the table.","starter":"@Entity\npublic class Parcel {\n"},"fill":{"code":"@Entity\npublic class Parcel {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String trackingCode;\n  private int weightGrams;\n\n  @___\n  private String label;\n}","blanks":[["Transient"]]},"predict":{"code":"@Entity\npublic class Sensor {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String place;\n\n  @Transient\n  private double lastReading;\n}","expr":"sql: SELECT CASE WHEN COUNT(*) > 0 THEN 'YES' ELSE 'NO' END FROM information_schema.columns WHERE table_name = 'sensor' AND column_name = 'last_reading'","ask":"Does the `sensor` table have a `last_reading` column? Answer `YES` or `NO`.","answer":"NO"},"explain":"`@Transient` means: keep this field in Java, but do not map it to a column. Hibernate makes columns for `id`, `trackingCode` and `weightGrams` only, so `label` is never saved, and a parcel loaded from the database has `null` there."},"w4manyToOne":{"title":"players in a team","sol":"@Entity\npublic class Team {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  @Column(name = \"team_id\")\n  private Long id;\n\n  private String name;\n\n  @OneToMany(mappedBy = \"team\")\n  private List\u003cPlayer> players = new ArrayList\u003c>();\n}\n\n@Entity\npublic class Player {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  @Column(name = \"player_id\")\n  private Long id;\n\n  private String name;\n\n  @ManyToOne\n  @JoinColumn(name = \"team_id\")\n  private Team team;\n}","checks":[["tables:","player, team"],["sql: SELECT column_name FROM information_schema.columns WHERE table_name = 'team' ORDER BY column_name","name; team_id"],["sql: SELECT column_name FROM information_schema.columns WHERE table_name = 'player' ORDER BY column_name","name; player_id; team_id"],["jpql: SELECT COUNT(p) FROM Player p WHERE p.team.name = 'Kites'","0"],["jpql: SELECT COUNT(p) FROM Team t JOIN t.players p","0"]],"write":{"task":"Write entities `Team` and `Player`. Each has `Long id`, generated with `IDENTITY` and stored in a column `team_id` (for `Team`) or `player_id` (for `Player`), and a `String name`. Many players belong to one team: give `Player` a field `Team team` with the foreign key column `team_id`. Give `Team` a field `List\u003cPlayer> players` for the other side of the same link, so no extra table is made.","starter":"@Entity\npublic class Team {\n"},"fill":{"code":"@Entity\npublic class Team {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  @Column(name = \"team_id\")\n  private Long id;\n\n  private String name;\n\n  @___(mappedBy = \"team\")\n  private List\u003cPlayer> players = new ArrayList\u003c>();\n}\n\n@Entity\npublic class Player {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  @Column(name = \"player_id\")\n  private Long id;\n\n  private String name;\n\n  @___\n  @JoinColumn(name = \"team_id\")\n  private Team team;\n}","blanks":[["OneToMany"],["ManyToOne"]]},"predict":{"code":"@Entity\npublic class Kennel {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String town;\n}\n\n@Entity\npublic class Dog {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String name;\n\n  @ManyToOne\n  private Kennel kennel;\n}","expr":"sql: SELECT column_name FROM information_schema.columns WHERE table_name = 'dog' AND column_name NOT IN ('id', 'name')","ask":"There is no `@JoinColumn`. What is the foreign key column in `dog` called? (Spring Boot naming)","answer":"kennel_id"},"explain":"The many side (`Player`) holds the foreign key, so it gets `@ManyToOne` and `@JoinColumn`. The one side (`Team`) gets `@OneToMany(mappedBy = \"team\")`, which points at the `team` field instead of storing the link a second time."},"w4manyToMany":{"title":"films and actors","sol":"@Entity\npublic class Actor {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String name;\n}\n\n@Entity\npublic class Film {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String title;\n\n  @ManyToMany\n  @JoinTable(name = \"film_actor\",\n    joinColumns = @JoinColumn(name = \"film_id\"),\n    inverseJoinColumns = @JoinColumn(name = \"actor_id\"))\n  private Set\u003cActor> actors = new HashSet\u003c>();\n}","checks":[["tables:","actor, film, film_actor"],["sql: SELECT column_name FROM information_schema.columns WHERE table_name = 'film_actor' ORDER BY column_name","actor_id; film_id"],["jpql: SELECT COUNT(a) FROM Film f JOIN f.actors a","0"]],"write":{"task":"Write entities `Actor` (`Long id`, `String name`) and `Film` (`Long id`, `String title`), both ids generated with `IDENTITY`. A film has many actors and an actor is in many films: give `Film` a field `Set\u003cActor> actors`, stored in a join table `film_actor` with the columns `film_id` and `actor_id`.","starter":"@Entity\npublic class Actor {\n"},"fill":{"code":"@Entity\npublic class Actor {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String name;\n}\n\n@Entity\npublic class Film {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String title;\n\n  @ManyToMany\n  @___(name = \"film_actor\",\n    ___ = @JoinColumn(name = \"film_id\"),\n    inverseJoinColumns = @JoinColumn(name = \"actor_id\"))\n  private Set\u003cActor> actors = new HashSet\u003c>();\n}","blanks":[["JoinTable"],["joinColumns"]]},"predict":{"code":"@Entity\npublic class Post {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String heading;\n\n  @ManyToMany\n  @JoinTable(name = \"post_tag\",\n    joinColumns = @JoinColumn(name = \"post_id\"),\n    inverseJoinColumns = @JoinColumn(name = \"tag_id\"))\n  private Set\u003cTag> tags = new HashSet\u003c>();\n}\n\n@Entity\npublic class Tag {\n  @Id\n  @GeneratedValue(strategy = GenerationType.IDENTITY)\n  private Long id;\n\n  private String label;\n}","expr":"sql: SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'post_tag'","ask":"How many columns does the join table `post_tag` have?","answer":"2"},"explain":"`@ManyToMany` with `@JoinTable` makes a third table that only holds pairs of keys. `joinColumns` is the key for the entity you are in (`film_id`), and `inverseJoinColumns` is the key for the other entity (`actor_id`)."},"w4jpqlPath":{"title":"flights by Irish airlines","entities":"@Entity\npublic class Airline {\n  @Id\n  private Long id;\n  private String name;\n  private String country;\n}\n\n@Entity\npublic class Flight {\n  @Id\n  private Long id;\n  private String flightCode;\n  private int seats;\n\n  @ManyToOne\n  private Airline airline;\n}","setup":"INSERT INTO airline (id, name, country) VALUES (1, 'Shamrock Air', 'Ireland'), (2, 'Thistle Jet', 'Scotland'), (3, 'Liffey Wings', 'Ireland');\nINSERT INTO flight (id, flight_code, seats, airline_id) VALUES (1, 'SA12', 180, 1), (2, 'TJ40', 90, 2), (3, 'LW07', 70, 3), (4, 'SA03', 150, 1), (5, 'TJ88', 120, 2);","sol":"SELECT f.flightCode FROM Flight f WHERE f.airline.country = 'Ireland' ORDER BY f.flightCode","checks":[["@result","LW07; SA03; SA12"]],"write":{"task":"Write a JPQL query for the `flightCode` of every flight whose airline's country is `Ireland`, sorted by `flightCode`. Use entity and field names, not table and column names, and reach the country by following the `airline` field, without writing a `JOIN`. The first row is `LW07`.","starter":"SELECT "},"fill":{"code":"SELECT f.flightCode FROM ___ f WHERE f.___ = 'Ireland' ORDER BY f.flightCode","blanks":[["Flight"],["airline.country"]]},"predict":{"code":"SELECT COUNT(f) FROM Flight f WHERE f.airline.name = 'Thistle Jet'","answer":"2"},"explain":"In JPQL you write the class name `Flight` and the field `flightCode`, even though the table column is `flight_code`. The dots in `f.airline.country` walk along the `@ManyToOne` link, so you do not need a `JOIN ... ON`."},"w4jpqlGroup":{"title":"sales per shop","entities":"@Entity\npublic class Shop {\n  @Id\n  private Long id;\n  private String name;\n}\n\n@Entity\npublic class Sale {\n  @Id\n  private Long id;\n  private int amount;\n\n  @ManyToOne\n  private Shop shop;\n}","setup":"INSERT INTO shop (id, name) VALUES (1, 'Corner'), (2, 'Market'), (3, 'Station');\nINSERT INTO sale (id, amount, shop_id) VALUES (1, 5, 2), (2, 12, 1), (3, 7, 2), (4, 3, 3), (5, 9, 2), (6, 4, 1);","sol":"SELECT sh.name, COUNT(s) FROM Sale s JOIN s.shop sh GROUP BY sh.name ORDER BY sh.name","checks":[["@result","Corner, 2; Market, 3; Station, 1"]],"write":{"task":"Write a JPQL query over `Sale s` that joins each sale to its shop `sh` through the `shop` field and returns two columns: the shop's `name` and how many sales it has. Group by the shop name and sort by name. The first row is `Corner, 2`.","starter":"SELECT "},"fill":{"code":"SELECT sh.name, ___ FROM Sale s JOIN s.shop sh ___ sh.name ORDER BY sh.name","blanks":[["COUNT(s)","COUNT(*)"],["GROUP BY"]]},"predict":{"code":"SELECT SUM(s.amount) FROM Sale s JOIN s.shop sh WHERE sh.name = 'Market'","answer":"21"},"explain":"`JOIN s.shop sh` follows the `shop` field of each sale, so `sh` stands for that sale's shop. `GROUP BY sh.name` makes one group per shop, and `COUNT(s)` counts the sales in each group."},"w5createGraph":{"title":"instructors and classes","setup":"","sol":"CREATE (mia:Instructor {name: 'Mia'}),\n       (raj:Instructor {name: 'Raj'}),\n       (mia)-[:TEACHES]->(:GymClass {name: 'Spin', day: 'Monday'}),\n       (mia)-[:TEACHES]->(:GymClass {name: 'Pilates', day: 'Thursday'}),\n       (raj)-[:TEACHES]->(:GymClass {name: 'Boxing', day: 'Tuesday'})","checks":[["MATCH (i:Instructor)-[:TEACHES]->(c:GymClass) RETURN i.name, c.name, c.day ORDER BY c.name","Raj, Boxing, Tuesday; Mia, Pilates, Thursday; Mia, Spin, Monday"],["MATCH (i:Instructor) RETURN count(i)","2"],["MATCH (n) RETURN count(n)","5"]],"write":{"task":"The graph is empty. Turn this table (instructor, class, day) into a graph: `Mia, Spin, Monday`; `Mia, Pilates, Thursday`; `Raj, Boxing, Tuesday`. Make one `Instructor` node per instructor (property `name`), one `GymClass` node per class (properties `name` and `day`), and a `TEACHES` relationship from each instructor to each of their classes. Mia must be one node, not two.","starter":"CREATE "},"fill":{"code":"___ (mia:Instructor {name: 'Mia'}),\n       (raj:Instructor {name: 'Raj'}),\n       (mia)-[:TEACHES]->(:GymClass {name: 'Spin', day: 'Monday'}),\n       (___)-[:TEACHES]->(:GymClass {name: 'Pilates', day: 'Thursday'}),\n       (raj)-[:TEACHES]->(:GymClass {name: 'Boxing', day: 'Tuesday'})","blanks":[["CREATE","create"],["mia"]]},"predict":{"code":"CREATE (:Town {name: 'Ely'});\nCREATE (:Town {name: 'Ely'})-[:NEAR]->(:Town {name: 'Diss'});\n\nMATCH (t:Town)\nRETURN count(t)","ask":"The graph starts empty. How many `Town` nodes does the last query count?","answer":"3"},"explain":"Instructors and classes are the nouns, so they become nodes; `day` describes a class, so it is a property of `GymClass`; teaching links them, so it is a relationship. Reusing the variable `mia` points at the node already made instead of creating a second Mia."},"w5linkNodes":{"title":"assigning a van","setup":"CREATE (:Driver {name: 'Omar'}),\n       (pia:Driver {name: 'Pia'}),\n       (:Van {reg: 'KX21'}),\n       (lm07:Van {reg: 'LM07'}),\n       (pia)-[:DRIVES {shift: 'late'}]->(lm07)","sol":"MATCH (p:Driver {name: 'Omar'}), (v:Van {reg: 'KX21'})\nCREATE (p)-[:DRIVES {shift: 'early'}]->(v)","checks":[["MATCH (p:Driver)-[r:DRIVES]->(v:Van) RETURN p.name, v.reg, r.shift ORDER BY p.name","Omar, KX21, early; Pia, LM07, late"],["MATCH (n) RETURN count(n)","4"]],"write":{"task":"The `Driver` named `'Omar'` and the `Van` with `reg` `'KX21'` already exist. Find both with one `MATCH`, then `CREATE` a `DRIVES` relationship from Omar to the van, with the property `shift` set to `'early'`. Do not make any new nodes.","starter":"MATCH "},"fill":{"code":"___ (p:Driver {name: 'Omar'}), (v:Van {reg: 'KX21'})\nCREATE (p)-[:DRIVES ___]->(v)","blanks":[["MATCH","match"],["{shift: 'early'}","{shift:'early'}","{shift: \"early\"}","{shift:\"early\"}"]]},"predict":{"code":"MATCH (p:Driver {name: 'Pia'}), (v:Van)\nCREATE (p)-[:DRIVES]->(v);\n\nMATCH (:Driver {name: 'Pia'})-[r:DRIVES]->(:Van)\nRETURN count(r)","ask":"Pia already drives one van. How many `DRIVES` relationships from Pia does the last query count?","answer":"3"},"explain":"`MATCH` finds the driver and the van that already exist and names them `p` and `v`, so `CREATE` only adds the relationship between them. A relationship's properties go inside its square brackets, as in `[:DRIVES {shift: 'early'}]`. `CREATE` never checks for an existing relationship, so it can add a second one between the same nodes."},"w5match":{"title":"flights from an airport","setup":"CREATE (bhx:Airport {code: 'BHX'}),\n       (man:Airport {code: 'MAN'}),\n       (:Flight {number: 'QX12'})-[:DEPARTS_FROM]->(bhx),\n       (:Flight {number: 'AB40'})-[:DEPARTS_FROM]->(bhx),\n       (:Flight {number: 'QX90'})-[:DEPARTS_FROM]->(man)","sol":"MATCH (a:Airport {code: 'BHX'})\u003c-[:DEPARTS_FROM]-(f:Flight)\nRETURN f.number AS flight\nORDER BY flight","checks":[["@result","AB40; QX12"]],"write":{"task":"Start your pattern at the `Airport` node with `code` `'BHX'`. The `DEPARTS_FROM` arrows point from `Flight` to `Airport`, so follow them backwards. Return one column, each flight's `number` renamed with `AS flight`, sorted by number. The first row is `AB40`.","starter":"MATCH (a:Airport {code: 'BHX'})"},"fill":{"code":"MATCH (a:Airport {code: 'BHX'})___[:DEPARTS_FROM]-(f:Flight)\nRETURN f.number ___ flight\nORDER BY flight","blanks":[["\u003c-"],["AS","as"]]},"predict":{"code":"MATCH (a:Airport {code: 'BHX'})-[:DEPARTS_FROM]-(f:Flight)\nRETURN count(f)","ask":"This pattern has no arrow head at either end. What does it return?","answer":"2"},"explain":"The relationship was created from flight to airport, so starting at the airport you need `\u003c-[:DEPARTS_FROM]-`. Leaving out the arrow head (`-[:DEPARTS_FROM]-`) matches the relationship in either direction. `AS flight` names the output column."},"w5where":{"title":"experienced hikers","setup":"CREATE (:Hiker {name: 'Nell', age: 41, level: 'expert'}),\n       (:Hiker {name: 'Otto', age: 35}),\n       (:Hiker {name: 'Pia', age: 27, level: 'beginner'}),\n       (:Hiker {name: 'Rex', age: 52, level: 'improver'}),\n       (:Hiker {name: 'Sue', age: 19})","sol":"MATCH (h:Hiker)\nWHERE h.age > 30 AND h.level IS NOT NULL\nRETURN h.name, h.level\nORDER BY h.name","checks":[["@result","Nell, expert; Rex, improver"]],"write":{"task":"Return two columns, `name` then `level`, for every `Hiker` older than 30 who has a `level` property. Sort by `name`. The first row is `Nell, expert`.","starter":"MATCH (h:Hiker)\n"},"fill":{"code":"MATCH (h:Hiker)\nWHERE h.age > 30 ___ h.level ___\nRETURN h.name, h.level\nORDER BY h.name","blanks":[["AND","and"],["IS NOT NULL","is not null"]]},"predict":{"code":"MATCH (h:Hiker)\nWHERE h.level = null\nRETURN h.name","ask":"What does it return? Write `(no rows)` if nothing comes back.","answer":"(no rows)"},"explain":"A hiker with no `level` property gives null for `h.level`. Any comparison with null, even `= null`, is null rather than true, so `WHERE` drops the row. Use `IS NULL` or `IS NOT NULL` to test for a missing value."},"w5relProps":{"title":"rides in May","setup":"CREATE (ida:Cyclist {name: 'Ida'}),\n       (joe:Cyclist {name: 'Joe'}),\n       (coast:Route {name: 'Coast'}),\n       (hills:Route {name: 'Hills'}),\n       (ida)-[:RODE {km: 42, month: 'May'}]->(coast),\n       (ida)-[:RODE {km: 18, month: 'June'}]->(hills),\n       (joe)-[:RODE {km: 35, month: 'May'}]->(hills),\n       (joe)-[:RODE {km: 12, month: 'June'}]->(coast)","sol":"MATCH (c:Cyclist)-[r:RODE]->(t:Route)\nWHERE r.month = 'May'\nRETURN c.name, t.name, r.km\nORDER BY r.km","checks":[["@result","Joe, Hills, 35; Ida, Coast, 42"]],"write":{"task":"Each `RODE` relationship from a `Cyclist` to a `Route` has the properties `km` and `month`. Return three columns, the cyclist's `name`, the route's `name`, then `km`, for every ride in `'May'`, sorted by `km` from lowest to highest. The first row is `Joe, Hills, 35`.","starter":"MATCH (c:Cyclist)"},"fill":{"code":"MATCH (c:Cyclist)-[r:RODE]->(t:Route)\nWHERE ___ = 'May'\nRETURN c.name, t.name, ___\nORDER BY r.km","blanks":[["r.month"],["r.km"]]},"predict":{"code":"MATCH (:Cyclist {name: 'Joe'})-[r:RODE]->(:Route)\nRETURN sum(r.km)","answer":"47"},"explain":"The `km` and `month` describe one ride, so they are stored on the `RODE` relationship, not on the cyclist or the route. Naming the relationship `r` lets you use `r.month` in `WHERE` and `r.km` in `RETURN` and `ORDER BY`."},"w5orderSkip":{"title":"third and fourth best games","setup":"CREATE (:Game {title: 'Orbit', score: 81}),\n       (:Game {title: 'Tiny Farm', score: 93}),\n       (:Game {title: 'Dune Racer', score: 77}),\n       (:Game {title: 'Pixel Knights', score: 88}),\n       (:Game {title: 'Go', score: 85})","sol":"MATCH (g:Game)\nRETURN g.title, g.score\nORDER BY g.score DESC\nSKIP 2\nLIMIT 2","checks":[["@result","Go, 85; Orbit, 81"]],"write":{"task":"Return two columns, `title` then `score`, for the `Game` nodes with the 3rd and 4th highest `score` only, highest first. Use `ORDER BY`, `SKIP` and `LIMIT`.","starter":"MATCH (g:Game)\n"},"fill":{"code":"MATCH (g:Game)\nRETURN g.title, g.score\nORDER BY g.score ___\nSKIP 2\n___ 2","blanks":[["DESC","desc"],["LIMIT","limit"]]},"predict":{"code":"MATCH (g:Game)\nRETURN g.title\nORDER BY size(g.title) DESC\nLIMIT 1","answer":"Pixel Knights"},"explain":"`ORDER BY g.score DESC` puts the highest score first. `SKIP 2` throws away the top two rows and `LIMIT 2` keeps the next two. You can also sort by an expression, such as `size(g.title)`, the length of the title."},"w5count":{"title":"recipes per ingredient","setup":"CREATE (egg:Ingredient {name: 'Egg'}),\n       (flour:Ingredient {name: 'Flour'}),\n       (milk:Ingredient {name: 'Milk'}),\n       (pancake:Recipe {name: 'Pancakes', minutes: 20}),\n       (omelette:Recipe {name: 'Omelette', minutes: 10}),\n       (bread:Recipe {name: 'Bread', minutes: 90}),\n       (scone:Recipe {name: 'Scones', minutes: 25}),\n       (pancake)-[:USES]->(egg), (pancake)-[:USES]->(flour), (pancake)-[:USES]->(milk),\n       (omelette)-[:USES]->(egg), (omelette)-[:USES]->(milk),\n       (bread)-[:USES]->(flour),\n       (scone)-[:USES]->(flour), (scone)-[:USES]->(milk)","sol":"MATCH (r:Recipe)-[:USES]->(i:Ingredient)\nRETURN i.name, count(r) AS recipes\nORDER BY recipes DESC, i.name","checks":[["@result","Flour, 3; Milk, 3; Egg, 2"]],"write":{"task":"For each `Ingredient`, return two columns: its `name`, then how many recipes have a `USES` relationship to it, as `recipes`. Sort by `recipes` from most to fewest, and ingredients with the same number by name. The first row is `Flour, 3`.","starter":"MATCH (r:Recipe)-[:USES]->(i:Ingredient)\n"},"fill":{"code":"MATCH (r:Recipe)-[:USES]->(i:Ingredient)\nRETURN i.name, ___(r) AS recipes\nORDER BY recipes ___, i.name","blanks":[["count","COUNT"],["DESC","desc"]]},"predict":{"code":"MATCH (r:Recipe)-[:USES]->(i:Ingredient {name: 'Milk'})\nRETURN min(r.minutes)","answer":"10"},"explain":"`i.name` is not an aggregate, so Cypher groups by it automatically and `count(r)` counts the recipes in each group. There is no `GROUP BY` to write. `min`, `max`, `sum` and `avg` group the same way."},"w5with":{"title":"authors with popular posts","setup":"CREATE (ana:Author {name: 'Ana'}),\n       (ben:Author {name: 'Ben'}),\n       (cy:Author {name: 'Cy'}),\n       (ana)-[:WROTE]->(:Post {likes: 30}),\n       (ana)-[:WROTE]->(:Post {likes: 25}),\n       (ben)-[:WROTE]->(:Post {likes: 12}),\n       (ben)-[:WROTE]->(:Post {likes: 8}),\n       (cy)-[:WROTE]->(:Post {likes: 70})","sol":"MATCH (a:Author)-[:WROTE]->(p:Post)\nWITH a, sum(p.likes) AS likes\nWHERE likes >= 50\nRETURN a.name, likes\nORDER BY a.name","checks":[["@result","Ana, 55; Cy, 70"]],"write":{"task":"Use `WITH` to add up the `likes` of each author's posts as `likes`, then keep only authors with 50 or more. Return two columns, the author's `name` then `likes`, sorted by `name`. The first row is `Ana, 55`.","starter":"MATCH (a:Author)-[:WROTE]->(p:Post)\n"},"fill":{"code":"MATCH (a:Author)-[:WROTE]->(p:Post)\n___ a, sum(p.likes) AS likes\n___ likes >= 50\nRETURN a.name, likes\nORDER BY a.name","blanks":[["WITH","with"],["WHERE","where"]]},"predict":{"code":"MATCH (a:Author)-[:WROTE]->(p:Post)\nWITH a, count(p) AS posts\nWHERE posts = 1\nRETURN a.name","answer":"Cy"},"explain":"You cannot put `WHERE` on an aggregate straight after `MATCH`, because the totals do not exist yet. `WITH` works them out and passes them on, and the `WHERE` after it filters on them, like `HAVING` in SQL."},"w5merge":{"title":"restocking items","setup":"CREATE (:Item {sku: 'A1', qty: 5}),\n       (:Item {sku: 'C3', qty: 0})","sol":"MERGE (i:Item {sku: 'B2'})\nON CREATE SET i.qty = 10\nON MATCH SET i.qty = i.qty + 10","checks":[["MATCH (i:Item) RETURN i.sku, i.qty ORDER BY i.sku","A1, 5; B2, 10; C3, 0"]],"write":{"task":"Restock the item `'B2'` with one `MERGE` on an `Item` node with that `sku`. If no such node exists, create it with `qty` set to 10 (`ON CREATE SET`). If it exists, add 10 to its `qty` (`ON MATCH SET`). B2 is not in the graph yet, so afterwards it has 10.","starter":"MERGE "},"fill":{"code":"___ (i:Item {sku: 'B2'})\n___ SET i.qty = 10\nON MATCH SET i.qty = i.qty + 10","blanks":[["MERGE","merge"],["ON CREATE","on create"]]},"predict":{"code":"MERGE (i:Item {sku: 'A1'})\nON CREATE SET i.qty = 1\nON MATCH SET i.qty = i.qty - 1\nRETURN i.qty","answer":"4"},"explain":"`MERGE` finds the node if it is there and creates it if not. `ON CREATE SET` gives a brand new node its starting values, while `ON MATCH SET` updates a node that was already there. Exactly one of the two runs."},"w5optional":{"title":"authors and book counts","setup":"CREATE (eve:Author {name: 'Eve'}),\n       (:Author {name: 'Gil'}),\n       (hana:Author {name: 'Hana'}),\n       (eve)-[:WROTE]->(:Book {title: 'Salt'}),\n       (eve)-[:WROTE]->(:Book {title: 'Ash'}),\n       (hana)-[:WROTE]->(:Book {title: 'Reed'})","sol":"MATCH (a:Author)\nOPTIONAL MATCH (a)-[:WROTE]->(b:Book)\nRETURN a.name, count(b) AS books\nORDER BY a.name","checks":[["@result","Eve, 2; Gil, 0; Hana, 1"]],"write":{"task":"Return two columns, every author's `name` then how many books they `WROTE`, as `books`, sorted by `name`. Authors with no books must still appear, with `0`, for example `Gil, 0`.","starter":"MATCH (a:Author)\n"},"fill":{"code":"MATCH (a:Author)\n___ (a)-[:WROTE]->(b:Book)\nRETURN a.name, count(b) AS books\nORDER BY a.name","blanks":[["OPTIONAL MATCH","optional match"]]},"predict":{"code":"MATCH (a:Author)-[:WROTE]->(b:Book)\nRETURN a.name, count(b)\nORDER BY a.name","ask":"This uses a plain `MATCH`. What does it return? Write the rows like `Ann, 3`, separated by semicolons.","answer":"Eve, 2; Hana, 1"},"explain":"With a plain `MATCH`, Gil has no `WROTE` relationship and vanishes. `OPTIONAL MATCH` keeps him with `b` as null, and `count(b)` skips the null, so he gets 0. This is the graph version of a `LEFT JOIN`."},"w5setRemove":{"title":"closing rooms for repair","setup":"CREATE (:Room:Bookable {number: 101, status: 'open', needsRepair: true}),\n       (:Room:Bookable {number: 102, status: 'open', needsRepair: false}),\n       (:Room:Bookable {number: 103, status: 'open', needsRepair: true})","sol":"MATCH (r:Room)\nWHERE r.needsRepair = true\nSET r.status = 'closed'\nREMOVE r:Bookable","checks":[["MATCH (r:Room) RETURN r.number, r.status, labels(r) ORDER BY r.number","101, closed, [Room]; 102, open, [Room, Bookable]; 103, closed, [Room]"]],"write":{"task":"In one query, find every `Room` whose `needsRepair` is `true`, set its `status` to `'closed'`, and remove its `Bookable` label. Other rooms stay as they are.","starter":"MATCH (r:Room)\n"},"fill":{"code":"MATCH (r:Room)\nWHERE r.needsRepair = true\n___ r.status = 'closed'\n___ r:Bookable","blanks":[["SET","set"],["REMOVE","remove"]]},"predict":{"code":"MATCH (r:Room {number: 102})\nREMOVE r.status\nRETURN r.number, r.status","answer":"102, null"},"explain":"`SET r.status = 'closed'` overwrites a property, and `REMOVE r:Bookable` takes a label off the node while keeping the node. After `REMOVE r.status`, reading that property gives null."},"w5delete":{"title":"clearing old events","setup":"CREATE (a:Venue {name: 'Hall'}),\n       (b:Venue {name: 'Park'}),\n       (e1:Event {name: 'Fair', year: 2018}),\n       (e2:Event {name: 'Gig', year: 2025}),\n       (e3:Event {name: 'Quiz', year: 2019}),\n       (e1)-[:HELD_AT]->(a),\n       (e2)-[:HELD_AT]->(a),\n       (e3)-[:HELD_AT]->(b)","sol":"MATCH (e:Event)\nWHERE e.year \u003c 2020\nDETACH DELETE e","checks":[["MATCH (e:Event) RETURN e.name","Gig"],["MATCH (v:Venue) RETURN count(v)","2"],["MATCH ()-[h:HELD_AT]->() RETURN count(h)","1"]],"write":{"task":"Delete every `Event` node whose `year` is before 2020, together with its `HELD_AT` relationships, in one query. The `Venue` nodes must stay.","starter":"MATCH (e:Event)\n"},"fill":{"code":"MATCH (e:Event)\nWHERE e.year \u003c 2020\n___ e","blanks":[["DETACH DELETE","detach delete"]]},"predict":{"code":"MATCH (:Event)-[h:HELD_AT]->(:Venue {name: 'Hall'})\nDELETE h;\n\nMATCH (e:Event)\nRETURN count(e)","ask":"The first statement deletes the `HELD_AT` relationships to the Hall. How many `Event` nodes does the second one count?","answer":"3"},"explain":"`DETACH DELETE` first cuts every relationship of the node and then deletes it, so it works even when the node is connected. The nodes at the other end (the venues) are untouched. Plain `DELETE` on a relationship removes only that relationship."},"w5friendsOfFriends":{"title":"two stops away","setup":"CREATE (ashby:Station {name: 'Ashby'}),\n       (brook:Station {name: 'Brook'}),\n       (cole:Station {name: 'Cole'}),\n       (dale:Station {name: 'Dale'}),\n       (eden:Station {name: 'Eden'}),\n       (fern:Station {name: 'Fern'}),\n       (ashby)-[:LINE_TO]->(brook),\n       (ashby)-[:LINE_TO]->(cole),\n       (brook)-[:LINE_TO]->(cole),\n       (brook)-[:LINE_TO]->(dale),\n       (cole)-[:LINE_TO]->(eden),\n       (cole)-[:LINE_TO]->(dale),\n       (dale)-[:LINE_TO]->(fern)","sol":"MATCH (start:Station {name: 'Ashby'})-[:LINE_TO]->(:Station)-[:LINE_TO]->(stop:Station)\nWHERE NOT EXISTS { (start)-[:LINE_TO]->(stop) }\nRETURN DISTINCT stop.name\nORDER BY stop.name","checks":[["@result","Dale; Eden"]],"write":{"task":"Follow the `LINE_TO` arrows in their direction. Find the stations you reach from `'Ashby'` in exactly two `LINE_TO` steps but that Ashby has no direct `LINE_TO` arrow to. Return one column, each station's `name` once, sorted by name.","starter":"MATCH (start:Station {name: 'Ashby'})"},"fill":{"code":"MATCH (start:Station {name: 'Ashby'})-[:LINE_TO]->(:Station)-[:LINE_TO]->(stop:Station)\nWHERE ___ { (start)-[:LINE_TO]->(stop) }\nRETURN ___ stop.name\nORDER BY stop.name","blanks":[["NOT EXISTS","not exists"],["DISTINCT","distinct"]]},"predict":{"code":"MATCH (:Station {name: 'Brook'})-[:LINE_TO]->(:Station)-[:LINE_TO]->(s:Station)\nRETURN s.name\nORDER BY s.name","answer":"Dale; Eden; Fern"},"explain":"Two relationships in a row in one pattern make a two-step journey. `NOT EXISTS { ... }` removes the stations Ashby already reaches in one step (Cole). `DISTINCT` lists Dale once, although you can reach it through both Brook and Cole."},"w5union":{"title":"players and coaches","setup":"CREATE (ali:Person {name: 'Ali'}),\n       (bea:Person {name: 'Bea'}),\n       (reds:Team {name: 'Reds'}),\n       (blues:Team {name: 'Blues'}),\n       (ali)-[:PLAYS_FOR]->(reds),\n       (ali)-[:COACHES]->(blues),\n       (bea)-[:COACHES]->(reds),\n       (bea)-[:COACHES]->(blues)","sol":"MATCH (p:Person)-[:PLAYS_FOR]->(:Team)\nRETURN p.name AS name, 'Player' AS job\nUNION\nMATCH (p:Person)-[:COACHES]->(:Team)\nRETURN p.name AS name, 'Coach' AS job","checks":[["@result","Ali, Player; Ali, Coach; Bea, Coach"]],"write":{"task":"Use `UNION` to return two columns, `name` and `job`: everyone who `PLAYS_FOR` a `Team` with the job `'Player'`, and everyone who `COACHES` one with the job `'Coach'`. Each name and job pair appears once, for example `Bea, Coach`. Any row order.","starter":"MATCH (p:Person)-[:PLAYS_FOR]->(:Team)\n"},"fill":{"code":"MATCH (p:Person)-[:PLAYS_FOR]->(:Team)\nRETURN p.name AS name, 'Player' AS job\n___\nMATCH (p:Person)-[:COACHES]->(:Team)\nRETURN p.name AS name, 'Coach' ___ job","blanks":[["UNION","union"],["AS","as"]]},"predict":{"code":"MATCH (p:Person)-[:PLAYS_FOR]->(:Team)\nRETURN p.name AS name\nUNION\nMATCH (p:Person)-[:COACHES]->(:Team)\nRETURN p.name AS name","ask":"What does it return? Write the rows in any order, separated by semicolons.","answer":"Ali; Bea"},"explain":"`UNION` joins the rows of both queries and drops exact duplicate rows: Bea coaches two teams but appears once. Both halves must use the same column names (`name`, `job`) in the same order. Use `UNION ALL` to keep duplicates."}};
 const SRC = {"w1entityTypes":"Week 1 slides 71, 74, 75 and 79, JDL entities and field types (slides 83 and 85: `id` added for you); Lab 1 solution, task 3 (LocalDate, Integer)","w1validations":"Week 1 slide 76, primitive modifiers; Lab 1 solution, task 2","w1enum":"Week 1 slide 77, JDL enum type; Lab 1 solution, task 2 (order status enum)","w1oneToOne":"Week 1 slides 65 and 80 to 82, OneToOne and relationship direction","w1manyToOne":"Week 1 slides 80, 82 and 90, ManyToOne and unidirectional relationships; Lab 1 solution, task 2","w1oneToMany":"Week 1 slides 65 and 83 to 84, OneToMany and where the foreign key lives","w1manyToMany":"Week 1 slides 65, 85, 86 and 89, ManyToMany and the join table","w1noLists":"Week 1 slide 78, no List or Set types: use a relationship instead","w1miniModel":"Week 1 slides 80, 87 and 90, a small model with several relationship blocks; Lab 1 solution, task 2","w2createTable":"Week 2 slides 56-62, CREATE TABLE, data types, PRIMARY KEY and NOT NULL","w2insert":"Week 2 slide 68 (INSERT, with and without a column list) and Lab 2 Part 2, step 1 (SERIAL key, inserting records)","w2select":"Week 2 slide 70 (SELECT and WHERE) and Lab 2 Part 2 tasks (retrieving rows with a filter)","w2update":"Week 2 slide 69 (UPDATE) and Lab 2 Part 2 tasks (updating one product's price)","w2delete":"Week 2 slide 71 (DELETE with a date in the WHERE) and Lab 2 Part 2 tasks (deleting rows that meet two conditions)","w2updateAnomaly":"Week 2 slides 14 and 31 (update anomaly; the notes on slide 31 show it for a fee)","w2repeatingGroup":"Week 2 slides 8, 11-12 and 18-20 (repeating groups, 1NF) and Lab 2, tasks 1 and 2 (composite key)","w2partialDependency":"Week 2 slides 13, 15, 23-26 and 34 (insert and delete anomalies, functional dependency, 2NF) and Lab 2, task 3","w2transitive":"Week 2 slides 27 and 30-34 (foreign keys, transitive dependency, 3NF) and Lab 2, task 4","w3copyCsv":"Week 3 slides 7-10 (CSV files, from a CSV file to a table) and Lab 3, task 20 (a table for a CSV file)","w3addColumn":"Week 3 slides 12-13 (ALTER changes an existing table; ADD COLUMN itself is not shown on the slides)","w3foreignKey":"Week 3 slides 13-14 (adding a foreign key with ALTER, CASCADE) and Lab 3, task 21","w3setDefault":"Week 3 slide 15 (default constraint, due date 7 days on) and Lab 3, task 22","w3countSum":"Week 3 slides 18-20 (COUNT and SUM) and Lab 3, tasks 9 and 11","w3minMaxAvg":"Week 3 slides 21-23 (MIN and MAX, AS, AVG with ROUND, subtracting dates) and Lab 3, task 10","w3groupBy":"Week 3 slides 24-25 (ORDER BY, GROUP BY) and Lab 3, tasks 12 and 17","w3whereHaving":"Week 3 slide 26 (HAVING) and Lab 3, task 16 and the find-the-errors queries (WHERE vs HAVING)","w3join":"Week 3 slides 27-29 (JOIN, table aliases) and Lab 3, task 15","w3view":"Week 3 slides 30-31 (creating and using a view)","w3prepare":"Week 3 slides 32-34 (dynamic queries, PREPARE and EXECUTE) and Lab 3, tasks 18 and 19","w3dropTruncate":"Week 3 slides 35-36 (DROP and TRUNCATE)","w3doBlock":"Week 3 slides 37, 40 and 41-42, self-study (control structures, a DO block that loops over rows and updates them)","w4innerJoin":"Week 4 slides 2-4 (INNER JOIN) and 14 (NATURAL JOIN), and Lab 4 Part 1 (naming the join type from its result set)","w4leftJoin":"Week 4 slides 5-7 (LEFT JOIN) and 17 (COUNT and NULLs), and Lab 4 Part 1 (LEFT JOIN with the empty bonus table)","w4noMatch":"Week 4 slides 5-7 (LEFT JOIN, filtering unmatched rows) and 15 (NULL and IS NULL)","w4fullJoin":"Week 4 slides 8-11 (RIGHT JOIN and FULL OUTER JOIN) and Lab 4 Part 1 (report of every book and every author)","w4threeJoin":"Week 4 slides 12-13 (joining three tables) and Lab 4 Part 1 (catalogue report with two INNER JOINs)","w4entity":"Week 4 slides 33-37 (first entity, @Id and @GeneratedValue, naming convention) and Lab 4 Part 2 (from a Java class to a database table)","w4column":"Week 4 slides 33-37 (@Column name, nullable and unique, Spring Boot naming) and Lab 4 Part 2, Task C (default column names)","w4transient":"Week 4 slide 37 (@Transient: the field is not persisted) and Lab 4 Part 2, Task C (matching @Transient to its purpose)","w4manyToOne":"Week 4 slides 44-46 (@ManyToOne with @JoinColumn, @OneToMany with mappedBy)","w4manyToMany":"Week 4 slides 47-48 (@ManyToMany and @JoinTable) and Lab 4 Part 2, Task A (students, courses and enrolments)","w4jpqlPath":"Week 4 slides 50-52 (JPQL with entity and field names, path navigation, @Query)","w4jpqlGroup":"Week 4 slides 50-51 (JPQL, JOIN and aggregates in @Query) and 62 (explicit JOIN with COUNT and GROUP BY)","w5createGraph":"Week 5 slides 41-43 (CREATE nodes, relationships and a whole subgraph in one query) and Week 5 lab, Part 1 (from a movie table to a property graph)","w5linkNodes":"Week 5 lab, Part 2 (linking existing professors and courses with MATCH then CREATE) and Week 5 slides 42-43 (relationships with properties, such as since and role)","w5match":"Week 5 slides 44-45 (MATCH and RETURN) and Week 6 revision slides 8-11 (AS, and what the arrow direction means)","w5where":"Week 5 slides 47-49 (WHERE, NULL in comparisons, IS NULL and IS NOT NULL)","w5relProps":"Week 6 revision slide 12 (a variable on WATCHED to sort by its rating) and Week 5 lab, Part 2 (reading and updating the grade stored on ENROLLED_IN)","w5orderSkip":"Week 5 slides 52-55 (ORDER BY, SKIP and LIMIT) and Week 6 revision slide 12 (SKIP and LIMIT after sorting)","w5count":"Week 5 slide 55 (count with AS, sorted DESC) and Week 5 lab, Part 2 (counting students per major)","w5with":"Week 5 slide 52 (WITH) and Week 6 revision slide 13 (WITH and count, then WHERE on the count)","w5merge":"Week 5 slides 50-51 (MERGE and ON CREATE SET)","w5optional":"Week 5 slides 52 and 56 (OPTIONAL MATCH and null) and Week 6 revision slide 14","w5setRemove":"Week 5 slide 52 and Week 6 revision slides 6 and 13 (SET and REMOVE on labels and properties)","w5delete":"Week 6 revision slide 6 (DELETE and DETACH DELETE) and Week 5 lab, Part 2 (deleting friendships, and deleting a student with all her relationships)","w5friendsOfFriends":"Week 5 slide 57 (WHERE NOT EXISTS) and Week 5 lab, advanced tasks (friends of friends who are not direct friends)","w5union":"Week 5 slides 58-59 (UNION and UNION ALL)"};
 const TESTS = [];
+const KIND = "code";          // "code" or "maths"
+const IS_MATHS = KIND === "maths";
+// Maths answer checking, shared by the practice page (inlined by the build) and
+// by scripts/test-maths.js, so the page marks answers exactly as the tests do.
+//
+//   MATHS.evaluate("3/8 + 0.25")             -> 0.625
+//   MATHS.evaluate("k/n", {k: 3, n: 4})      -> 0.75
+//   MATHS.checkNumber("0.27", 0.2689)        -> "ok"
+//   MATHS.checkExpr("s*(1-s)", "s - s^2", {s: [0.1, 0.9]}) -> "ok"
+//
+// Typed answers can be numbers (0.27, .27, 27%, 1e-3, 1,000), fractions (8/27) or sums
+// (1 - 11/36). Supported: + - * / ^ ( ) !, implicit multiplication (2p, s(1-s)),
+// ln, log (natural; log(x, 2) for another base), log2, log10, exp, sqrt, abs, sigmoid,
+// choose(n, k), e, pi. A one-value function needs no brackets: ln 20, √0.5, log₂ 8.
+const MATHS = (() => {
+  const FUNCS = {
+    ln: Math.log, log: Math.log, log2: Math.log2, log10: Math.log10, exp: Math.exp,
+    sqrt: Math.sqrt, abs: Math.abs, sigmoid: z => 1 / (1 + Math.exp(-z)),
+    choose: (n, k) => fact(n) / (fact(k) * fact(n - k)),
+  };
+  const CONSTS = { e: Math.E, pi: Math.PI };
+
+  function fact(n) {
+    if (!Number.isInteger(n) || n < 0 || n > 170) return NaN;
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+  }
+
+  // Unicode and typing habits: −, ×, ·, ÷, ², ³, √, π, ≈, log₂, "1,000" (thousands),
+  // "0,25" (a decimal comma).
+  function tidy(src) {
+    let s = String(src).trim()
+      .replace(/[\u2212\u2012\u2013\u2014]/g, "-")
+      .replace(/[×⋅·]/g, "*")
+      .replace(/÷/g, "/")
+      .replace(/²/g, "^2").replace(/³/g, "^3")
+      .replace(/√/g, " sqrt ").replace(/π/g, "pi").replace(/σ/g, "sigmoid")
+      .replace(/[\u2080-\u2089]+/g, d => [...d].map(c => c.charCodeAt(0) - 0x2080).join("") + " ")   // log₂ 8
+      .replace(/\*\*/g, "^")
+      .replace(/^(?:[a-zA-Z_][\w]*\s*)?(?:=|≈|~)\s*/, "")   // "p = 0.27", "≈ 0.27"
+      .replace(/^(?:≈|~)/, "")
+      .trim();
+    if (/^-?[1-9]\d{0,2}(,\d{3})+$/.test(s)) s = s.replace(/,/g, "");
+    else if (!s.includes(".") && /^-?\d+,\d+$/.test(s)) s = s.replace(",", ".");
+    return s;
+  }
+
+  function tokenize(s) {
+    const out = [];
+    let i = 0;
+    while (i < s.length) {
+      const c = s[i];
+      if (/\s/.test(c)) { i++; continue; }
+      const num = /^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i.exec(s.slice(i));
+      if (num) {
+        if (out.length && out[out.length - 1].t === "num") throw new Error("two numbers are next to each other");   // "1 600"
+        out.push({ t: "num", v: parseFloat(num[0]) }); i += num[0].length; continue;
+      }
+      const id = /^[a-zA-Z_][a-zA-Z_0-9]*/.exec(s.slice(i));
+      if (id) { out.push({ t: "id", v: id[0] }); i += id[0].length; continue; }
+      if ("+-*/^()!%,".includes(c)) { out.push({ t: c }); i++; continue; }
+      throw new Error(`I can't read "${c}"`);
+    }
+    return out;
+  }
+
+  // Recursive descent: expr := term (+|- term)*; term := unary ((*|/|implicit) unary)*;
+  // unary := (+|-) unary | power; power := postfix (^ unary)?; postfix := primary (!|%)*
+  function parse(src, vars) {
+    const toks = tokenize(tidy(src));
+    let p = 0;
+    const peek = () => toks[p], take = () => toks[p++];
+    const startsPrimary = t => t && (t.t === "num" || t.t === "id" || t.t === "(");
+    function expr() {
+      let v = term();
+      while (peek() && (peek().t === "+" || peek().t === "-")) {
+        const op = take().t, r = term();
+        v = op === "+" ? v + r : v - r;
+      }
+      return v;
+    }
+    function term() {
+      let v = unary();
+      for (;;) {
+        const t = peek();
+        if (t && (t.t === "*" || t.t === "/")) { take(); const r = unary(); v = t.t === "*" ? v * r : v / r; }
+        else if (startsPrimary(t)) v *= unary();
+        else return v;
+      }
+    }
+    function unary() {
+      const t = peek();
+      if (t && t.t === "-") { take(); return -unary(); }
+      if (t && t.t === "+") { take(); return unary(); }
+      return power();
+    }
+    function power() {
+      const base = postfix();
+      if (peek() && peek().t === "^") { take(); return Math.pow(base, unary()); }
+      return base;
+    }
+    function postfix() {
+      let v = primary();
+      while (peek() && (peek().t === "!" || peek().t === "%")) v = take().t === "!" ? fact(v) : v / 100;
+      return v;
+    }
+    function args() {
+      take(); // (
+      const list = [expr()];
+      while (peek() && peek().t === ",") { take(); list.push(expr()); }
+      if (!peek() || peek().t !== ")") throw new Error("a bracket is not closed");
+      take();
+      return list;
+    }
+    function primary() {
+      const t = take();
+      if (!t) throw new Error("the answer stops too early");
+      if (t.t === "num") return t.v;
+      if (t.t === "(") {
+        const v = expr();
+        if (!peek() || peek().t !== ")") throw new Error("a bracket is not closed");
+        take();
+        return v;
+      }
+      if (t.t === "id") {
+        const name = t.v;
+        if (vars && Object.prototype.hasOwnProperty.call(vars, name)) return vars[name];
+        const fname = name === "C" ? "choose" : name;
+        const f = Object.prototype.hasOwnProperty.call(FUNCS, fname) ? FUNCS[fname] : null;
+        if (f && peek() && peek().t === "(") {
+          const list = args();
+          if (fname === "log" && list.length === 2) return Math.log(list[0]) / Math.log(list[1]);   // log(x, 2)
+          if (list.length !== f.length) throw new Error(`${name} takes ${f.length === 1 ? "one value" : f.length + " values"}`);
+          return f(...list);
+        }
+        // "ln 20", "√0.5": a one-value function applies to what follows it
+        if (f && f.length === 1 && startsPrimary(peek())) return f(power());
+        if (Object.prototype.hasOwnProperty.call(CONSTS, name)) return CONSTS[name];
+        // a run of single-letter variables typed together, like "kn" for k*n
+        if (vars && [...name].every(ch => Object.prototype.hasOwnProperty.call(vars, ch))) return [...name].reduce((a, ch) => a * vars[ch], 1);
+        throw new Error(`I don't know "${name}"`);
+      }
+      throw new Error(`"${t.t}" is in the wrong place`);
+    }
+    if (!toks.length) throw new Error("the answer is empty");
+    const v = expr();
+    if (p < toks.length) throw new Error(`"${toks[p].t === "num" || toks[p].t === "id" ? toks[p].v : toks[p].t}" is in the wrong place`);
+    return v;
+  }
+
+  function evaluate(src, vars) { return parse(src, vars); }
+
+  // A bare number typed by hand: how many decimals and significant figures it has.
+  function literal(src) {
+    const s = tidy(src).replace(/\s+/g, "");
+    const m = /^([+-]?)(\d*)(?:\.(\d*))?(%?)$/.exec(s);
+    if (!m || (m[2] === "" && (m[3] === undefined || m[3] === ""))) return null;
+    const digits = (m[2] + (m[3] || "")).replace(/^0+/, "");
+    return { decimals: (m[3] || "").length + (m[4] ? 2 : 0), sig: digits.length || 1 };
+  }
+
+  // "ok", "precision" (right value but too few digits), "wrong" or "invalid".
+  function checkNumber(input, answer) {
+    let x;
+    try { x = evaluate(input); } catch (e) { return "invalid"; }
+    if (!Number.isFinite(x)) return "invalid";
+    const a = Number(answer), diff = Math.abs(x - a), scale = Math.max(1, Math.abs(a));
+    if (diff <= 1e-9 * scale) return "ok";
+    const lit = literal(input);
+    if (lit) {
+      const half = 0.5 * Math.pow(10, -lit.decimals) * (1 + 1e-9);
+      // A whole-number answer (a count such as 600 or 2^8) typed as a whole
+      // number must be exact: 599 or 255 is a real mistake, not rounding.
+      const count = lit.decimals === 0 && Math.abs(a - Math.round(a)) <= 1e-9 * scale;
+      const close = diff <= half || (!count && a !== 0 && diff <= 0.01 * Math.abs(a));
+      if (!close) return "wrong";
+      if (lit.sig >= 2) return "ok";
+      // One significant figure (0.7 for 0.722) is "the right idea" only when it
+      // has a decimal point and is near the answer. A single whole digit is
+      // usually a different answer: 0 for 0.05, 1 for 0.73, 2 bits for 1.906.
+      return lit.decimals > 0 && x !== 0 && diff <= 0.15 * Math.abs(a) ? "precision" : "wrong";
+    }
+    // a typed calculation such as 1/(1+2.718): allow small rounding inside it
+    return a !== 0 && diff <= 0.005 * Math.abs(a) ? "ok" : "wrong";
+  }
+
+  // Deterministic sample points inside each variable's [low, high] range.
+  function samples(ranges, count) {
+    const names = Object.keys(ranges);
+    let seed = 12345;
+    const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+    const pts = [];
+    for (let i = 0; i < count; i++) {
+      const pt = {};
+      for (const n of names) {
+        const [lo, hi, integer] = ranges[n];
+        let v = lo + rnd() * (hi - lo);
+        if (integer) v = Math.round(v);
+        pt[n] = v;
+      }
+      pts.push(pt);
+    }
+    return pts;
+  }
+
+  // Is a typed formula the same function as the reference over the given ranges?
+  function checkExpr(input, ref, ranges) {
+    const pts = samples(ranges, 8);
+    let compared = 0;
+    for (const pt of pts) {
+      let want, got;
+      try { want = evaluate(ref, pt); } catch (e) { continue; }
+      if (!Number.isFinite(want)) continue;
+      try { got = evaluate(input, pt); } catch (e) { return "invalid"; }
+      if (!Number.isFinite(got)) return "wrong";
+      if (Math.abs(got - want) > 1e-7 * Math.max(1, Math.abs(want))) return "wrong";
+      compared++;
+    }
+    return compared ? "ok" : "invalid";
+  }
+
+  const squash = s => String(s).toLowerCase().replace(/[\s.,;:!?'"`()\-‘’“”]/g, "");
+  // A word answer is right if it matches an accepted answer, ignoring case, spaces
+  // and punctuation. An answer with an explanation, like "S (sunny spot)" or
+  // "no, dependent", is also right when every part of it is an accepted answer.
+  function checkText(input, accepted) {
+    const a = squash(input);
+    if (!a) return "invalid";
+    const ok = x => accepted.some(y => squash(y) === squash(x));
+    if (ok(input)) return "ok";
+    const parts = String(input).split(/[,;:()[\]]|\s[-\u2013\u2014]\s/).filter(p => squash(p));
+    return parts.length > 1 && parts.every(ok) ? "ok" : "wrong";
+  }
+
+  // Short, readable form of a computed answer: whole numbers as they are, else 4 significant figures.
+  function format(x) {
+    if (typeof x !== "number") return String(x);
+    if (Number.isInteger(x)) return String(x);
+    return String(parseFloat(x.toPrecision(4)));
+  }
+
+  // Mark one answer against an answer spec {type: "number"|"expr"|"text", value, whole, ref, vars, accept}.
+  // whole: the answer is a whole number (a count, or n rounded up) and must be exact.
+  function check(input, spec) {
+    if (spec.type === "expr") return checkExpr(input, spec.ref, spec.vars);
+    if (spec.type === "text") return checkText(input, spec.accept);
+    // "5/6 (0.833)" or "0.7 (70%)": an answer followed by the same value written
+    // another way. Both must be right; it is not 5/6 times 0.833.
+    const both = /^(.*\S)\s+\(\s*(-?[\d.,]+\s*(?:%|\/\s*[\d.]+)?)\s*\)\s*$/.exec(String(input));
+    if (both) {
+      const r = [markNumber(both[1], spec), markNumber(both[2], spec)];
+      for (const worst of ["invalid", "wrong", "precision"]) if (r.includes(worst)) return worst;
+      return "ok";
+    }
+    return markNumber(input, spec);
+  }
+  function markNumber(input, spec) {
+    if (spec.whole) {
+      let x;
+      try { x = evaluate(input); } catch (e) { return "invalid"; }
+      if (!Number.isFinite(x)) return "invalid";
+      return Math.abs(x - spec.value) <= 1e-9 * Math.max(1, Math.abs(spec.value)) ? "ok" : "wrong";
+    }
+    return checkNumber(input, spec.value);
+  }
+
+  return { evaluate, checkNumber, checkExpr, checkText, check, format, fact, tidy };
+})();
+if (typeof module !== "undefined") module.exports = MATHS;
 // How query results are written as text, shared by scripts/test-databases.js and the
 // practice page (the build pastes this file into the page). Columns are separated by
 // ", " and rows by "; ". NULL is null, and a query with no rows gives "(no rows)".
@@ -580,7 +853,7 @@ async function verifySql(g){
   finally { if (db) { try { db.close(); } catch(e) {} } }
 }
 
-const LEVELS = {3:"Write it", 2:"Fill the gaps", 1:"Predict"};
+const LEVELS = IS_MATHS ? {3:"Solve it", 2:"Fill the gaps", 1:"Plug in"} : {3:"Write it", 2:"Fill the gaps", 1:"Predict"};
 const INTERVALS = [10*60e3, 864e5, 3*864e5, 7*864e5, 16*864e5, 35*864e5];
 const MASTER_BOX = 3;
 const MODULE_ID = "databases-and-web-programming";
@@ -593,17 +866,21 @@ let mode = "course";
 let lastUndo = null;
 let current = null;     // {s, lvl}
 let checked = false;
+let busy = false, renderId = 0;   // busy: a check is running; renderId: which card it belongs to
 let sample = null, db = null, uid = null, saving = false, saveAgain = false;
 
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 // colours code in one pass, so a colour tag is never coloured again
 function hl(src){
+  if (IS_MATHS) return esc(String(src));
   const other = hlOther(src); if (other != null) return other;   // other languages
   return String(src).replace(/("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|\b(where|case|of|if|then|else|let|in|data|type|newtype|instance|class|deriving|otherwise|module|import)\b|([^"'a-z]+|[a-z_][\w']*|.)/gs,
     (m, str, kw) => str ? `<span class="st">${esc(str)}</span>` : kw ? `<span class="kw">${kw}</span>` : esc(m));
 }
 function md(s){ return esc(s).replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, a, b) => `<code>${a ?? b}</code>`); }
+// generated text: no long dashes as punctuation
+const plain = s => String(s).replace(/\s*[\u2014\u2013]\s*/g, ", ");
 
 // ---------- persistence ----------
 // Progress lives in three places, and the newest copy always wins:
@@ -786,14 +1063,17 @@ function setupAI(){
   const info = keyInfo();
   sample = claudeSample || (info ? keySample(info) : null);
   const status = $("aiStatus");
+  const what = IS_MATHS ? "hints for wrong answers, explanations and new questions" : "marking, explanations and new questions";
   if (claudeSample) {
-    status.textContent = "On: you're using Recallr inside Claude, so marking, explanations and new questions use your own Claude account. No key needed.";
+    status.textContent = `On: you're using Recallr inside Claude, so ${what} use your own Claude account. No key needed.`;
     $("keyForm").hidden = true;
   } else if (info) {
     status.textContent = `On: using your own API key with ${$("apiModel").querySelector(`option[value="${info.model}"]`)?.textContent || info.model}.`;
     $("keyForm").hidden = false; $("apiModel").value = info.model; $("apiKey").value = ""; $("apiKey").placeholder = "Key saved (enter a new one to replace it)";
   } else {
-    status.textContent = "Off: you mark your own answers and get the built-in explanations. Add your own Anthropic API key below to turn on automatic marking, step-by-step explanations and new questions.";
+    status.textContent = IS_MATHS
+      ? "Off: your answers are still marked here, with the built-in explanations. Add your own Anthropic API key below to turn on hints for wrong answers, step-by-step explanations and new questions."
+      : "Off: you mark your own answers and get the built-in explanations. Add your own Anthropic API key below to turn on automatic marking, step-by-step explanations and new questions.";
     $("keyForm").hidden = false; $("apiKey").placeholder = "sk-ant-...";
   }
   $("genBtn").disabled = !sample;
@@ -807,6 +1087,56 @@ $("keySave").onclick = () => {
 };
 $("keyRemove").onclick = () => { try { localStorage.removeItem(KEY_STORE); } catch(e) {} setupAI(); };
 
+// Maths questions from the model give every number as a calculation, which the page works out
+// itself, so the marked answers have no arithmetic slips. A question whose shown answers don't
+// match those values is dropped.
+const MATHS_EXAMPLE = {
+  week: 1, topic: "Conditional probability", title: "Rain on a cloudy day",
+  write: { task: "On a random day, P(rain and cloudy) = 0.12 and P(cloudy) = 0.4. What is P(rain | cloudy), the chance of rain given that it is cloudy? Give a decimal." },
+  answer: { value: "0.12 / 0.4", show: "0.3" },
+  fill: { code: "P(R | C) = P(R and C) / P(C)\n         = ___ / 0.4\n         = ___", blanks: [["0.12"], ["0.3", "3/10"]], values: ["0.12", "0.12 / 0.4"] },
+  predict: { code: "P(R | C) = 0.12 / 0.4", ask: "Work out P(R | C).", value: "0.12 / 0.4" },
+  sol: "P(R | C) = P(R and C) / P(C)\n         = 0.12 / 0.4\n         = 0.3",
+  explain: "Knowing it is cloudy shrinks the world to cloudy days, so divide by P(cloudy).",
+};
+function mathsPrompt(weeks, topics, pool){
+  return `Write 5 NEW maths practice questions for a university Databases and Web Programming module, for a student who finds maths symbols hard.
+Weeks: ${weeks.join(", ")}. Topics covered in those weeks: ${topics}.
+They must be different from these existing ones: ${pool.map(s => s.title).join(", ")}.
+Use the exact JSON shape of this example (one object per question):
+${JSON.stringify(MATHS_EXAMPLE)}
+Rules: every "value" is a calculation in plain maths syntax that gives the exact answer, using only numbers, + - * / ^ ( ), ln, log2, log10, exp, sqrt, choose(n, k), e and pi (never a rounded result). "show" is how the answer is written, rounded as the task asks. "fill.code" is the worked solution with 1 to 3 short gaps written ___, "fill.blanks" lists the accepted ways to fill each gap and "fill.values" the true value of each gap as a calculation. For a word answer (yes or no, or which option) use "accept": [...] instead of "value" and "show", and null in "fill.values" for a word gap. "week" is one of ${weeks.join(", ")}. Say in the task how to give the answer (a fraction, or a number of decimal places). Plain words, short lines, no LaTeX, no dashes as punctuation.
+Reply with only a JSON array of 5 objects.`;
+}
+function genMaths(g, id){
+  const str = v => typeof v === "string" && v.trim() ? plain(v) : null;
+  const num = (calc, show) => {
+    const value = MATHS.evaluate(String(calc));
+    if (!Number.isFinite(value)) throw new Error("not a number");
+    const spec = { type: "number", value, show: String(show ?? MATHS.format(value)) };
+    if (MATHS.check(spec.show, spec) !== "ok") throw new Error("shown answer doesn't match");
+    return spec;
+  };
+  const words = list => ({ type: "text", accept: list.map(String), show: String(list[0]) });
+  try {
+    const task = str(g.write && g.write.task), code = str(g.fill && g.fill.code), sol = str(g.sol);
+    if (!task || !code || !sol || !g.answer || !g.predict) return null;
+    const blanks = (g.fill.blanks || []).map(b => (Array.isArray(b) ? b : [b]).map(String)), values = g.fill.values || [];
+    const gaps = code.split("___").length - 1;
+    if (!gaps || gaps !== blanks.length || gaps !== values.length) return null;
+    const answer = Array.isArray(g.answer.accept) && g.answer.accept.length ? words(g.answer.accept) : num(g.answer.value, g.answer.show);
+    const fillAnswers = values.map((v, i) => v === null ? words(blanks[i]) : num(v, blanks[i][0]));
+    if (blanks.some((acc, i) => acc.some(a => MATHS.check(a, fillAnswers[i]) !== "ok"))) return null;
+    const predAnswer = Array.isArray(g.predict.accept) && g.predict.accept.length ? words(g.predict.accept)
+      : g.predict.value != null ? num(g.predict.value) : answer.type === "number" ? answer : null;
+    if (!predAnswer || !str(g.predict.code)) return null;
+    return { id, gen: true, week: Number(g.week), topic: String(g.topic || "Practice"), title: String(g.title || "New question"),
+      write: { task, answer }, fill: { code, blanks, answers: fillAnswers },
+      predict: { code: str(g.predict.code), ask: str(g.predict.ask) || "Work out the value.", answer: predAnswer },
+      sol, explain: str(g.explain) || "" };
+  } catch(e) { return null; }
+}
+
 // When the built-in questions run out (or on request), ask for new ones in the same format.
 async function generate(){
   if (otherLang({})) return generateOther();   // other languages
@@ -814,6 +1144,22 @@ async function generate(){
   const weeks = [...weeksSel].sort();
   const pool = allSkills().filter(inWeek);
   const topics = [...new Set(pool.map(s => `week ${s.week}: ${s.topic}`))].join("; ");
+  if (IS_MATHS) {
+    $("genBtn").disabled = true; $("genStatus").textContent = "Writing new questions… this can take a minute.";
+    try {
+      const arr = await sample.json(mathsPrompt(weeks, topics, pool), { modelTier: "default", effort: "medium" });
+      const stamp = Date.now();
+      const made = (Array.isArray(arr) ? arr : []).filter(g => g && weeksSel.has(Number(g.week))).map((g, i) => genMaths(g, `gen-${stamp}-${i}`)).filter(Boolean);
+      state.generated = (state.generated || []).concat(made);
+      persist(); renderStats();
+      $("genStatus").textContent = made.length ? `Added ${made.length} new question${made.length > 1 ? "s" : ""}. They're marked "AI-generated": their numbers are worked out here, but the questions haven't been checked like the built-in ones.` : "That didn't produce usable questions. Try again.";
+      if (made.length && (!current || checked)) pickAndRender();
+    } catch(e) {
+      $("genStatus").textContent = e && e.code === "bad_key" ? "Your API key was rejected. Check it and save it again." : e && e.code === "rate_limited" ? "Too many requests just now. Try again in a minute." : "Couldn't generate questions just now. Try again.";
+    }
+    $("genBtn").disabled = !sample;
+    return;
+  }
   const example = DECK.find(s => s.id === "sum") || DECK[0];
   const ex = { id: example.id, week: example.week, topic: example.topic, title: example.title, sol: example.sol, checks: example.checks, write: example.write, fill: example.fill, predict: { code: example.predict.code, expr: example.predict.expr, answer: example.predict.answer }, explain: example.explain };
   $("genBtn").disabled = true; $("genStatus").textContent = "Writing new questions… this can take a minute.";
@@ -912,7 +1258,7 @@ function grade(ok, retried){
 }
 
 // ---------- rendering ----------
-// each week's tick box shows how many of its exercises you can already write from memory
+// each week's tick box shows how many of its exercises you can already write (or solve) from memory
 function renderWeekProgress(){
   document.querySelectorAll(".tick input[data-week]").forEach(el => {
     const w = Number(el.dataset.week), list = DECK.filter(s => Number(s.week) === w);
@@ -921,7 +1267,7 @@ function renderWeekProgress(){
     let span = el.parentNode.querySelector(".wp");
     if (!span) { span = document.createElement("span"); span.className = "wp"; el.parentNode.appendChild(span); }
     span.textContent = can === list.length ? " ✓ done" : ` ${can}/${list.length}`;
-    span.title = `${can} of ${list.length} written from memory at least once`;
+    span.title = `${can} of ${list.length} ${IS_MATHS ? "solved" : "written"} from memory at least once`;
   });
 }
 function renderStats(){
@@ -935,7 +1281,7 @@ function renderStats(){
   $("skills").innerHTML = pool.map(s => {
     const x = state.skills[s.id];
     let pill = '<span class="pill new">new</span>';
-    if (x && x.seen) pill = x.box >= MASTER_BOX ? '<span class="pill ok">mastered</span>' : x.lvl < 3 ? `<span class="pill learn">${LEVELS[x.lvl]}</span>` : `<span class="pill ok">can write · ${x.box}</span>`;
+    if (x && x.seen) pill = x.box >= MASTER_BOX ? '<span class="pill ok">mastered</span>' : x.lvl < 3 ? `<span class="pill learn">${LEVELS[x.lvl]}</span>` : `<span class="pill ok">can ${IS_MATHS ? "solve" : "write"} · ${x.box}</span>`;
     return `<div class="sk"><code>${esc(s.title)}</code>${pill}</div>`;
   }).join("");
 }
@@ -970,18 +1316,31 @@ function renderDone(){
 function renderCard(){
   const { lvl } = current; const s = V(current.s);
   current.tries = 0;
+  renderId++; busy = false;   // a check still running for the previous card is ignored when it returns
   const ladder = [1,2,3].map(i => `<span class="rung ${i<=lvl?'on':''}"></span>`).join("");
   let body = "";
   if (otherLang(s)) body = bodyOther(s, lvl);   // other languages
-  else if (lvl === 3) {
+  else if (IS_MATHS && lvl === 3) {
+    body = `<p class="task">${md(s.write.task)}</p>
+      <label class="label" for="work">Working (optional, not marked)</label>
+      <textarea id="work" class="work" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Rough working, if it helps"></textarea>
+      <label class="label" for="ans">Your answer</label>
+      <div class="answer-row"><input id="ans" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="${answerPlaceholder(s.write.answer)}" aria-label="Your answer"></div>
+      <p class="hint">${answerHint(s.write.answer)} Enter to check.</p>`;
+  } else if (IS_MATHS && lvl === 1) {
+    body = `<p class="task">${md(s.predict.ask)}</p>
+      <pre class="code">${esc(s.predict.code)}</pre>
+      <div class="answer-row"><input id="pred" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="${answerPlaceholder(s.predict.answer)}" aria-label="Your answer"></div>
+      <p class="hint">${answerHint(s.predict.answer)}</p>`;
+  } else if (lvl === 3) {
     body = `<p class="task">${md(s.write.task)}</p>
       <label class="label" for="code">Your code</label>
       <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Write the type signature and the function">${esc(starterOf(s))}</textarea>
       <p class="hint">Write only the function (no <code>main</code> needed). Ctrl+Enter to check.</p>`;
   } else if (lvl === 2) {
     let i = 0;
-    const parts = esc(s.fill.code).split("___").map((p, k, arr) => k < arr.length-1 ? hl(unesc(p)) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" spellcheck="false" size="10">` : hl(unesc(p)));
-    body = `<p class="task">Fill the gap${s.fill.blanks.length>1?'s':''} so the code is correct.</p>
+    const parts = esc(s.fill.code).split("___").map((p, k, arr) => k < arr.length-1 ? hl(unesc(p)) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" spellcheck="false" size="${gapSize(s, i - 1)}">` : hl(unesc(p)));
+    body = `<p class="task">Fill the gap${s.fill.blanks.length>1?'s':''} so the ${IS_MATHS ? "working" : "code"} is correct.</p>
       <p class="task hint">${md(s.write.task)}</p>
       <pre class="code">${parts.join("")}</pre>`;
   } else {
@@ -992,7 +1351,7 @@ function renderCard(){
   $("card").innerHTML = `
     <div class="eyebrow"><span>Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${ladder} ${LEVELS[lvl]}</span></div>
     <h2>${esc(s.title)}</h2>
-    <div class="src">${s.gen ? (s.verified ? "AI-generated question: its answers come from running it on PostgreSQL" : "AI-generated question: its answer hasn't been checked by a compiler") : `${mode === "twin" ? "Variation of" : "From"}: ${esc(SRC[s.id] || "course material")}`}</div>
+    <div class="src">${s.gen ? (s.verified ? "AI-generated question: its answers come from running it on PostgreSQL" : IS_MATHS ? "AI-generated question: its numbers are worked out here, but the question itself hasn't been checked" : "AI-generated question: its answer hasn't been checked by a compiler") : `${mode === "twin" ? "Variation of" : "From"}: ${esc(SRC[s.id] || "course material")}`}</div>
     ${body}
     <div class="actions">
       <button class="btn primary" id="check">Check</button>
@@ -1000,26 +1359,30 @@ function renderCard(){
     </div>
     <div id="res"></div>`;
   $("check").onclick = check;
-  $("stuck").onclick = () => finish(false, "Here's the answer. This skill steps down a level and comes back in a couple of cards.", $("code")?.value ?? null);
-  const ta = $("code");
+  $("stuck").onclick = () => finish(false, "Here's the answer. This skill steps down a level and comes back in a couple of cards.", attemptText());
+  const ta = $("code") || $("work");
   if (ta) {
     ta.addEventListener("keydown", e => {
       if (e.key === "Tab") { e.preventDefault(); const p = ta.selectionStart; ta.setRangeText("  ", p, ta.selectionEnd, "end"); }
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); check(); }
     });
-    ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    if (ta.id === "code") { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
   }
-  document.querySelectorAll(".blank, #pred").forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } }));
-  const first = document.querySelector(".blank, #pred"); if (first) first.focus();
+  document.querySelectorAll(".blank, #pred, #ans").forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } }));
+  document.querySelectorAll(".blank").forEach(el => el.addEventListener("input", () => el.classList.remove("wrong")));
+  const first = document.querySelector(".blank, #pred, #ans"); if (first) first.focus();
   restoreDraft();
-  document.querySelectorAll("#code, .blank, #pred").forEach(el => el.addEventListener("input", saveDraftSoon));
-  document.querySelectorAll("#code, .blank").forEach(el => el.addEventListener("input", precompileSoon));
-  precompileSoon();
+  document.querySelectorAll("#code, .blank, #pred, #work, #ans").forEach(el => el.addEventListener("input", saveDraftSoon));
+  if (!IS_MATHS) {
+    document.querySelectorAll("#code, .blank").forEach(el => el.addEventListener("input", precompileSoon));
+    precompileSoon();
+  }
 }
 // what you've typed on the current card is saved as you type, and comes back if you close the page
 function draftKey(){ return `${current.s.id}:${current.lvl}:${mode}`; }
 function readInputs(){
   if ($("code")) return { code: $("code").value };
+  if ($("ans")) return { work: $("work") ? $("work").value : "", ans: $("ans").value };
   if ($("pred")) return { pred: $("pred").value };
   return { blanks: [...document.querySelectorAll(".blank")].map(el => el.value) };
 }
@@ -1029,10 +1392,12 @@ function restoreDraft(){
   const s = V(current.s);
   if (d.code != null && $("code") && norm(d.code) !== norm(starterOf(s))) {
     $("res").innerHTML = `<p class="hint">This is what you typed last time, kept for you. <button class="btn" id="startBlank">Start blank</button></p>`;
-    $("startBlank").onclick = () => { $("code").value = starterOf(s); $("res").innerHTML = ""; if (state.drafts) delete state.drafts[draftKey()]; save(); $("code").focus(); };
+    $("startBlank").onclick = () => { $("code").value = starterOf(s); $("res").innerHTML = ""; if (state.drafts) delete state.drafts[draftKey()]; persist(); $("code").focus(); };
   }
   if (d.code != null && $("code")) $("code").value = d.code;
   if (d.pred != null && $("pred")) $("pred").value = d.pred;
+  if (d.work != null && $("work")) $("work").value = d.work;
+  if (d.ans != null && $("ans")) $("ans").value = d.ans;
   if (d.blanks) document.querySelectorAll(".blank").forEach((el, i) => { if (d.blanks[i] != null) el.value = d.blanks[i]; });
 }
 let draftTimer = null;
@@ -1041,6 +1406,27 @@ function saveDraftSoon(){
   draftTimer = setTimeout(() => { state.drafts = state.drafts || {}; state.drafts[draftKey()] = readInputs(); persist(); }, 800);
 }
 function unesc(s){ return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&"); }
+// maths gaps are sized to their answer so the working still fits on a phone
+function gapSize(s, i){ return IS_MATHS ? Math.min(12, Math.max(4, ...s.fill.blanks[i].map(a => a.length + 1))) : 10; }
+// what the learner typed, for the explanation and the hint
+function attemptText(){
+  if (!IS_MATHS) return $("code")?.value ?? null;
+  const work = $("work")?.value.trim(), ans = $("ans")?.value.trim();
+  if (!work && !ans) return null;
+  return (work ? work + "\n" : "") + (ans ? "Answer: " + ans : "");
+}
+function answerPlaceholder(spec){
+  if (spec && spec.type === "expr") return "a formula, e.g. " + Object.keys(spec.vars).join(" * ");
+  if (spec && spec.type === "text") return "a word or short phrase";
+  if (spec && spec.whole) return "a whole number";
+  return "a number, e.g. 0.27 or 3/8";
+}
+function answerHint(spec){
+  if (spec && spec.type === "expr") return `Use the letters ${Object.keys(spec.vars).map(v => `<code>${esc(v)}</code>`).join(", ")}, with <code>*</code> for times, <code>/</code> for divide and <code>^</code> for powers.`;
+  if (spec && spec.type === "text") return "One word or a short phrase.";
+  if (spec && spec.whole) return "A whole number, exactly.";
+  return "A decimal (2 or more significant figures), a fraction like <code>3/8</code>, or a sum like <code>1 - 11/36</code>.";
+}
 
 // ---------- checking ----------
 const norm = s => s.replace(/\s+/g, "");
@@ -1057,9 +1443,84 @@ function retry(msg){
   setBusy(false);
   $("res").innerHTML = `<div class="result meh"><h3>Not yet. Try again</h3><p>${msg}</p>
     <p class="hint">Fix it and press Check again. Attempt ${current.tries}. When you've had enough, press "I give up".</p>
-    <div class="actions"><button class="btn" id="overrule">The checker is wrong, mine works</button></div></div>`;
-  $("overrule").onclick = () => finish(true, "Counted as correct.", $("code")?.value ?? null);
-  const f = $("code") || document.querySelector(".blank, #pred"); if (f) f.focus();
+    <div class="actions"><button class="btn" id="overrule">${IS_MATHS ? "The checker is wrong, mine is right" : "The checker is wrong, mine works"}</button></div></div>`;
+  $("overrule").onclick = () => finish(true, "Counted as correct.", attemptText());
+  const f = $("code") || document.querySelector(".blank.wrong") || document.querySelector(".blank, #pred, #ans"); if (f) f.focus();
+}
+// ---------- checking maths answers ----------
+const READ_HELP = "Type a number like <code>0.27</code>, a fraction like <code>3/8</code>, or a sum like <code>1 - 11/36</code>.";
+function unreadable(input, spec){
+  if (spec && spec.type === "expr") {
+    let why = "";
+    try { MATHS.evaluate(input, Object.fromEntries(Object.keys(spec.vars).map(v => [v, 1]))); } catch(e) { why = e.message + ". "; }
+    return `I can't read that formula. ${esc(why)}Use only ${Object.keys(spec.vars).map(v => `<code>${esc(v)}</code>`).join(", ")}, numbers, <code>* / + - ^</code> and brackets.`;
+  }
+  if (spec && spec.type === "text") return "Type a word or a short phrase.";
+  return "I can't read that as a number. " + READ_HELP;
+}
+async function checkMaths(){
+  const { lvl } = current; const s = V(current.s);
+  if (lvl === 1) {
+    const v = $("pred").value;
+    if (!v.trim()) return $("pred").focus();
+    const r = MATHS.check(v, s.predict.answer);
+    if (r === "ok") return finish(true, "Right.", null);
+    if (r === "precision") return retry("Right idea, but give more digits: at least 2 significant figures, like 0.27 rather than 0.3.");
+    if (r === "invalid") return retry(unreadable(v, s.predict.answer));
+    return retry("That's not the value. Work through it one step at a time: brackets first, then powers and logs, then multiply and divide, then add and subtract.");
+  }
+  if (lvl === 2) {
+    const inputs = s.fill.answers.map((_, i) => $("b"+i));
+    const empty = inputs.find(el => !el.value.trim());
+    if (empty) return empty.focus();
+    const res = s.fill.answers.map((spec, i) => MATHS.check(inputs[i].value, spec));
+    inputs.forEach((el, i) => el.classList.toggle("wrong", res[i] !== "ok"));
+    if (res.every(r => r === "ok")) return finish(true, "Right.", null);
+    const bad = res.map((r, i) => r === "ok" ? null : i + 1).filter(Boolean);
+    const gaps = bad.length === 1 ? `Gap ${bad[0]} isn't right yet.` : `Gaps ${bad.slice(0, -1).join(", ")} and ${bad[bad.length-1]} aren't right yet.`;
+    const first = res.findIndex(r => r !== "ok");
+    const extra = res[first] === "precision" ? " For that gap, give more digits (at least 2 significant figures)."
+      : res[first] === "invalid" ? " " + unreadable(inputs[first].value, s.fill.answers[first]) : "";
+    return retry(gaps + extra);
+  }
+  const v = $("ans").value;
+  if (!v.trim()) return $("ans").focus();
+  const r = MATHS.check(v, s.write.answer);
+  if (r === "ok") return finish(true, "Right.", attemptText());
+  if (r === "precision") return retry("Right idea, but give more digits: at least 2 significant figures, like 0.27 rather than 0.3.");
+  if (r === "invalid") return retry(unreadable(v, s.write.answer));
+  if (sample) return aiHint();
+  return retry("That's not the answer. Check each step of your working, or step down by pressing \"I give up\".");
+}
+async function aiHint(){
+  const s = V(current.s);
+  setBusy(true);
+  $("res").innerHTML = `<div class="result meh"><h3>Checking…</h3><p class="hint">Looking at your working for the slip. This takes a few seconds.</p></div>`;
+  const prompt = `A university student is practising a maths question from the Databases and Web Programming module and their final answer is wrong.
+
+QUESTION: ${s.write.task}
+WORKED SOLUTION (for you only, do not reveal it):
+${s.sol}
+CORRECT FINAL ANSWER (for you only, do not reveal it): ${s.write.answer.show}
+STUDENT'S WORKING:
+${$("work").value.trim() || "(none written)"}
+STUDENT'S FINAL ANSWER: ${$("ans").value.trim()}
+
+Give ONE short hint, 1 or 2 sentences in plain words, that points at the most likely slip: a wrong formula, the wrong log base, a missing term, a wrong count, or an arithmetic slip. Do not give the correct final answer or any number that gives it away. No LaTeX and no dashes as punctuation.
+
+Reply with only JSON: {"hint": "..."}`;
+  const id = renderId;
+  try {
+    const r = await sample.json(prompt, { modelTier: "default" });
+    if (id !== renderId || checked) return;
+    const hint = r && typeof r.hint === "string" ? md(plain(r.hint)) : "";
+    retry("That's not the answer. " + hint);
+  } catch(e) {
+    if (id !== renderId || checked) return;
+    setBusy(false);
+    if (e && (e.code === "not_granted" || e.code === "sampling_disabled" || e.code === "capability_disabled" || e.code === "not_declared")) sample = null;
+    retry("That's not the answer. Check each step of your working, or step down by pressing \"I give up\"." + (e && e.code === "bad_key" ? ' <span class="hint">(No hint: your API key was rejected. Check it in "Smart features" below.)</span>' : ""));
+  }
 }
 // ---------- running real code ----------
 // The free Wandbox service (wandbox.org) compiles and runs the code with GHC. If it can't be reached
@@ -1253,7 +1714,8 @@ function missingSigs(code, s){
 function instantMsg(s){ return `Correct: it's the model answer, which passes every test (${s.checks.map(c => esc(c[0])).join(", ")}).`; }
 
 async function check(){
-  if (checked) return;
+  if (checked || busy) return;
+  if (IS_MATHS) return checkMaths();
   const { lvl } = current; const s = V(current.s);
   if (otherLang(s)) return checkOther(s, lvl);   // other languages
   if (lvl === 1) {
@@ -1297,7 +1759,7 @@ async function check(){
   if (!sample) return selfGrade();
   return aiGrade(code, false);
 }
-function setBusy(b){ ["check","stuck"].forEach(id => { const el = $(id); if (el) el.disabled = b; }); }
+function setBusy(b){ busy = b; ["check","stuck"].forEach(id => { const el = $(id); if (el) el.disabled = b; }); }
 async function aiGrade(code, isFill){
   const s = V(current.s);
   setBusy(true);
@@ -1326,16 +1788,19 @@ Decide:
 Do NOT give the corrected code or the answer. Give a hint that lets them fix it themselves.
 
 Reply with only JSON: {"compiles": true/false, "correct": true/false, "line": "...", "feedback": "..."}`;
+  const id = renderId;
   try {
     const r = await sample.json(prompt, { modelTier: "default" });
+    if (id !== renderId || checked) return;
     const ok = !!(r && r.correct && r.compiles);
-    const fb = r && typeof r.feedback === "string" ? md(r.feedback) : "";
+    const fb = r && typeof r.feedback === "string" ? md(plain(r.feedback)) : "";
     if (ok) return finish(true, "Correct. " + fb, code, current.tries > 0);
     const quoted = r && typeof r.line === "string" ? r.line.trim() : "";
     const invented = quoted && !norm(code).includes(norm(quoted));
     if (invented) return retry("The checker pointed at a line that isn't in your code, so it may be wrong. If you've tested yours and it works, press the button below; otherwise look again.");
     retry((r && r.compiles === false ? "This wouldn't compile. " : "") + fb + (quoted ? `<br><span class="hint">Look at: <code>${esc(quoted)}</code></span>` : ""));
   } catch(e) {
+    if (id !== renderId || checked) return;
     setBusy(false);
     if (e && e.code === "bad_key") { setBusy(false); $("res").innerHTML = `<div class="result meh"><h3>Your API key was rejected</h3><p>Check it in "Smart features" below, or mark this one yourself.</p><div class="actions"><button class="btn" id="selfmark">Mark it myself</button></div></div>`; $("selfmark").onclick = selfGrade; return; }
     if (e && (e.code === "not_granted" || e.code === "sampling_disabled" || e.code === "capability_disabled" || e.code === "not_declared")) { sample = null; return isFill ? check() : selfGrade(); }
@@ -1391,7 +1856,7 @@ function finish(ok, msg, attempt, retried){
     <h3>${ok ? "✓ Correct" : "✗ Not yet"}</h3>
     <p>${msg}</p>
     <p class="hint">${next}</p>
-    ${ok && attempt && norm(attempt) !== norm(s.sol) ? `<div class="label">Your code</div>
+    ${!IS_MATHS && ok && attempt && norm(attempt) !== norm(s.sol) ? `<div class="label">Your code</div>
     <pre class="code">${hl(attempt.trim())}</pre>
     <div class="label">Model answer${sameAsModel(attempt, s) ? "" : " (yours is different, and both work)"}</div>` : `<div class="label">Answer</div>`}
     <pre class="code">${hl(s.sol)}</pre>
@@ -1409,14 +1874,21 @@ async function explain(attempt){
   const s = V(current.s);
   const out = $("aiExplain"), btn = $("explain");
   btn.disabled = true; out.hidden = false; out.textContent = "Thinking…";
-  const prompt = `Explain this ${otherLang(s) ? otherLang(s).name : "SQL, Cypher, JPA, JDL"} exercise to a university student who is new to programming and finds syntax hard. Be short and concrete: under 170 words, plain words, no headings. Go through the solution line by line, saying what each symbol does. ${attempt ? "Then say exactly what was different or wrong in the student's attempt, kindly, in 1-2 sentences." : ""}
+  const prompt = IS_MATHS
+    ? `Explain this maths question from a university Databases and Web Programming module to a student who finds maths symbols hard. Be short and concrete: under 170 words, plain words, no headings, no LaTeX (write any formula in plain text, like P(A|B) = P(A and B) / P(B)), and no dashes as punctuation. Go through the worked solution one step at a time, saying what each number stands for and why that step is done. ${attempt ? "Then say kindly, in 1 or 2 sentences, what was different or wrong in the student's attempt." : ""}
+
+Question: ${s.write.task}
+Worked solution:
+${s.sol}
+${attempt ? "Student's attempt:\n" + attempt : ""}`
+    : `Explain this ${otherLang(s) ? otherLang(s).name : "SQL, Cypher, JPA, JDL"} exercise to a university student who is new to programming and finds syntax hard. Be short and concrete: under 170 words, plain words, no headings. Go through the solution line by line, saying what each symbol does. ${attempt ? "Then say exactly what was different or wrong in the student's attempt, kindly, in 1-2 sentences." : ""}
 
 Exercise: ${s.write.task}
 ${otherLang(s) ? explainContext(s) : ""}Solution:
 ${s.sol}
 ${attempt ? "Student's attempt:\n" + attempt : ""}`;
   try {
-    await sample(prompt, { modelTier: "default", onText: ({ text }) => { out.textContent = text; } });
+    await sample(prompt, { modelTier: "default", onText: ({ text }) => { out.textContent = plain(text); } });
   } catch(e) {
     out.textContent = e && e.text ? e.text : (e && e.code === "rate_limited" ? "Too many requests just now. Try again in a minute." : "Couldn't get an explanation right now.");
   }
@@ -1424,6 +1896,11 @@ ${attempt ? "Student's attempt:\n" + attempt : ""}`;
 }
 
 // ---------- boot ----------
+[1,2,3].forEach(i => document.querySelectorAll(".lv" + i).forEach(el => el.textContent = LEVELS[i]));
+if (IS_MATHS) {
+  document.querySelectorAll(".lvVerb").forEach(el => el.textContent = "solve");
+  document.querySelectorAll(".lvPast").forEach(el => el.textContent = "solved");
+}
 document.querySelectorAll(".chip.mode").forEach(c => c.onclick = () => {
   mode = c.dataset.mode;
   document.querySelectorAll(".chip.mode").forEach(o => o.setAttribute("aria-pressed", String(o === c)));
@@ -1620,6 +2097,8 @@ if (T) {
   };
 }
 document.querySelectorAll(".chip.view").forEach(c => c.onclick = () => setView(c.dataset.view));
+// a module without mock tests (such as a maths module) has only the practice view
+if (!T) document.querySelectorAll(".chip.view").forEach(c => { c.closest(".chips").hidden = true; });
 function themeLabel(){ $("themeBtn").textContent = document.documentElement.getAttribute("data-theme") === "light" ? "Dark mode" : "Light mode"; }
 $("themeBtn").onclick = () => {
   const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";

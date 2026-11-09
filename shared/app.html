@@ -79,6 +79,9 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .done h2{font-size:26px}
 .note{font-size:13px;color:var(--muted)}
 .src{font-size:12px;color:var(--muted)}
+.blank.wrong{border-bottom-color:var(--bad)}
+textarea.work{min-height:90px}
+.kind-maths pre.code{white-space:pre-wrap;overflow-wrap:anywhere}
 .btn.theme{padding:6px 12px;font-size:13px}
 .weeks{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .tick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer}
@@ -106,11 +109,11 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 // dark by default; the toggle remembers your choice in this browser
 (function(){ var t = "dark"; try { t = localStorage.getItem("recallr-theme") || "dark"; } catch(e) {} document.documentElement.setAttribute("data-theme", t); })();
 </script>
-<div class="wrap">
+<div class="wrap kind-__KIND__">
   <header>
     <div>
       <h1><span class="lam">__MODULE_ICON__</span> Recallr</h1>
-      <p class="sub">__MODULE_NAME__ · __MODULE_SCOPE__ · write it, or step down until you can</p>
+      <p class="sub">__MODULE_NAME__ · __MODULE_SCOPE__ · __TAGLINE__</p>
     </div>
     <button class="btn theme" id="themeBtn" aria-label="Switch between dark and light">Light mode</button>
     <div class="stats">
@@ -139,7 +142,7 @@ __WEEK_CHIPS__
 
   <details id="ladderBox">
     <summary>All skills and where you are</summary>
-    <p class="note">Each skill starts at <b>Write it</b>. Get it wrong and it steps down to <b>Fill the gaps</b>, then <b>Predict</b>. Get it wrong and you can try again as often as you like; the answer only appears when you give up. Get it right first time and it climbs back up. A skill you can write comes back after 10 minutes, then 1, 3, 7, 16 and 35 days. "Mastered" means you wrote it correctly three times in a row, spread over days.</p>
+    <p class="note">Each skill starts at <b class="lv3">Write it</b>. Get it wrong and it steps down to <b class="lv2">Fill the gaps</b>, then <b class="lv1">Predict</b>. Get it wrong and you can try again as often as you like; the answer only appears when you give up. Get it right first time and it climbs back up. A skill you can <span class="lvVerb">write</span> comes back after 10 minutes, then 1, 3, 7, 16 and 35 days. "Mastered" means you <span class="lvPast">wrote</span> it correctly three times in a row, spread over days.</p>
     <div class="skills" id="skills"></div>
   </details>
 
@@ -164,7 +167,7 @@ __WEEK_CHIPS__
   </details>
 
   <details class="settings" id="aiBox">
-    <summary>Smart features: marking, explanations, new questions</summary>
+    <summary>Smart features: __SMART_WHAT__</summary>
     <p class="note" id="aiStatus">Checking what's available…</p>
     <div id="keyForm">
       <p class="note">Use your own Anthropic API key (from console.anthropic.com). It stays in this browser and is only sent to Anthropic. Usage is charged to your key.</p>
@@ -237,8 +240,11 @@ const DECK = __DECK__;
 const TWINS = __TWINS__;
 const SRC = __SRC__;
 const TESTS = __TESTS__;
+const KIND = "__KIND__";          // "code" or "maths"
+const IS_MATHS = KIND === "maths";
+__MATHS_LIB__
 __LANGS_JS__
-const LEVELS = {3:"Write it", 2:"Fill the gaps", 1:"Predict"};
+const LEVELS = IS_MATHS ? {3:"Solve it", 2:"Fill the gaps", 1:"Plug in"} : {3:"Write it", 2:"Fill the gaps", 1:"Predict"};
 const INTERVALS = [10*60e3, 864e5, 3*864e5, 7*864e5, 16*864e5, 35*864e5];
 const MASTER_BOX = 3;
 const MODULE_ID = "__MODULE_ID__";
@@ -251,17 +257,21 @@ let mode = "course";
 let lastUndo = null;
 let current = null;     // {s, lvl}
 let checked = false;
+let busy = false, renderId = 0;   // busy: a check is running; renderId: which card it belongs to
 let sample = null, db = null, uid = null, saving = false, saveAgain = false;
 
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 // colours code in one pass, so a colour tag is never coloured again
 function hl(src){
+  if (IS_MATHS) return esc(String(src));
   const other = hlOther(src); if (other != null) return other;   // other languages
   return String(src).replace(/("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|\b(where|case|of|if|then|else|let|in|data|type|newtype|instance|class|deriving|otherwise|module|import)\b|([^"'a-z]+|[a-z_][\w']*|.)/gs,
     (m, str, kw) => str ? `<span class="st">${esc(str)}</span>` : kw ? `<span class="kw">${kw}</span>` : esc(m));
 }
 function md(s){ return esc(s).replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, a, b) => `<code>${a ?? b}</code>`); }
+// generated text: no long dashes as punctuation
+const plain = s => String(s).replace(/\s*[\u2014\u2013]\s*/g, ", ");
 
 // ---------- persistence ----------
 // Progress lives in three places, and the newest copy always wins:
@@ -444,14 +454,17 @@ function setupAI(){
   const info = keyInfo();
   sample = claudeSample || (info ? keySample(info) : null);
   const status = $("aiStatus");
+  const what = IS_MATHS ? "hints for wrong answers, explanations and new questions" : "marking, explanations and new questions";
   if (claudeSample) {
-    status.textContent = "On: you're using Recallr inside Claude, so marking, explanations and new questions use your own Claude account. No key needed.";
+    status.textContent = `On: you're using Recallr inside Claude, so ${what} use your own Claude account. No key needed.`;
     $("keyForm").hidden = true;
   } else if (info) {
     status.textContent = `On: using your own API key with ${$("apiModel").querySelector(`option[value="${info.model}"]`)?.textContent || info.model}.`;
     $("keyForm").hidden = false; $("apiModel").value = info.model; $("apiKey").value = ""; $("apiKey").placeholder = "Key saved (enter a new one to replace it)";
   } else {
-    status.textContent = "Off: you mark your own answers and get the built-in explanations. Add your own Anthropic API key below to turn on automatic marking, step-by-step explanations and new questions.";
+    status.textContent = IS_MATHS
+      ? "Off: your answers are still marked here, with the built-in explanations. Add your own Anthropic API key below to turn on hints for wrong answers, step-by-step explanations and new questions."
+      : "Off: you mark your own answers and get the built-in explanations. Add your own Anthropic API key below to turn on automatic marking, step-by-step explanations and new questions.";
     $("keyForm").hidden = false; $("apiKey").placeholder = "sk-ant-...";
   }
   $("genBtn").disabled = !sample;
@@ -465,6 +478,56 @@ $("keySave").onclick = () => {
 };
 $("keyRemove").onclick = () => { try { localStorage.removeItem(KEY_STORE); } catch(e) {} setupAI(); };
 
+// Maths questions from the model give every number as a calculation, which the page works out
+// itself, so the marked answers have no arithmetic slips. A question whose shown answers don't
+// match those values is dropped.
+const MATHS_EXAMPLE = {
+  week: 1, topic: "Conditional probability", title: "Rain on a cloudy day",
+  write: { task: "On a random day, P(rain and cloudy) = 0.12 and P(cloudy) = 0.4. What is P(rain | cloudy), the chance of rain given that it is cloudy? Give a decimal." },
+  answer: { value: "0.12 / 0.4", show: "0.3" },
+  fill: { code: "P(R | C) = P(R and C) / P(C)\n         = ___ / 0.4\n         = ___", blanks: [["0.12"], ["0.3", "3/10"]], values: ["0.12", "0.12 / 0.4"] },
+  predict: { code: "P(R | C) = 0.12 / 0.4", ask: "Work out P(R | C).", value: "0.12 / 0.4" },
+  sol: "P(R | C) = P(R and C) / P(C)\n         = 0.12 / 0.4\n         = 0.3",
+  explain: "Knowing it is cloudy shrinks the world to cloudy days, so divide by P(cloudy).",
+};
+function mathsPrompt(weeks, topics, pool){
+  return `Write 5 NEW maths practice questions for a university __MODULE_NAME__ module, for a student who finds maths symbols hard.
+Weeks: ${weeks.join(", ")}. Topics covered in those weeks: ${topics}.
+They must be different from these existing ones: ${pool.map(s => s.title).join(", ")}.
+Use the exact JSON shape of this example (one object per question):
+${JSON.stringify(MATHS_EXAMPLE)}
+Rules: every "value" is a calculation in plain maths syntax that gives the exact answer, using only numbers, + - * / ^ ( ), ln, log2, log10, exp, sqrt, choose(n, k), e and pi (never a rounded result). "show" is how the answer is written, rounded as the task asks. "fill.code" is the worked solution with 1 to 3 short gaps written ___, "fill.blanks" lists the accepted ways to fill each gap and "fill.values" the true value of each gap as a calculation. For a word answer (yes or no, or which option) use "accept": [...] instead of "value" and "show", and null in "fill.values" for a word gap. "week" is one of ${weeks.join(", ")}. Say in the task how to give the answer (a fraction, or a number of decimal places). Plain words, short lines, no LaTeX, no dashes as punctuation.
+Reply with only a JSON array of 5 objects.`;
+}
+function genMaths(g, id){
+  const str = v => typeof v === "string" && v.trim() ? plain(v) : null;
+  const num = (calc, show) => {
+    const value = MATHS.evaluate(String(calc));
+    if (!Number.isFinite(value)) throw new Error("not a number");
+    const spec = { type: "number", value, show: String(show ?? MATHS.format(value)) };
+    if (MATHS.check(spec.show, spec) !== "ok") throw new Error("shown answer doesn't match");
+    return spec;
+  };
+  const words = list => ({ type: "text", accept: list.map(String), show: String(list[0]) });
+  try {
+    const task = str(g.write && g.write.task), code = str(g.fill && g.fill.code), sol = str(g.sol);
+    if (!task || !code || !sol || !g.answer || !g.predict) return null;
+    const blanks = (g.fill.blanks || []).map(b => (Array.isArray(b) ? b : [b]).map(String)), values = g.fill.values || [];
+    const gaps = code.split("___").length - 1;
+    if (!gaps || gaps !== blanks.length || gaps !== values.length) return null;
+    const answer = Array.isArray(g.answer.accept) && g.answer.accept.length ? words(g.answer.accept) : num(g.answer.value, g.answer.show);
+    const fillAnswers = values.map((v, i) => v === null ? words(blanks[i]) : num(v, blanks[i][0]));
+    if (blanks.some((acc, i) => acc.some(a => MATHS.check(a, fillAnswers[i]) !== "ok"))) return null;
+    const predAnswer = Array.isArray(g.predict.accept) && g.predict.accept.length ? words(g.predict.accept)
+      : g.predict.value != null ? num(g.predict.value) : answer.type === "number" ? answer : null;
+    if (!predAnswer || !str(g.predict.code)) return null;
+    return { id, gen: true, week: Number(g.week), topic: String(g.topic || "Practice"), title: String(g.title || "New question"),
+      write: { task, answer }, fill: { code, blanks, answers: fillAnswers },
+      predict: { code: str(g.predict.code), ask: str(g.predict.ask) || "Work out the value.", answer: predAnswer },
+      sol, explain: str(g.explain) || "" };
+  } catch(e) { return null; }
+}
+
 // When the built-in questions run out (or on request), ask for new ones in the same format.
 async function generate(){
   if (otherLang({})) return generateOther();   // other languages
@@ -472,6 +535,22 @@ async function generate(){
   const weeks = [...weeksSel].sort();
   const pool = allSkills().filter(inWeek);
   const topics = [...new Set(pool.map(s => `week ${s.week}: ${s.topic}`))].join("; ");
+  if (IS_MATHS) {
+    $("genBtn").disabled = true; $("genStatus").textContent = "Writing new questions… this can take a minute.";
+    try {
+      const arr = await sample.json(mathsPrompt(weeks, topics, pool), { modelTier: "default", effort: "medium" });
+      const stamp = Date.now();
+      const made = (Array.isArray(arr) ? arr : []).filter(g => g && weeksSel.has(Number(g.week))).map((g, i) => genMaths(g, `gen-${stamp}-${i}`)).filter(Boolean);
+      state.generated = (state.generated || []).concat(made);
+      persist(); renderStats();
+      $("genStatus").textContent = made.length ? `Added ${made.length} new question${made.length > 1 ? "s" : ""}. They're marked "AI-generated": their numbers are worked out here, but the questions haven't been checked like the built-in ones.` : "That didn't produce usable questions. Try again.";
+      if (made.length && (!current || checked)) pickAndRender();
+    } catch(e) {
+      $("genStatus").textContent = e && e.code === "bad_key" ? "Your API key was rejected. Check it and save it again." : e && e.code === "rate_limited" ? "Too many requests just now. Try again in a minute." : "Couldn't generate questions just now. Try again.";
+    }
+    $("genBtn").disabled = !sample;
+    return;
+  }
   const example = DECK.find(s => s.id === "sum") || DECK[0];
   const ex = { id: example.id, week: example.week, topic: example.topic, title: example.title, sol: example.sol, checks: example.checks, write: example.write, fill: example.fill, predict: { code: example.predict.code, expr: example.predict.expr, answer: example.predict.answer }, explain: example.explain };
   $("genBtn").disabled = true; $("genStatus").textContent = "Writing new questions… this can take a minute.";
@@ -570,7 +649,7 @@ function grade(ok, retried){
 }
 
 // ---------- rendering ----------
-// each week's tick box shows how many of its exercises you can already write from memory
+// each week's tick box shows how many of its exercises you can already write (or solve) from memory
 function renderWeekProgress(){
   document.querySelectorAll(".tick input[data-week]").forEach(el => {
     const w = Number(el.dataset.week), list = DECK.filter(s => Number(s.week) === w);
@@ -579,7 +658,7 @@ function renderWeekProgress(){
     let span = el.parentNode.querySelector(".wp");
     if (!span) { span = document.createElement("span"); span.className = "wp"; el.parentNode.appendChild(span); }
     span.textContent = can === list.length ? " ✓ done" : ` ${can}/${list.length}`;
-    span.title = `${can} of ${list.length} written from memory at least once`;
+    span.title = `${can} of ${list.length} ${IS_MATHS ? "solved" : "written"} from memory at least once`;
   });
 }
 function renderStats(){
@@ -593,7 +672,7 @@ function renderStats(){
   $("skills").innerHTML = pool.map(s => {
     const x = state.skills[s.id];
     let pill = '<span class="pill new">new</span>';
-    if (x && x.seen) pill = x.box >= MASTER_BOX ? '<span class="pill ok">mastered</span>' : x.lvl < 3 ? `<span class="pill learn">${LEVELS[x.lvl]}</span>` : `<span class="pill ok">can write · ${x.box}</span>`;
+    if (x && x.seen) pill = x.box >= MASTER_BOX ? '<span class="pill ok">mastered</span>' : x.lvl < 3 ? `<span class="pill learn">${LEVELS[x.lvl]}</span>` : `<span class="pill ok">can ${IS_MATHS ? "solve" : "write"} · ${x.box}</span>`;
     return `<div class="sk"><code>${esc(s.title)}</code>${pill}</div>`;
   }).join("");
 }
@@ -628,18 +707,31 @@ function renderDone(){
 function renderCard(){
   const { lvl } = current; const s = V(current.s);
   current.tries = 0;
+  renderId++; busy = false;   // a check still running for the previous card is ignored when it returns
   const ladder = [1,2,3].map(i => `<span class="rung ${i<=lvl?'on':''}"></span>`).join("");
   let body = "";
   if (otherLang(s)) body = bodyOther(s, lvl);   // other languages
-  else if (lvl === 3) {
+  else if (IS_MATHS && lvl === 3) {
+    body = `<p class="task">${md(s.write.task)}</p>
+      <label class="label" for="work">Working (optional, not marked)</label>
+      <textarea id="work" class="work" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Rough working, if it helps"></textarea>
+      <label class="label" for="ans">Your answer</label>
+      <div class="answer-row"><input id="ans" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="${answerPlaceholder(s.write.answer)}" aria-label="Your answer"></div>
+      <p class="hint">${answerHint(s.write.answer)} Enter to check.</p>`;
+  } else if (IS_MATHS && lvl === 1) {
+    body = `<p class="task">${md(s.predict.ask)}</p>
+      <pre class="code">${esc(s.predict.code)}</pre>
+      <div class="answer-row"><input id="pred" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="${answerPlaceholder(s.predict.answer)}" aria-label="Your answer"></div>
+      <p class="hint">${answerHint(s.predict.answer)}</p>`;
+  } else if (lvl === 3) {
     body = `<p class="task">${md(s.write.task)}</p>
       <label class="label" for="code">Your code</label>
       <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Write the type signature and the function">${esc(starterOf(s))}</textarea>
       <p class="hint">Write only the function (no <code>main</code> needed). Ctrl+Enter to check.</p>`;
   } else if (lvl === 2) {
     let i = 0;
-    const parts = esc(s.fill.code).split("___").map((p, k, arr) => k < arr.length-1 ? hl(unesc(p)) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" spellcheck="false" size="10">` : hl(unesc(p)));
-    body = `<p class="task">Fill the gap${s.fill.blanks.length>1?'s':''} so the code is correct.</p>
+    const parts = esc(s.fill.code).split("___").map((p, k, arr) => k < arr.length-1 ? hl(unesc(p)) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" spellcheck="false" size="${gapSize(s, i - 1)}">` : hl(unesc(p)));
+    body = `<p class="task">Fill the gap${s.fill.blanks.length>1?'s':''} so the ${IS_MATHS ? "working" : "code"} is correct.</p>
       <p class="task hint">${md(s.write.task)}</p>
       <pre class="code">${parts.join("")}</pre>`;
   } else {
@@ -650,7 +742,7 @@ function renderCard(){
   $("card").innerHTML = `
     <div class="eyebrow"><span>Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${ladder} ${LEVELS[lvl]}</span></div>
     <h2>${esc(s.title)}</h2>
-    <div class="src">${s.gen ? (s.verified ? "AI-generated question: its answers come from running it on PostgreSQL" : "AI-generated question: its answer hasn't been checked by a compiler") : `${mode === "twin" ? "Variation of" : "From"}: ${esc(SRC[s.id] || "course material")}`}</div>
+    <div class="src">${s.gen ? (s.verified ? "AI-generated question: its answers come from running it on PostgreSQL" : IS_MATHS ? "AI-generated question: its numbers are worked out here, but the question itself hasn't been checked" : "AI-generated question: its answer hasn't been checked by a compiler") : `${mode === "twin" ? "Variation of" : "From"}: ${esc(SRC[s.id] || "course material")}`}</div>
     ${body}
     <div class="actions">
       <button class="btn primary" id="check">Check</button>
@@ -658,26 +750,30 @@ function renderCard(){
     </div>
     <div id="res"></div>`;
   $("check").onclick = check;
-  $("stuck").onclick = () => finish(false, "Here's the answer. This skill steps down a level and comes back in a couple of cards.", $("code")?.value ?? null);
-  const ta = $("code");
+  $("stuck").onclick = () => finish(false, "Here's the answer. This skill steps down a level and comes back in a couple of cards.", attemptText());
+  const ta = $("code") || $("work");
   if (ta) {
     ta.addEventListener("keydown", e => {
       if (e.key === "Tab") { e.preventDefault(); const p = ta.selectionStart; ta.setRangeText("  ", p, ta.selectionEnd, "end"); }
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); check(); }
     });
-    ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    if (ta.id === "code") { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
   }
-  document.querySelectorAll(".blank, #pred").forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } }));
-  const first = document.querySelector(".blank, #pred"); if (first) first.focus();
+  document.querySelectorAll(".blank, #pred, #ans").forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } }));
+  document.querySelectorAll(".blank").forEach(el => el.addEventListener("input", () => el.classList.remove("wrong")));
+  const first = document.querySelector(".blank, #pred, #ans"); if (first) first.focus();
   restoreDraft();
-  document.querySelectorAll("#code, .blank, #pred").forEach(el => el.addEventListener("input", saveDraftSoon));
-  document.querySelectorAll("#code, .blank").forEach(el => el.addEventListener("input", precompileSoon));
-  precompileSoon();
+  document.querySelectorAll("#code, .blank, #pred, #work, #ans").forEach(el => el.addEventListener("input", saveDraftSoon));
+  if (!IS_MATHS) {
+    document.querySelectorAll("#code, .blank").forEach(el => el.addEventListener("input", precompileSoon));
+    precompileSoon();
+  }
 }
 // what you've typed on the current card is saved as you type, and comes back if you close the page
 function draftKey(){ return `${current.s.id}:${current.lvl}:${mode}`; }
 function readInputs(){
   if ($("code")) return { code: $("code").value };
+  if ($("ans")) return { work: $("work") ? $("work").value : "", ans: $("ans").value };
   if ($("pred")) return { pred: $("pred").value };
   return { blanks: [...document.querySelectorAll(".blank")].map(el => el.value) };
 }
@@ -687,10 +783,12 @@ function restoreDraft(){
   const s = V(current.s);
   if (d.code != null && $("code") && norm(d.code) !== norm(starterOf(s))) {
     $("res").innerHTML = `<p class="hint">This is what you typed last time, kept for you. <button class="btn" id="startBlank">Start blank</button></p>`;
-    $("startBlank").onclick = () => { $("code").value = starterOf(s); $("res").innerHTML = ""; if (state.drafts) delete state.drafts[draftKey()]; save(); $("code").focus(); };
+    $("startBlank").onclick = () => { $("code").value = starterOf(s); $("res").innerHTML = ""; if (state.drafts) delete state.drafts[draftKey()]; persist(); $("code").focus(); };
   }
   if (d.code != null && $("code")) $("code").value = d.code;
   if (d.pred != null && $("pred")) $("pred").value = d.pred;
+  if (d.work != null && $("work")) $("work").value = d.work;
+  if (d.ans != null && $("ans")) $("ans").value = d.ans;
   if (d.blanks) document.querySelectorAll(".blank").forEach((el, i) => { if (d.blanks[i] != null) el.value = d.blanks[i]; });
 }
 let draftTimer = null;
@@ -699,6 +797,27 @@ function saveDraftSoon(){
   draftTimer = setTimeout(() => { state.drafts = state.drafts || {}; state.drafts[draftKey()] = readInputs(); persist(); }, 800);
 }
 function unesc(s){ return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&"); }
+// maths gaps are sized to their answer so the working still fits on a phone
+function gapSize(s, i){ return IS_MATHS ? Math.min(12, Math.max(4, ...s.fill.blanks[i].map(a => a.length + 1))) : 10; }
+// what the learner typed, for the explanation and the hint
+function attemptText(){
+  if (!IS_MATHS) return $("code")?.value ?? null;
+  const work = $("work")?.value.trim(), ans = $("ans")?.value.trim();
+  if (!work && !ans) return null;
+  return (work ? work + "\n" : "") + (ans ? "Answer: " + ans : "");
+}
+function answerPlaceholder(spec){
+  if (spec && spec.type === "expr") return "a formula, e.g. " + Object.keys(spec.vars).join(" * ");
+  if (spec && spec.type === "text") return "a word or short phrase";
+  if (spec && spec.whole) return "a whole number";
+  return "a number, e.g. 0.27 or 3/8";
+}
+function answerHint(spec){
+  if (spec && spec.type === "expr") return `Use the letters ${Object.keys(spec.vars).map(v => `<code>${esc(v)}</code>`).join(", ")}, with <code>*</code> for times, <code>/</code> for divide and <code>^</code> for powers.`;
+  if (spec && spec.type === "text") return "One word or a short phrase.";
+  if (spec && spec.whole) return "A whole number, exactly.";
+  return "A decimal (2 or more significant figures), a fraction like <code>3/8</code>, or a sum like <code>1 - 11/36</code>.";
+}
 
 // ---------- checking ----------
 const norm = s => s.replace(/\s+/g, "");
@@ -715,9 +834,84 @@ function retry(msg){
   setBusy(false);
   $("res").innerHTML = `<div class="result meh"><h3>Not yet. Try again</h3><p>${msg}</p>
     <p class="hint">Fix it and press Check again. Attempt ${current.tries}. When you've had enough, press "I give up".</p>
-    <div class="actions"><button class="btn" id="overrule">The checker is wrong, mine works</button></div></div>`;
-  $("overrule").onclick = () => finish(true, "Counted as correct.", $("code")?.value ?? null);
-  const f = $("code") || document.querySelector(".blank, #pred"); if (f) f.focus();
+    <div class="actions"><button class="btn" id="overrule">${IS_MATHS ? "The checker is wrong, mine is right" : "The checker is wrong, mine works"}</button></div></div>`;
+  $("overrule").onclick = () => finish(true, "Counted as correct.", attemptText());
+  const f = $("code") || document.querySelector(".blank.wrong") || document.querySelector(".blank, #pred, #ans"); if (f) f.focus();
+}
+// ---------- checking maths answers ----------
+const READ_HELP = "Type a number like <code>0.27</code>, a fraction like <code>3/8</code>, or a sum like <code>1 - 11/36</code>.";
+function unreadable(input, spec){
+  if (spec && spec.type === "expr") {
+    let why = "";
+    try { MATHS.evaluate(input, Object.fromEntries(Object.keys(spec.vars).map(v => [v, 1]))); } catch(e) { why = e.message + ". "; }
+    return `I can't read that formula. ${esc(why)}Use only ${Object.keys(spec.vars).map(v => `<code>${esc(v)}</code>`).join(", ")}, numbers, <code>* / + - ^</code> and brackets.`;
+  }
+  if (spec && spec.type === "text") return "Type a word or a short phrase.";
+  return "I can't read that as a number. " + READ_HELP;
+}
+async function checkMaths(){
+  const { lvl } = current; const s = V(current.s);
+  if (lvl === 1) {
+    const v = $("pred").value;
+    if (!v.trim()) return $("pred").focus();
+    const r = MATHS.check(v, s.predict.answer);
+    if (r === "ok") return finish(true, "Right.", null);
+    if (r === "precision") return retry("Right idea, but give more digits: at least 2 significant figures, like 0.27 rather than 0.3.");
+    if (r === "invalid") return retry(unreadable(v, s.predict.answer));
+    return retry("That's not the value. Work through it one step at a time: brackets first, then powers and logs, then multiply and divide, then add and subtract.");
+  }
+  if (lvl === 2) {
+    const inputs = s.fill.answers.map((_, i) => $("b"+i));
+    const empty = inputs.find(el => !el.value.trim());
+    if (empty) return empty.focus();
+    const res = s.fill.answers.map((spec, i) => MATHS.check(inputs[i].value, spec));
+    inputs.forEach((el, i) => el.classList.toggle("wrong", res[i] !== "ok"));
+    if (res.every(r => r === "ok")) return finish(true, "Right.", null);
+    const bad = res.map((r, i) => r === "ok" ? null : i + 1).filter(Boolean);
+    const gaps = bad.length === 1 ? `Gap ${bad[0]} isn't right yet.` : `Gaps ${bad.slice(0, -1).join(", ")} and ${bad[bad.length-1]} aren't right yet.`;
+    const first = res.findIndex(r => r !== "ok");
+    const extra = res[first] === "precision" ? " For that gap, give more digits (at least 2 significant figures)."
+      : res[first] === "invalid" ? " " + unreadable(inputs[first].value, s.fill.answers[first]) : "";
+    return retry(gaps + extra);
+  }
+  const v = $("ans").value;
+  if (!v.trim()) return $("ans").focus();
+  const r = MATHS.check(v, s.write.answer);
+  if (r === "ok") return finish(true, "Right.", attemptText());
+  if (r === "precision") return retry("Right idea, but give more digits: at least 2 significant figures, like 0.27 rather than 0.3.");
+  if (r === "invalid") return retry(unreadable(v, s.write.answer));
+  if (sample) return aiHint();
+  return retry("That's not the answer. Check each step of your working, or step down by pressing \"I give up\".");
+}
+async function aiHint(){
+  const s = V(current.s);
+  setBusy(true);
+  $("res").innerHTML = `<div class="result meh"><h3>Checking…</h3><p class="hint">Looking at your working for the slip. This takes a few seconds.</p></div>`;
+  const prompt = `A university student is practising a maths question from the __MODULE_NAME__ module and their final answer is wrong.
+
+QUESTION: ${s.write.task}
+WORKED SOLUTION (for you only, do not reveal it):
+${s.sol}
+CORRECT FINAL ANSWER (for you only, do not reveal it): ${s.write.answer.show}
+STUDENT'S WORKING:
+${$("work").value.trim() || "(none written)"}
+STUDENT'S FINAL ANSWER: ${$("ans").value.trim()}
+
+Give ONE short hint, 1 or 2 sentences in plain words, that points at the most likely slip: a wrong formula, the wrong log base, a missing term, a wrong count, or an arithmetic slip. Do not give the correct final answer or any number that gives it away. No LaTeX and no dashes as punctuation.
+
+Reply with only JSON: {"hint": "..."}`;
+  const id = renderId;
+  try {
+    const r = await sample.json(prompt, { modelTier: "default" });
+    if (id !== renderId || checked) return;
+    const hint = r && typeof r.hint === "string" ? md(plain(r.hint)) : "";
+    retry("That's not the answer. " + hint);
+  } catch(e) {
+    if (id !== renderId || checked) return;
+    setBusy(false);
+    if (e && (e.code === "not_granted" || e.code === "sampling_disabled" || e.code === "capability_disabled" || e.code === "not_declared")) sample = null;
+    retry("That's not the answer. Check each step of your working, or step down by pressing \"I give up\"." + (e && e.code === "bad_key" ? ' <span class="hint">(No hint: your API key was rejected. Check it in "Smart features" below.)</span>' : ""));
+  }
 }
 // ---------- running real code ----------
 // The free Wandbox service (wandbox.org) compiles and runs the code with GHC. If it can't be reached
@@ -911,7 +1105,8 @@ function missingSigs(code, s){
 function instantMsg(s){ return `Correct: it's the model answer, which passes every test (${s.checks.map(c => esc(c[0])).join(", ")}).`; }
 
 async function check(){
-  if (checked) return;
+  if (checked || busy) return;
+  if (IS_MATHS) return checkMaths();
   const { lvl } = current; const s = V(current.s);
   if (otherLang(s)) return checkOther(s, lvl);   // other languages
   if (lvl === 1) {
@@ -955,7 +1150,7 @@ async function check(){
   if (!sample) return selfGrade();
   return aiGrade(code, false);
 }
-function setBusy(b){ ["check","stuck"].forEach(id => { const el = $(id); if (el) el.disabled = b; }); }
+function setBusy(b){ busy = b; ["check","stuck"].forEach(id => { const el = $(id); if (el) el.disabled = b; }); }
 async function aiGrade(code, isFill){
   const s = V(current.s);
   setBusy(true);
@@ -984,16 +1179,19 @@ Decide:
 Do NOT give the corrected code or the answer. Give a hint that lets them fix it themselves.
 
 Reply with only JSON: {"compiles": true/false, "correct": true/false, "line": "...", "feedback": "..."}`;
+  const id = renderId;
   try {
     const r = await sample.json(prompt, { modelTier: "default" });
+    if (id !== renderId || checked) return;
     const ok = !!(r && r.correct && r.compiles);
-    const fb = r && typeof r.feedback === "string" ? md(r.feedback) : "";
+    const fb = r && typeof r.feedback === "string" ? md(plain(r.feedback)) : "";
     if (ok) return finish(true, "Correct. " + fb, code, current.tries > 0);
     const quoted = r && typeof r.line === "string" ? r.line.trim() : "";
     const invented = quoted && !norm(code).includes(norm(quoted));
     if (invented) return retry("The checker pointed at a line that isn't in your code, so it may be wrong. If you've tested yours and it works, press the button below; otherwise look again.");
     retry((r && r.compiles === false ? "This wouldn't compile. " : "") + fb + (quoted ? `<br><span class="hint">Look at: <code>${esc(quoted)}</code></span>` : ""));
   } catch(e) {
+    if (id !== renderId || checked) return;
     setBusy(false);
     if (e && e.code === "bad_key") { setBusy(false); $("res").innerHTML = `<div class="result meh"><h3>Your API key was rejected</h3><p>Check it in "Smart features" below, or mark this one yourself.</p><div class="actions"><button class="btn" id="selfmark">Mark it myself</button></div></div>`; $("selfmark").onclick = selfGrade; return; }
     if (e && (e.code === "not_granted" || e.code === "sampling_disabled" || e.code === "capability_disabled" || e.code === "not_declared")) { sample = null; return isFill ? check() : selfGrade(); }
@@ -1049,7 +1247,7 @@ function finish(ok, msg, attempt, retried){
     <h3>${ok ? "✓ Correct" : "✗ Not yet"}</h3>
     <p>${msg}</p>
     <p class="hint">${next}</p>
-    ${ok && attempt && norm(attempt) !== norm(s.sol) ? `<div class="label">Your code</div>
+    ${!IS_MATHS && ok && attempt && norm(attempt) !== norm(s.sol) ? `<div class="label">Your code</div>
     <pre class="code">${hl(attempt.trim())}</pre>
     <div class="label">Model answer${sameAsModel(attempt, s) ? "" : " (yours is different, and both work)"}</div>` : `<div class="label">Answer</div>`}
     <pre class="code">${hl(s.sol)}</pre>
@@ -1067,14 +1265,21 @@ async function explain(attempt){
   const s = V(current.s);
   const out = $("aiExplain"), btn = $("explain");
   btn.disabled = true; out.hidden = false; out.textContent = "Thinking…";
-  const prompt = `Explain this ${otherLang(s) ? otherLang(s).name : "__LANG__"} exercise to a university student who is new to programming and finds syntax hard. Be short and concrete: under 170 words, plain words, no headings. Go through the solution line by line, saying what each symbol does. ${attempt ? "Then say exactly what was different or wrong in the student's attempt, kindly, in 1-2 sentences." : ""}
+  const prompt = IS_MATHS
+    ? `Explain this maths question from a university __MODULE_NAME__ module to a student who finds maths symbols hard. Be short and concrete: under 170 words, plain words, no headings, no LaTeX (write any formula in plain text, like P(A|B) = P(A and B) / P(B)), and no dashes as punctuation. Go through the worked solution one step at a time, saying what each number stands for and why that step is done. ${attempt ? "Then say kindly, in 1 or 2 sentences, what was different or wrong in the student's attempt." : ""}
+
+Question: ${s.write.task}
+Worked solution:
+${s.sol}
+${attempt ? "Student's attempt:\n" + attempt : ""}`
+    : `Explain this ${otherLang(s) ? otherLang(s).name : "__LANG__"} exercise to a university student who is new to programming and finds syntax hard. Be short and concrete: under 170 words, plain words, no headings. Go through the solution line by line, saying what each symbol does. ${attempt ? "Then say exactly what was different or wrong in the student's attempt, kindly, in 1-2 sentences." : ""}
 
 Exercise: ${s.write.task}
 ${otherLang(s) ? explainContext(s) : ""}Solution:
 ${s.sol}
 ${attempt ? "Student's attempt:\n" + attempt : ""}`;
   try {
-    await sample(prompt, { modelTier: "default", onText: ({ text }) => { out.textContent = text; } });
+    await sample(prompt, { modelTier: "default", onText: ({ text }) => { out.textContent = plain(text); } });
   } catch(e) {
     out.textContent = e && e.text ? e.text : (e && e.code === "rate_limited" ? "Too many requests just now. Try again in a minute." : "Couldn't get an explanation right now.");
   }
@@ -1082,6 +1287,11 @@ ${attempt ? "Student's attempt:\n" + attempt : ""}`;
 }
 
 // ---------- boot ----------
+[1,2,3].forEach(i => document.querySelectorAll(".lv" + i).forEach(el => el.textContent = LEVELS[i]));
+if (IS_MATHS) {
+  document.querySelectorAll(".lvVerb").forEach(el => el.textContent = "solve");
+  document.querySelectorAll(".lvPast").forEach(el => el.textContent = "solved");
+}
 document.querySelectorAll(".chip.mode").forEach(c => c.onclick = () => {
   mode = c.dataset.mode;
   document.querySelectorAll(".chip.mode").forEach(o => o.setAttribute("aria-pressed", String(o === c)));
@@ -1278,6 +1488,8 @@ if (T) {
   };
 }
 document.querySelectorAll(".chip.view").forEach(c => c.onclick = () => setView(c.dataset.view));
+// a module without mock tests (such as a maths module) has only the practice view
+if (!T) document.querySelectorAll(".chip.view").forEach(c => { c.closest(".chips").hidden = true; });
 function themeLabel(){ $("themeBtn").textContent = document.documentElement.getAttribute("data-theme") === "light" ? "Dark mode" : "Light mode"; }
 $("themeBtn").onclick = () => {
   const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";

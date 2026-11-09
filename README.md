@@ -1,6 +1,6 @@
 <h1 align="center">Recallr</h1>
 
-<p align="center"><b>Coding practice that adapts to you.</b><br>Write it from memory, or step down until you can.</p>
+<p align="center"><b>Practice that adapts to you.</b><br>Write it or solve it from memory, or step down until you can. For coding modules and maths modules.</p>
 
 <p align="center">
   <a href="https://abyyworld.github.io/Recallr/"><img src="https://img.shields.io/badge/%E2%96%B6%20%20Open%20Recallr-Start%20practising%2C%20free-2c7a57?style=for-the-badge" alt="Open Recallr and start practising"></a>
@@ -12,25 +12,28 @@
 
 Every exercise has three levels:
 
-1. **Write it**: write the function from memory.
-2. **Fill the gaps**: complete code with a few pieces missing.
-3. **Predict**: read code and say what it gives.
+| | Coding modules | Maths modules |
+|---|---|---|
+| 1 (hardest) | **Write it**: write the function from memory. | **Solve it**: answer the question from scratch. |
+| 2 | **Fill the gaps**: complete code with a few pieces missing. | **Fill the gaps**: complete a worked solution with a few numbers missing. |
+| 3 (easiest) | **Predict**: read code and say what it gives. | **Plug in**: the numbers are in place; work out the value. |
 
-You start at the top. Get it wrong and you can try again; give up and you see the answer, and the exercise steps down a level. Get it right and it climbs back up. Once you can write it, it comes back after 10 minutes, then 1, 3, 7, 16 and 35 days.
+You start at the top. Get it wrong and you can try again; give up and you see the answer, and the exercise steps down a level. Get it right and it climbs back up. Once you can do it from scratch, it comes back after 10 minutes, then 1, 3, 7, 16 and 35 days.
 
-There's also a **mock test** mode in the vLab style: one file with every function set to `undefined`, a timer, a "Run checks" button that works like typing `checks` in ghci, and marking with feedback at the end. "Copy file" gives a complete file to run on vLab or a laptop.
+Coding modules also have a **mock test** mode in the vLab style: one file with every function set to `undefined`, a timer, a "Run checks" button that works like typing `checks` in ghci, and marking with feedback at the end. "Copy file" gives a complete file to run on vLab or a laptop.
 
 Tick the weeks you want questions from. Everything you do, including half-typed answers, saves as you go, and the app opens on the card you left.
 
-**Smart features** (optional): automatic marking, step-by-step explanations, and new questions when the built-in ones run out. Inside Claude they use your own Claude account; anywhere else, add your own Anthropic API key in the app. The key stays in your browser. AI-generated questions are labelled, because no compiler has checked their answers.
+**Smart features** (optional): automatic marking for code, hints for wrong maths answers, step-by-step explanations, and new questions when the built-in ones run out. Inside Claude they use your own Claude account; anywhere else, add your own Anthropic API key in the app. The key stays in your browser. AI-generated questions are labelled: no compiler has checked a coding question's answers, and a maths question's numbers are worked out on the page but the question itself isn't checked.
 
-Each exercise has a **course** version (labelled with where the idea comes from) and a **variation** that practises the same skill with a different function, for people who'd rather not repeat the course's exact questions.
+Each exercise has a **course** version (labelled with where the idea comes from) and a **variation** that practises the same skill in a different setting, for people who'd rather not repeat the course's exact questions.
 
 ## Modules
 
 | Module | Language | Covers |
 |---|---|---|
 | [Functional Programming](https://abyyworld.github.io/Recallr/functional-programming/) | Haskell | weeks 1-5: types, guards, pattern matching, recursion, higher-order functions, type classes, list comprehensions, Maybe and Either, binary trees, search trees, sorting, rose trees, expression trees |
+| [Artificial Intelligence 2](https://abyyworld.github.io/Recallr/artificial-intelligence-2/) | Maths | weeks 1-5: probability, maximum likelihood, logistic regression, naive Bayes, information theory, decision trees, confidence bounds, MAP estimation, Bayesian networks |
 | [Databases and Web Programming](https://abyyworld.github.io/Recallr/databases-and-web-programming/) | SQL, Cypher, JPA, JPQL, JDL | weeks 1-5: ER modelling in JDL, constraints and CRUD, normalisation, advanced SQL, joins, JPA and JPQL, Neo4j and Cypher |
 
 Pages are built into [`docs/`](docs) so they can be served with GitHub Pages.
@@ -38,15 +41,17 @@ Pages are built into [`docs/`](docs) so they can be served with GitHub Pages.
 ## How it works
 
 - `shared/app.html`: the practice page, shared by every module. Placeholders like `__DECK__` are filled in by the build.
+- `shared/maths.js`: reads and marks typed maths answers (numbers, fractions, sums, formulas). The build puts it into every page, and `scripts/test-maths.js` uses the same file, so the page marks exactly as the tests do.
 - `modules/<module>/`
-  - `module.json`: name, weeks, language (`lang` sets the default language of its exercises; an exercise can set its own `lang`)
+  - `module.json`: name, weeks, language, and `"kind": "maths"` for a maths module (coding is the default) (`lang` sets the default language of a code module's exercises; an exercise can set its own `lang`)
   - `deck.js`: the exercises (solution, checks, and the three levels)
   - `variations.js`: where each exercise comes from (`SRC`) and its variation (`TWINS`)
-  - `tests.js`: mock tests (blank file, model answer, marks and checks per part)
+  - `tests.js`: mock tests for a coding module (blank file, model answer, marks and checks per part)
   - `answers.json`: generated by the test script, never edited by hand
 - `scripts/test-haskell.js`: runs every solution, gap answer and predict expression through GHC, checks each mock test's blank file compiles and its model answer passes, and writes `answers.json`
 - `scripts/test-databases.js`: the same for SQL (PostgreSQL through PGlite), Cypher (embedded Neo4j), JPA and JPQL (Hibernate on H2) and JDL (the JHipster parser). Cypher and JPA run in `scripts/jvm-runner`, a small Maven project.
 - `shared/langs.js` and `shared/rows.js`: everything the page needs for languages other than Haskell (highlighting, the tables or graph shown with a question, marking, new questions), and how query results are written as text (`a, b; c, d`). The build pastes both into the page.
+- `scripts/test-maths.js`: computes every final answer, gap and plug-in value of a maths module, checks that each accepted answer is marked right and each listed mistake is marked wrong, rejects em and en dashes, and writes `answers.json`
 - `scripts/build.js`: builds `docs/<module>/index.html` and `docs/index.html`
 - `site.json`: site settings, such as the optional support link
 
@@ -58,6 +63,7 @@ Marking and progress:
 - If the runner can't be reached, the page falls back to smart features (the viewer's Claude account inside Claude, or their own Anthropic API key through the official `@anthropic-ai/sdk`, pinned to 1.2.0), and then to self-marking. Progress is saved in the browser.
 - **Sync between phone and laptop without a server**: in "Sync between your phone and laptop", paste a GitHub token that can only use gists. Progress is kept in a private gist on your own GitHub account, every connected device reads and writes it, and the newest progress wins.
 - Progress stays on the viewer's device (browser storage, plus their account inside Claude). There is no server. "Back up progress" saves a file and "Restore from a backup" loads it on another device.
+- Maths answers are always marked on the page itself, against the values in `answers.json`: a decimal counts if it rounds correctly (at least 2 significant figures), a whole-number answer such as a count must be exact, and a formula counts if it gives the same values as the answer. With smart features on, a wrong "Solve it" answer also gets a hint about the likely slip.
 - Progress is never lost to an update: storage names don't change between versions, older names are read once and carried over, and the newest copy always wins.
 - `shared/pwa/`: the app manifest, icons and service worker that make the site installable. The service worker fetches from the network first, so updates show up straight away.
 
@@ -67,6 +73,7 @@ Marking and progress:
 node scripts/test-haskell.js modules/functional-programming   # needs runghc (GHC)
 npm install                                                    # PGlite and the JDL parser
 node scripts/test-databases.js modules/databases-and-web-programming   # also needs Java 21 and Maven
+node scripts/test-maths.js modules/artificial-intelligence-2   # needs only Node
 node scripts/build.js
 ```
 
@@ -74,7 +81,7 @@ node scripts/build.js
 
 1. Copy `modules/functional-programming` to `modules/<new-module>` and edit `module.json`.
 2. Write the exercises in `deck.js` and their variations in `variations.js`.
-3. Add a test script for the module's language (like `scripts/test-haskell.js`) that checks every solution and writes `answers.json`.
+3. Add a test script for the module's language (like `scripts/test-haskell.js`) that checks every solution and writes `answers.json`. A maths module uses `scripts/test-maths.js`; see the comment at the top of `modules/artificial-intelligence-2/deck.js` for its format.
 4. Run the test script and `node scripts/build.js`.
 
 ## Content rules

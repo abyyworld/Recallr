@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, "..");
 const template = fs.readFileSync(path.join(root, "shared/app.html"), "utf8");
 // languages other than Haskell (shared/langs.js uses the result formatting in shared/rows.js)
 const langs = ["rows.js", "langs.js"].map(f => fs.readFileSync(path.join(root, "shared", f), "utf8")).join("\n");
+const mathsLib = fs.readFileSync(path.join(root, "shared/maths.js"), "utf8");
 const site = JSON.parse(fs.readFileSync(path.join(root, "site.json"), "utf8"));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -33,9 +34,16 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
   const answersFile = path.join(dir, "answers.json");
   if (!fs.existsSync(answersFile)) { console.error(`${name}: no answers.json, run its test script first`); process.exit(1); }
   const answers = JSON.parse(fs.readFileSync(answersFile, "utf8"));
-  for (const s of DECK) s.predict.answer = answers.course[s.id];
-  for (const id in TWINS) TWINS[id].predict.answer = answers.variation[id];
-  const missing = DECK.filter(s => s.predict.answer === undefined).map(s => s.id);
+  const kind = mod.kind || "code";
+  // maths modules also mark the final answer and each gap against values the test script computed
+  const attach = (s, side, id) => {
+    s.predict.answer = answers[side][id];
+    if (kind === "maths") { s.write.answer = answers.write?.[side]?.[id]; s.fill.answers = answers.fill?.[side]?.[id]; }
+  };
+  for (const s of DECK) attach(s, "course", s.id);
+  for (const id in TWINS) attach(TWINS[id], "variation", id);
+  const stale = s => s.predict.answer === undefined || (kind === "maths" && (s.write.answer === undefined || s.fill.answers === undefined));
+  const missing = [...DECK.filter(stale).map(s => s.id), ...Object.keys(TWINS).filter(id => stale(TWINS[id])).map(id => id + " (variation)")];
   if (missing.length) { console.error(`${name}: answers.json is out of date (${missing.join(", ")}), rerun its test script`); process.exit(1); }
 
   const chips = mod.weeks.map(w => `    <label class="tick"><input type="checkbox" data-week="${w}" checked> Week ${w}</label>`).join("\n");
@@ -47,10 +55,14 @@ for (const name of fs.readdirSync(path.join(root, "modules"))) {
     .split("__MODULE_ICON__").join(esc(mod.icon))
     .split("__MODULE_SCOPE__").join(esc(mod.scope))
     .split("__MODULE_ID__").join(mod.id)
+    .split("__KIND__").join(kind)
+    .split("__TAGLINE__").join(kind === "maths" ? "solve it, or step down until you can" : "write it, or step down until you can")
+    .split("__SMART_WHAT__").join(kind === "maths" ? "hints, explanations, new questions" : "marking, explanations, new questions")
     .split("__LANG__").join(mod.language)
-    .split("__COMPILER__").join(mod.compiler)
+    .split("__COMPILER__").join(mod.compiler || "")
     .split("__RUNNER_LANG__").join(JSON.stringify(mod.runner || null))
-    // functions, so a "$$" or "$1" in the content is not read as a replacement pattern
+    // functions as replacements, so a "$" in the content is never read as a replacement pattern
+    .replace("__MATHS_LIB__", () => mathsLib.trim())
     .replace("__WEEK_CHIPS__", () => chips)
     .replace("__SUPPORT__", () => support)
     .replace("__DECK__", () => json(DECK))
@@ -74,7 +86,7 @@ const cards = built.map(m => `      <a class="mod" href="${m.id}/">
 fs.writeFileSync(path.join(root, "docs", "index.html"), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Recallr</title>
-<meta name="description" content="Coding practice that adapts to you: write it from memory, or step down until you can.">
+<meta name="description" content="Practice that adapts to you: write it or solve it from memory, or step down until you can.">
 ${pwaHead("")}
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
@@ -104,14 +116,14 @@ h1 span{color:var(--accent)}
 <script>(function(){ var t = "dark"; try { t = localStorage.getItem("recallr-theme") || "dark"; } catch(e) {} document.documentElement.setAttribute("data-theme", t); })();</script>
 </head><body><button class="theme" id="themeBtn">Light mode</button><main>
 <h1>Recall<span>r</span></h1>
-<p class="lede">Coding practice that adapts to you. Write it from memory, or step down until you can.</p>
+<p class="lede">Practice that adapts to you. Write it or solve it from memory, or step down until you can.</p>
 <div class="mods">
 ${cards}
 </div>
 <ol class="ladder">
-  <li><b>Write it</b><span>Write the function from scratch.</span></li>
-  <li><b>Fill the gaps</b><span>Stuck? Finish code with a few pieces missing.</span></li>
-  <li><b>Predict</b><span>Still stuck? Read code and say what it gives. Then climb back up.</span></li>
+  <li><b>Write it</b><span>Write the function, or solve the question, from scratch.</span></li>
+  <li><b>Fill the gaps</b><span>Stuck? Finish a worked answer with a few pieces missing.</span></li>
+  <li><b>Predict</b><span>Still stuck? Say what the code gives, or work out the last step. Then climb back up.</span></li>
 </ol>
 <p class="note">Free. Your progress saves as you go. Install it as an app from your browser's menu ("Install Recallr" or "Add to Dock"). Spaced repetition brings each skill back after 10 minutes, then 1, 3, 7, 16 and 35 days.</p>
 ${support}
