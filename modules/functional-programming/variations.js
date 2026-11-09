@@ -329,4 +329,5 @@ next: { title: "Bounded + Enum: prev",
     for (const k in more) if (/^SRC/.test(k)) Object.assign(SRC, more[k]); else if (/^TWINS/.test(k)) Object.assign(TWINS, more[k]);
   }
 }
+{ const { TWIN_LESSONS } = require("./lessons.js"); for (const id in TWINS) if (TWIN_LESSONS[id]) TWINS[id].lesson = TWIN_LESSONS[id]; }
 if (typeof module !== "undefined") module.exports = { SRC, TWINS };

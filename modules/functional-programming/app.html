@@ -26,6 +26,12 @@
   --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+.trace{background:var(--codebg,#111);border-radius:12px;padding:12px 14px;margin:6px 0 12px;font-family:var(--mono,ui-monospace,monospace);font-size:14px;line-height:1.55;overflow-x:auto}
+.tstep{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
+.tstep code{background:none;padding:0;white-space:pre}
+.tnote{color:var(--muted);font-size:13px;font-family:inherit}
+.lesson-tip{margin-top:4px}
+@media (max-width:520px){.tstep{display:block}.tnote{display:block;padding:0 0 4px 1.2em}}
 .tick .wp{font-weight:400;opacity:.75;font-size:.9em}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
 .wrap{max-width:760px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
@@ -1003,6 +1009,16 @@ function renderDone(){
     current = makeCurrent(weakest); state.shown++; checked = false; present();
   };
 }
+// a lesson card: what it gives you, then one example worked through step by step
+function lessonHtml(L){
+  const steps = (L.trace || []).map(st => {
+    const note = st.note ? `<span class="tnote">-- ${esc(st.note)}</span>` : "";
+    return `<div class="tstep"><code>${esc(st.line)}</code>${note}</div>`;
+  }).join("");
+  return `<p class="task">${esc(L.what)}</p>
+    <div class="label">Step by step</div>
+    <div class="trace">${steps}</div>`;
+}
 function renderLesson(){
   const s = V(current.s), x = sk(current.k);
   x.lesson = true; x.lvl = 1; current.lvl = 1; saveLocal();
@@ -1010,9 +1026,10 @@ function renderLesson(){
     <div class="eyebrow"><span>New · Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${[1,2,3].map(() => '<span class="rung"></span>').join("")} Lesson</span></div>
     <h2>${esc(s.title)}</h2>
     <p class="lesson-tag">Learn it in 10 seconds</p>
-    <p class="task">${md(s.explain || "")}</p>
-    <div class="label">Example</div>
+    ${s.lesson ? lessonHtml(s.lesson) : `<p class="task">${md(s.explain || "")}</p>`}
+    <div class="label">${s.lesson ? "The code" : "Example"}</div>
     <pre class="code">${hl(s.predict.code)}</pre>
+    ${s.lesson && s.lesson.tip ? `<p class="hint lesson-tip">${esc(s.lesson.tip)}</p>` : ""}
     <div class="actions">
       <button class="btn primary" id="gotIt">Got it</button>
       <button class="btn" id="lessonSkip">I already know this</button>

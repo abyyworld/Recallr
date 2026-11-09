@@ -333,4 +333,7 @@ DECK.push(...require("./deck-5x.js").DECK5X);
 // (near-duplicates like product, and, or are left to "All course questions")
 const CORE = ["double", "swap", "addTen", "sign", "safetail", "describe", "sum", "take", "zip", "takeWhile", "foldr", "compose", "qsort", "suitDeriving", "instanceEq", "suitShow", "constraint", "next", "rmdups", "suitOrd", "safeDiv", "either", "pyths", "positions", "btInorder", "btMirror", "mapFoldr", "firstPosition", "exprEval", "roseSize", "bstInsert", "bstCheck", "msort", "foldTree"];
 for (const s of DECK) if (CORE.includes(s.id)) s.core = true;
+
+// beginner lesson cards (lessons.js)
+{ const { LESSONS } = require("./lessons.js"); for (const s of DECK) if (LESSONS[s.id]) s.lesson = LESSONS[s.id]; }
 if (typeof module !== "undefined") module.exports = DECK;
