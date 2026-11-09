@@ -99,7 +99,44 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
 .marks td.n{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
 .tablewrap{overflow-x:auto}
 .rules{margin:0;padding-left:20px;color:var(--muted);font-size:14px}
+.lesson-tag{margin:0;font-weight:600;color:var(--accent)}
+.fweek{display:flex;flex-direction:column;gap:6px;padding-bottom:10px}
+.frow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;font-size:14px}
+.seg4{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.fbtn{border:0;border-left:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 12px var(--body);padding:4px 10px;cursor:pointer}
+.fbtn:first-child{border-left:0}
+.fbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.fbtn[data-f="3"][aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:600 14px var(--body);text-decoration:underline;cursor:pointer}
+.fbtn:focus-visible,.linkbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.card{animation:in .18s ease-out}@keyframes in{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}}
+/* daily set: one segment per card, coloured by how it went */
+.daybar{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);min-width:0}
+.segs{flex:1;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;min-width:40px}
+.seg{height:8px;border-radius:4px;background:var(--line)}
+.seg.on{background:var(--accent)}.seg.g{background:var(--good)}.seg.a{background:var(--warn)}.seg.r{background:var(--bad)}
+#dayTxt{white-space:nowrap;font-variant-numeric:tabular-nums}
+.goalrow{align-items:center}
+.goalrow .note{margin-right:2px}
+.banner{margin:0;font-weight:600;color:var(--accent)}
+.result{position:relative}
+.remind{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+.remind input{font:15px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);color:var(--ink)}
+/* a quick reward on a correct answer (none when the device asks for less motion) */
+.confetti{display:none}
+@media (prefers-reduced-motion:no-preference){
+  .card.win{animation:win .45s ease-out}
+  @keyframes win{0%{transform:scale(1);box-shadow:0 0 0 0 var(--good)}35%{transform:scale(1.015);box-shadow:0 0 0 6px var(--good-soft)}100%{transform:scale(1);box-shadow:0 0 0 0 transparent}}
+  .confetti{display:block;position:absolute;left:24px;top:18px;width:0;height:0;pointer-events:none}
+  .confetti i{position:absolute;width:7px;height:7px;border-radius:2px;opacity:0;animation:pop .55s ease-out forwards}
+  .confetti i:nth-child(1){background:var(--good);--x:-26px;--y:-22px}
+  .confetti i:nth-child(2){background:var(--warn);--x:-8px;--y:-30px}
+  .confetti i:nth-child(3){background:var(--accent);--x:14px;--y:-28px}
+  .confetti i:nth-child(4){background:var(--str);--x:30px;--y:-14px}
+  .confetti i:nth-child(5){background:var(--kw);--x:24px;--y:8px}
+  .confetti i:nth-child(6){background:var(--warn);--x:-30px;--y:4px}
+  @keyframes pop{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--x),var(--y)) scale(1);opacity:0}}
+}
 </style>
 
 <script>
@@ -116,6 +153,7 @@ summary{cursor:pointer;font-weight:600;padding:10px 0}
     <div class="stats">
       <div class="stat"><b id="sDue">0</b><span>due</span></div>
       <div class="stat"><b id="sDone">0</b><span>today</span></div>
+      <div class="stat" id="stStreak" hidden><b id="sStreak"></b><span>day streak</span></div>
       <div class="stat"><b id="sMastered">0</b><span id="sMasteredOf">mastered</span></div>
     </div>
   </header>
@@ -131,15 +169,29 @@ __WEEK_CHIPS__
     <button class="chip" id="weeksAll">All weeks</button>
   </div>
   <div class="chips" role="group" aria-label="Which questions">
-    <button class="chip mode" data-mode="course" aria-pressed="true">Course questions</button>
-    <button class="chip mode" data-mode="twin" aria-pressed="false">Variations (similar, not identical)</button>
+    <button class="chip set" data-set="core" aria-pressed="true">Essentials</button>
+    <button class="chip set" data-set="course" aria-pressed="false">All course questions</button>
+    <button class="chip set" data-set="twin" aria-pressed="false">Variations</button>
   </div>
+  <div class="chips goalrow" role="group" aria-label="Cards a day">
+    <span class="note">Cards a day</span>
+    <button class="chip goal" data-goal="3" aria-pressed="false">3</button>
+    <button class="chip goal" data-goal="5" aria-pressed="true">5</button>
+    <button class="chip goal" data-goal="10" aria-pressed="false">10</button>
+  </div>
+  <details class="settings" id="focusBox">
+    <summary id="focusSum">Focus</summary>
+    <p class="note">How often each topic comes up. Off hides it.</p>
+    <div id="focusList"></div>
+    <p><button class="linkbtn" id="focusReset">Reset focus</button></p>
+  </details>
 
+  <div id="dayBar" class="daybar"><div class="segs" id="segs"></div><span id="dayTxt">Today 0 / 5</span></div>
   <main id="card" class="card" aria-live="polite"></main>
 
   <details id="ladderBox">
     <summary>All skills and where you are</summary>
-    <p class="note">Each skill starts at <b>Write it</b>. Get it wrong and it steps down to <b>Fill the gaps</b>, then <b>Predict</b>. Get it wrong and you can try again as often as you like; the answer only appears when you give up. Get it right first time and it climbs back up. A skill you can write comes back after 10 minutes, then 1, 3, 7, 16 and 35 days. "Mastered" means you wrote it correctly three times in a row, spread over days.</p>
+    <p class="note">A new skill starts with a 10-second lesson, then <b>Predict</b>, <b>Fill the gaps</b> and <b>Write it</b>. Not right? Try again as often as you like; the answer only appears when you give up, and the skill steps down a level. Right first time and it climbs up. After 3 goes in a day it waits until tomorrow. Essentials and All course questions share progress; Variations keep their own. A skill you can write comes back after 10 minutes, then 1, 3, 7, 16 and 35 days. "Mastered" means you wrote it correctly three times in a row, spread over days. A day counts toward your streak with at least 3 cards. Every 7 days earns a rest day (up to 2).</p>
     <div class="skills" id="skills"></div>
   </details>
 
@@ -194,7 +246,7 @@ __WEEK_CHIPS__
     <input type="file" id="restoreFile" accept=".json,application/json" hidden>
   </div>
   <p class="note" id="backupNote"></p>
-  <div id="resetConfirm" hidden class="result bad"><p>Reset every skill back to new? This can't be undone.</p><div class="actions"><button class="btn primary" id="resetYes">Yes, reset</button><button class="btn" id="resetNo">Cancel</button></div></div>
+  <div id="resetConfirm" hidden class="result bad"><p>Reset every skill back to new? Your streak is kept. This can't be undone.</p><div class="actions"><button class="btn primary" id="resetYes">Yes, reset</button><button class="btn" id="resetNo">Cancel</button></div></div>
   </div>
 
   <section id="testView" class="stack" hidden>
@@ -246,7 +298,10 @@ const LS_KEY = "recallr-" + MODULE_ID;
 let state = { skills:{}, shown:0, todayKey:"", today:0, updated:0 };
 const ALL_WEEKS = [...new Set(DECK.map(s => Number(s.week)))].sort((a,b)=>a-b);
 let weeksSel = new Set(ALL_WEEKS);
-let mode = "course";
+let qset = "core";       // which questions: "core" (Essentials), "course" (all course questions), "twin" (Variations)
+const SET_LABEL = { core: "Essentials", course: "All course questions", twin: "Variations" };
+const FOCUS = ["Off", "Light", "Normal", "Extreme"], FOCUS_W = [0, 0.4, 1, 3];
+let pickKind = "", newRun = 0, lastId = null, lastTopic = null;
 let lastUndo = null;
 let current = null;     // {s, lvl}
 let checked = false;
@@ -270,10 +325,23 @@ function md(s){ return esc(s).replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, a, b) =>
 const OLD_LS_KEYS = MODULE_ID === "functional-programming" ? ["haskell-reps-v1"] : [];
 const OLD_DOCS = MODULE_ID === "functional-programming" ? ["reps"] : [];
 function parse(raw){ try { const s = JSON.parse(raw); return s && typeof s === "object" && s.skills ? s : null; } catch(e) { return null; } }
+// cards per day from two copies: the larger count wins, so practising on two devices never loses a day
+function mergeDays(a, b){
+  const out = Object.assign({}, a || {});
+  for (const k in (b || {})) { const n = Number(b[k]) || 0; if (!(k in out) || n > (Number(out[k]) || 0)) out[k] = n; }
+  return out;
+}
+function sameDays(a, b){ a = a || {}; b = b || {}; const ka = Object.keys(a); return ka.length === Object.keys(b).length && ka.every(k => a[k] === b[k]); }
 function adopt(s){
   // take another copy of the progress if it's newer than what we have
-  if (!s || (s.updated || 0) <= (state.updated || 0)) return false;
-  state = Object.assign({ skills:{}, shown:0, todayKey:"", today:0, updated:0, tests:{} }, s);
+  const merged = mergeDays(state.days, s && s.days);
+  if (!s || (s.updated || 0) <= (state.updated || 0)) {
+    // older copy: keep ours, but take any day it counted higher (without marking ours as newer)
+    if (!sameDays(merged, state.days || {})) { state.days = merged; if (state.updated) saveLocal(); }
+    return false;
+  }
+  state = Object.assign({ skills:{}, shown:0, todayKey:"", today:0, updated:0, tests:{}, days:{}, goal:5 }, s);
+  state.days = merged;
   return true;
 }
 function load(){
@@ -321,7 +389,7 @@ async function syncPull(info){
   if (f && f.truncated && f.raw_url) content = await (await fetch(f.raw_url, { cache: "no-store" })).text();
   remoteAll = content ? JSON.parse(content) : { app: "recallr", modules: {} };
   remoteAll.modules = remoteAll.modules || {};
-  if (adopt(remoteAll.modules[MODULE_ID])) refreshAfterAdopt();
+  if (adopt(remoteAll.modules[MODULE_ID])) refreshAfterAdopt(); else renderStats();
 }
 async function syncPush(){
   const info = syncInfo(); if (!info || !info.gist) return;
@@ -391,7 +459,7 @@ async function connect(){
   } catch(e) {}
   try { claudeSample = await window.claude?.use?.("sample"); } catch(e) { claudeSample = null; }
   setupAI();
-  if (current && !checked) renderCard();
+  if (current && !checked) rerender();
 }
 
 // ---------- smart features ----------
@@ -453,7 +521,7 @@ function setupAI(){
     $("keyForm").hidden = false; $("apiKey").placeholder = "sk-ant-...";
   }
   $("genBtn").disabled = !sample;
-  if (current && !checked) renderCard();
+  if (current && !checked) rerender();
 }
 $("keySave").onclick = () => {
   const key = $("apiKey").value.trim(), old = keyInfo();
@@ -509,7 +577,13 @@ $("syncOff").onclick = () => { try { localStorage.removeItem(SYNC_STORE); } catc
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && syncInfo() && syncInfo().gist) syncPull(syncInfo()).catch(() => {}); });
 
 // ---------- scheduling ----------
-function V(s){ return mode === "twin" && TWINS[s.id] ? Object.assign({}, s, TWINS[s.id], { id: s.id, week: s.week, topic: s.topic }) : s; }
+// Course questions and Variations keep separate progress: a variation's progress key ends in "~t".
+// Essentials share the course keys. pk(s, "course") always gives the course key.
+function pk(s, set){ const id = typeof s === "string" ? s : s.id; return (set || qset) === "twin" && TWINS[id] ? id + "~t" : id; }
+function V(s){
+  const t = (current && current.s.id === s.id ? current.v === "t" : qset === "twin") && TWINS[s.id];
+  return t ? Object.assign({}, s, TWINS[s.id], { id: s.id, week: s.week, topic: s.topic }) : s;
+}
 // The "Write it" box starts with only what the question gives (types, data, helper functions).
 // The function's own type signature is part of the answer, as in the exam.
 function starterOf(s){
@@ -518,31 +592,108 @@ function starterOf(s){
   const out = lines.filter(l => { const m = l.match(sig); return !m || given.has(m[1]); }).join("\n").replace(/\n{3,}/g, "\n\n");
   return out.trim() ? out.replace(/\s*$/, "\n\n") : "";
 }
-function sk(id){ return state.skills[id] || (state.skills[id] = { lvl:3, box:0, due:0, notBefore:0, streak:0, seen:false }); }
+// sk takes a progress key (pk). New skills start at Predict, after a short lesson.
+function sk(k){ return state.skills[k] || (state.skills[k] = { lvl:1, box:0, due:0, notBefore:0, streak:0, seen:false }); }
+function stateOf(s, set){ return state.skills[pk(s, set)]; }
 function allSkills(){ return DECK.concat(state.generated || []); }
 function inWeek(s){ return weeksSel.has(Number(s.week)); }
-function isMastered(s){ const x = state.skills[s.id]; return x && x.box >= MASTER_BOX; }
+// The questions of a set in the given weeks (the ticked weeks by default). Essentials are the entries
+// marked core; a week with no core entries uses all its course questions.
+function setPool(set, weeks){
+  set = set || qset;
+  const inW = s => weeks ? weeks.includes(Number(s.week)) : inWeek(s);
+  let deck = DECK.filter(inW);
+  if (set === "core") { const coreWeeks = new Set(deck.filter(s => s.core).map(s => Number(s.week))); deck = deck.filter(s => s.core || !coreWeeks.has(Number(s.week))); }
+  return deck.concat((state.generated || []).filter(inW));
+}
+// Focus: 0 Off, 1 Light, 2 Normal (default), 3 Extreme, per topic name
+function focusOf(topic){ const f = (state.focus || {})[topic]; return f === 0 || f === 1 || f === 3 ? f : 2; }
+function weight(s){ return FOCUS_W[focusOf(s.topic)]; }
+function activePool(){ return setPool().filter(s => weight(s) > 0); }
+function isMastered(s){ const x = stateOf(s); return x && x.box >= MASTER_BOX; }
 function dueList(){
   const now = Date.now();
-  return allSkills().filter(inWeek).filter(s => { const x = state.skills[s.id]; return x && x.seen && x.due <= now; });
+  return activePool().filter(s => { const x = stateOf(s); return x && x.seen && x.due <= now; });
+}
+// a "day" runs from 4am to 4am, so a session at 1am still counts for the evening before
+function dayKey(t){ const d = new Date((t || Date.now()) - 4*3600e3); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function nextDayStart(){ const now = new Date(), d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4); if (d <= now) d.setDate(d.getDate() + 1); return d.getTime(); }
+// ---------- the daily set ----------
+// today's finish line: the daily goal, plus any "5 more" added today
+function target(){ const e = state.extra; return (state.goal || 5) + (e && e.key === dayKey() ? e.n || 0 : 0); }
+function cardsToday(){ return (state.days || {})[dayKey()] || 0; }
+// course questions (never generated ones) that count toward "can write from memory"
+function trackerPool(){ return DECK; }
+function canCount(pool){ const now = Date.now(); return pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.lvl === 3 && x.box >= 1 && now - x.due < 2*864e5; }).length; }
+// how today's cards went, for the colours in the day bar: g right first time, a right after a retry or hint, r not right
+let sessMarks = [], combo = 0;
+// A streak counts days with at least 3 cards. Every 7 counted days earns a rest day (up to 2),
+// which a missed day uses up automatically. Worked out from state.days, so nothing extra is stored.
+function streakInfo(){
+  const days = state.days || {}, today = dayKey();
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const [ty, tm, td] = today.split("-").map(Number);
+  const keys = Object.keys(days).filter(k => /^\d{4}-\d\d-\d\d$/.test(k) && k < today).sort();
+  let run = 0, rest = 0, counted = 0, best = 0;
+  if (keys.length) {
+    const [y, m, d] = keys[0].split("-").map(Number);
+    const d0 = new Date(y, m - 1, d, 12), floor = new Date(ty, tm - 1, td - 120, 12);
+    for (let t = d0 < floor ? floor : d0; fmt(t) < today; t = new Date(t.getFullYear(), t.getMonth(), t.getDate() + 1, 12)) {
+      if ((days[fmt(t)] || 0) >= 3) { run++; counted++; if (counted % 7 === 0) rest = Math.min(2, rest + 1); }
+      else if (run > 0 && rest > 0) rest--;
+      else run = 0;
+      best = Math.max(best, run);
+    }
+  }
+  const past = run;
+  if ((days[today] || 0) >= 3) run++;
+  // a day not done yet today never breaks the streak
+  return { run, rest, best, hadHistory: counted > past };
+}
+function streakLine(){
+  const { run, rest, hadHistory } = streakInfo();
+  if (run >= 2) return `Day ${run} in a row · ${rest} rest day${rest === 1 ? "" : "s"} saved.`;
+  if (run === 1) return hadHistory ? "Day 1 of a new streak. Your skills are still here." : "Day 1 of your streak.";
+  return "Do 3 cards on a day to keep a streak.";
+}
+// New skills in course order: the lowest week first, Extreme topics first and Light ones last,
+// deck order otherwise, and not the same topic as the last card when another is just as wanted.
+function freshOrder(unseen){
+  if (!unseen.length) return [];
+  const w = Math.min(...unseen.map(s => Number(s.week)));
+  const low = unseen.filter(s => Number(s.week) === w).sort((a,b) => weight(b) - weight(a));
+  const top = weight(low[0]), i = low.findIndex(s => weight(s) === top && s.topic !== lastTopic);
+  if (i > 0) low.unshift(low.splice(i, 1)[0]);
+  return low.concat(unseen.filter(s => Number(s.week) !== w));
 }
 function pick(){
-  const now = Date.now();
-  const pool = allSkills().filter(inWeek);
-  const ready = pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.due <= now && x.notBefore <= state.shown; });
-  const learning = ready.filter(s => state.skills[s.id].lvl < 3);
-  if (learning.length) return learning.sort((a,b)=>state.skills[a.id].due - state.skills[b.id].due)[0];
-  const fresh = pool.find(s => !(state.skills[s.id] && state.skills[s.id].seen));
-  if (ready.length) return ready.sort((a,b)=>state.skills[a.id].due - state.skills[b.id].due)[0];
+  const now = Date.now(), pool = activePool(), X = s => stateOf(s);
+  const seen = s => !!(X(s) && X(s).seen);
+  const ready = pool.filter(s => seen(s) && X(s).due <= now && X(s).notBefore <= state.shown);
+  const learning = ready.filter(s => X(s).lvl < 3).sort((a,b) => X(a).due - X(b).due);
+  // reviews: most overdue first, times the topic's focus weight (ties keep deck order)
+  const score = s => (now - X(s).due + 60e3) * weight(s);
+  const reviews = ready.filter(s => X(s).lvl >= 3).sort((a,b) => score(b) - score(a));
+  const fresh = freshOrder(pool.filter(s => !seen(s)));
+  const cooling = pool.filter(s => seen(s) && X(s).due <= now && X(s).notBefore > state.shown).sort((a,b) => X(a).notBefore - X(b).notBefore);
+  // warm-up: the day's first card is one you can already write
+  const warm = ((state.days || {})[dayKey()] || 0) === 0 ? ready.filter(s => X(s).lvl === 3 && X(s).box >= 2).sort((a,b) => X(b).box - X(a).box) : [];
+  const order = [["warm", warm], ["learning", learning]];
+  // after every 2 new skills in a row, a review if one is ready
+  if (newRun >= 2 && reviews.length) order.push(["ready", reviews]);
   // new exercises come before repeating ones that are still cooling down
-  if (fresh) return fresh;
-  const cooling = pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.due <= now; });
-  if (cooling.length) return cooling.sort((a,b)=>state.skills[a.id].notBefore - state.skills[b.id].notBefore)[0];
-  return null;
+  order.push(["fresh", fresh], ["ready", reviews], ["cooling", cooling]);
+  // never the same skill twice in a row while anything else is available
+  for (const [kind, list] of order) { const s = list.find(s => s.id !== lastId); if (s) { pickKind = kind; return s; } }
+  for (const [kind, list] of order) if (list.length) { pickKind = kind; return list[0]; }
+  pickKind = ""; return null;
 }
 function grade(ok, retried){
-  const x = sk(current.s.id);
-  lastUndo = { id: current.s.id, prev: JSON.parse(JSON.stringify(x)), today: state.today, todayKey: state.todayKey };
+  const x = sk(current.k);
+  const dk = dayKey();
+  // what you could write before the day's first card, for the end-of-day line
+  if (!state.dayStart || state.dayStart.key !== dk) state.dayStart = { key: dk, can: canCount(trackerPool()) };
+  lastUndo = { id: current.s.id, k: current.k, v: current.v, prev: JSON.parse(JSON.stringify(x)), today: state.today, todayKey: state.todayKey, dayKey: dk, dayPrev: (state.days || {})[dk], dayEnded: state.dayEnded, combo };
   $("undo").disabled = false;
   const first = !x.seen;
   x.seen = true;
@@ -558,72 +709,233 @@ function grade(ok, retried){
   } else {
     x.lvl = Math.max(1, x.lvl - 1); x.box = 0; x.due = now; x.notBefore = state.shown + 2;
   }
+  // no loops: after 3 goes in a day without a clean first-try answer, it waits until tomorrow
+  if (x.dayKey !== dk) { x.dayKey = dk; x.dayN = 0; }
+  x.dayN++;
+  if (x.dayN >= 3 && !(ok && !retried)) { x.due = nextDayStart(); x.notBefore = 0; current.parked = true; }
   const key = new Date().toDateString();
   if (state.todayKey !== key) { state.todayKey = key; state.today = 0; }
   state.today++;
+  state.days = state.days || {}; state.days[dk] = (state.days[dk] || 0) + 1;
   persist();
   renderStats();
 }
 
 // ---------- rendering ----------
-// each week's tick box shows how many of its exercises you can already write from memory
+// each week's tick box shows how many of its exercises in the current set you can already write from memory
 function renderWeekProgress(){
   document.querySelectorAll(".tick input[data-week]").forEach(el => {
-    const w = Number(el.dataset.week), list = DECK.filter(s => Number(s.week) === w);
+    const w = Number(el.dataset.week), list = setPool(qset, [w]).filter(s => !s.gen);
     if (!list.length) return;
-    const can = list.filter(s => (state.skills[s.id]?.box || 0) >= 1).length;
+    const can = list.filter(s => (stateOf(s)?.box || 0) >= 1).length;
     let span = el.parentNode.querySelector(".wp");
     if (!span) { span = document.createElement("span"); span.className = "wp"; el.parentNode.appendChild(span); }
     span.textContent = can === list.length ? " ✓ done" : ` ${can}/${list.length}`;
-    span.title = `${can} of ${list.length} written from memory at least once`;
+    span.title = `${SET_LABEL[qset]}: ${can} of ${list.length} written from memory at least once`;
   });
+}
+// Focus panel: every topic in the ticked weeks, grouped by week
+function focusTopics(){
+  return [...weeksSel].sort((a,b) => a-b).map(w => ({ w, ts: [...new Set(setPool("course", [w]).map(s => s.topic))] })).filter(g => g.ts.length);
+}
+function focusSummary(){
+  const n = [0,0,0,0];
+  new Set(focusTopics().flatMap(g => g.ts)).forEach(t => n[focusOf(t)]++);
+  const parts = [[3,"extreme"],[1,"light"],[0,"off"]].filter(([f]) => n[f]).map(([f, w]) => `${n[f]} ${w}`);
+  return parts.length ? "Focus: " + parts.join(", ") : "";
+}
+const attr = s => esc(String(s)).replace(/"/g, "&quot;");
+function renderFocus(){
+  const box = $("focusList"); if (!box) return;
+  const a = document.activeElement, back = a && a.classList && a.classList.contains("fbtn") ? [a.dataset.topic, a.dataset.f] : null;
+  box.innerHTML = focusTopics().map(g => `<div class="fweek"><div class="label">Week ${g.w}</div>${g.ts.map(t =>
+    `<div class="frow"><span>${esc(t)}</span><span class="seg4" role="group" aria-label="Focus for ${attr(t)}">${FOCUS.map((name, f) =>
+      `<button class="fbtn" data-topic="${attr(t)}" data-f="${f}" aria-pressed="${focusOf(t) === f}">${name}</button>`).join("")}</span></div>`).join("")}</div>`).join("");
+  $("focusSum").textContent = focusSummary() || "Focus: all topics normal";
+  if (back) { const b = [...box.querySelectorAll(".fbtn")].find(el => el.dataset.topic === back[0] && el.dataset.f === back[1]); if (b) b.focus(); }
+}
+function setFocus(topic, f){
+  state.focus = Object.assign({}, state.focus || {});
+  state.focus[topic] = f;
+  persist(); afterFocus();
+}
+function afterFocus(){
+  renderStats();
+  if (!current || (!checked && weight(current.s) === 0)) pickAndRender();
 }
 function renderStats(){
   renderWeekProgress();
-  const pool = allSkills().filter(inWeek);
+  renderFocus();
+  const pool = setPool();
   $("sDue").textContent = dueList().length;
-  const key = new Date().toDateString();
-  $("sDone").textContent = state.todayKey === key ? state.today : 0;
+  renderDay();
   $("sMastered").textContent = pool.filter(isMastered).length;
   $("sMasteredOf").textContent = `of ${pool.length} mastered`;
   $("skills").innerHTML = pool.map(s => {
-    const x = state.skills[s.id];
+    const x = stateOf(s);
     let pill = '<span class="pill new">new</span>';
     if (x && x.seen) pill = x.box >= MASTER_BOX ? '<span class="pill ok">mastered</span>' : x.lvl < 3 ? `<span class="pill learn">${LEVELS[x.lvl]}</span>` : `<span class="pill ok">can write · ${x.box}</span>`;
     return `<div class="sk"><code>${esc(s.title)}</code>${pill}</div>`;
   }).join("");
 }
+// the day bar: one segment per card up to today's target, the count, and a combo from 3 right in a row
+function renderDay(){
+  const n = cardsToday(), t = target(), goal = state.goal || 5, drawn = Math.min(t, 10), filled = Math.min(n, drawn);
+  let segs = "";
+  for (let i = 0; i < drawn; i++) {
+    const m = i < filled ? (sessMarks[sessMarks.length - filled + i] || "on") : "";
+    segs += `<span class="seg${m ? " " + m : ""}"></span>`;
+  }
+  $("segs").innerHTML = segs;
+  let txt = n > t ? `Today ${n} · done` : n === t ? `Today ${n} / ${t} · done` : `Today ${n} / ${t}`;
+  if (combo >= 3) txt += ` · 🔥 ${combo} in a row`;
+  $("dayTxt").textContent = txt;
+  $("dayBar").setAttribute("aria-label", `${n} of ${t} cards today`);
+  $("sDone").textContent = `${n}/${t}`;
+  const st = streakInfo();
+  $("stStreak").hidden = st.run === 0;
+  $("sStreak").textContent = st.run;
+  $("stStreak").title = `${st.rest} rest day${st.rest === 1 ? "" : "s"} saved. A missed day uses one automatically.`;
+  document.querySelectorAll(".chip.goal").forEach(c => c.setAttribute("aria-pressed", String(Number(c.dataset.goal) === goal)));
+}
+// the card being shown: the skill, its progress key in the current set, the version ('c' or 't') and level
+function makeCurrent(s, k){
+  k = k || pk(s);
+  return { s, k, v: k.endsWith("~t") ? "t" : "c", lvl: sk(k).lvl };
+}
+// a skill never seen before starts with a short lesson
+function present(){
+  const x = sk(current.k);
+  lastId = current.s.id; lastTopic = current.s.topic;
+  if (!x.seen && !x.lesson) current.lesson = true;
+  rerender();
+}
+function rerender(){ if (current.lesson) renderLesson(); else renderCard(); }
 function pickAndRender(){
+  // the daily set: once today's target is reached, say so (once per target) instead of serving another card
+  const dk = dayKey(), n = cardsToday(), t = target();
+  if (n >= t && state.dayEnded !== dk + ":" + t) { state.dayEnded = dk + ":" + t; saveLocal(); return renderDayEnd("done"); }
   const s = pick();
   if (!s) { current = null; state.current = null; renderDone(); renderStats(); return; }
-  current = { s, lvl: sk(s.id).lvl };
+  // only repeats that are still cooling down are left: stop rather than loop
+  if (pickKind === "cooling" && n >= 1) return renderDayEnd("empty");
+  if (pickKind === "fresh") newRun++; else if (pickKind === "ready" || pickKind === "warm") newRun = 0;
+  current = makeCurrent(s);
+  current.warm = pickKind === "warm";
   state.shown++;
-  state.current = { id: s.id, done: false };
+  state.current = { id: s.id, done: false, k: current.k, v: current.v };
   saveLocal();
   checked = false;
-  renderCard(); renderStats();
+  present(); renderStats();
 }
 // open on the card you were on last time, if you hadn't finished it
 function resumeOrPick(){
   const c = state.current;
   const s = c && !c.done && allSkills().find(x => x.id === c.id);
-  if (s && inWeek(s)) { current = { s, lvl: sk(s.id).lvl }; checked = false; renderCard(); renderStats(); }
+  if (s && (c.k || c.id) === pk(s) && weight(s) > 0 && setPool().some(p => p.id === s.id)) { current = makeCurrent(s); checked = false; present(); renderStats(); }
+  else if (cardsToday() >= target()) { state.dayEnded = dayKey() + ":" + target(); saveLocal(); renderDayEnd("closed"); }
   else pickAndRender();
 }
+// the end of today's set: what you did, the streak, what's next, and a clear place to stop
+function renderDayEnd(kind){
+  current = null; checked = true; state.current = null;
+  const k = dayKey(), n = cardsToday(), now = canCount(trackerPool());
+  const ds = state.dayStart && state.dayStart.key === k ? state.dayStart.can : now;
+  const pool = activePool(), X = s => stateOf(s);
+  const r = pool.filter(s => X(s) && X(s).seen && X(s).due < nextDayStart() + 864e5).length;
+  const nextNew = freshOrder(pool.filter(s => !(X(s) && X(s).seen)))[0];
+  const unticked = ALL_WEEKS.find(w => !weeksSel.has(w));
+  const quick = typeof quickSuggested === "function" && typeof openQuick === "function" && quickSuggested();
+  const first = kind === "done" ? `${n} card${n === 1 ? "" : "s"}. That's enough for today.` : kind === "closed" ? "Come back tomorrow, or keep going if you like." : "Nothing new or due in the ticked weeks.";
+  let btns = "";
+  if (kind === "empty") btns = `<button class="btn primary" id="anywayE">Practise the weakest one anyway</button>${unticked != null ? `<button class="btn" id="addWeek">Add week ${unticked}</button>` : ""}`;
+  else btns = `${quick ? '<button class="btn primary" id="quickGo">Quick test (20 min)</button>' : ""}<button class="btn${quick ? "" : " primary"}" id="more5">5 more</button>${kind === "closed" ? '<button class="btn" id="keepGo">Keep going</button>' : '<button class="btn" id="stopHere">Stop here</button>'}`;
+  const remind = kind === "done" && !lsGet(LS_KEY + "-remind") ? `<div class="remind"><label class="note" for="remT">Remind me daily at</label><input type="time" id="remT" value="19:00"><button class="btn" id="remGo">Add to calendar</button></div>
+    <p class="note" id="remNote">Adds a daily 10-minute event to your calendar. Recallr can't send notifications itself.</p>` : "";
+  $("card").innerHTML = `<div class="done">
+    <h2>${kind === "empty" ? "That's everything for now" : "Done for today"}</h2>
+    <p>${first}</p>
+    <p>Can write from memory: ${ds !== now ? `${ds} → ${now}` : now}</p>
+    <p>${streakLine()}</p>
+    <p class="hint">Tomorrow: ${r} review${r === 1 ? "" : "s"} due.${nextNew ? ` Next new one: ${esc(nextNew.title)} (week ${nextNew.week}).` : ""}</p>
+    <div class="actions" style="justify-content:center">${btns}</div>
+    ${remind}
+  </div>`;
+  const on = (id, f) => { const el = $(id); if (el) el.onclick = f; };
+  on("more5", () => { state.extra = { key: k, n: (state.extra && state.extra.key === k ? state.extra.n || 0 : 0) + 5 }; persist(); pickAndRender(); });
+  on("stopHere", () => { $("card").innerHTML = `<div class="done"><h2>See you tomorrow</h2><p>Progress saved.</p><button class="btn" id="anyway2">Practise anyway</button></div>`; $("anyway2").onclick = pickAndRender; $("anyway2").focus(); });
+  on("keepGo", pickAndRender);
+  on("quickGo", () => openQuick());
+  on("anywayE", () => { const w = pool.slice().sort((a,b) => (X(a)?.box ?? 0) - (X(b)?.box ?? 0))[0]; if (!w) return; current = makeCurrent(w); state.shown++; checked = false; present(); });
+  on("addWeek", () => { weeksSel.add(unticked); renderWeekTicks(); lsSet(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); pickAndRender(); });
+  on("remGo", saveReminder);
+  const f = $("card").querySelector(".btn.primary"); if (f) f.focus();
+  renderStats();
+}
+function lsGet(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }
+function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(e) {} }
+// a daily calendar event, since a web page can't send notifications by itself
+async function saveReminder(){
+  const tm = ($("remT").value || "19:00").split(":").map(Number), pad = n => String(n).padStart(2, "0");
+  const ymd = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+  const now = new Date(), start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, tm[0] || 0, tm[1] || 0);
+  const until = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 60);
+  const utc = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Recallr//EN", "BEGIN:VEVENT",
+    `UID:recallr-daily-${Date.now()}@recallr`, `DTSTAMP:${utc}`,
+    `DTSTART:${ymd(start)}T${pad(start.getHours())}${pad(start.getMinutes())}00`, "DURATION:PT10M",
+    `RRULE:FREQ=DAILY;UNTIL=${ymd(until)}T235959`, `SUMMARY:Recallr: today's ${state.goal || 5}`,
+    `URL:${location.href}`, `DESCRIPTION:${location.href}`,
+    "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:Recallr", "TRIGGER:PT0M", "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR"].join("\r\n") + "\r\n";
+  const name = "recallr-daily.ics";
+  const dl = await (window.claude?.use?.("downloads") ?? null);
+  try {
+    if (dl) await dl.save({ filename: name, data: ics });
+    else {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+      a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    }
+    lsSet(LS_KEY + "-remind", $("remT").value || "19:00");
+    $("remNote").textContent = `Saved ${name}. Open it to add it to your calendar.`;
+  } catch(e) { $("remNote").textContent = "The calendar file wasn't saved."; }
+}
 function renderDone(){
-  const pool = allSkills().filter(inWeek);
-  const next = pool.map(s => state.skills[s.id]).filter(Boolean).map(x=>x.due).sort((a,b)=>a-b)[0];
+  const pool = activePool();
+  const next = pool.map(s => stateOf(s)).filter(Boolean).map(x=>x.due).sort((a,b)=>a-b)[0];
   const when = next ? new Date(next).toLocaleString(undefined,{weekday:"short",hour:"2-digit",minute:"2-digit"}) : "not scheduled";
+  if (!pool.length) { $("card").innerHTML = `<div class="done"><h2>Nothing to practise</h2><p>Every topic in the ticked weeks is set to Off. Change it in Focus.</p></div>`; return; }
   $("card").innerHTML = `<div class="done"><h2>All caught up</h2><p>Nothing is due in this set right now. Next review: <b>${when}</b>.</p>${document.querySelector(".tick input[data-week]:not(:checked)") ? '<p>Tick the next week above to carry on with new exercises.</p>' : ''}<div class="actions" style="justify-content:center">${sample ? '<button class="btn primary" id="genMore">Generate new questions</button>' : ''}<button class="btn${sample ? '' : ' primary'}" id="anyway">Practise the weakest one anyway</button></div>${sample ? '' : '<p class="note">Want fresh questions? Open "Smart features" below.</p>'}</div>`;
   if ($("genMore")) $("genMore").onclick = () => { $("aiBox").open = true; generate(); };
   $("anyway").onclick = () => {
-    const weakest = pool.slice().sort((a,b)=>(state.skills[a.id]?.box??0)-(state.skills[b.id]?.box??0))[0];
-    current = { s: weakest, lvl: sk(weakest.id).lvl }; state.shown++; checked = false; renderCard();
+    const weakest = pool.slice().sort((a,b)=>(stateOf(a)?.box??0)-(stateOf(b)?.box??0))[0];
+    current = makeCurrent(weakest); state.shown++; checked = false; present();
   };
+}
+function renderLesson(){
+  const s = V(current.s), x = sk(current.k);
+  x.lesson = true; x.lvl = 1; current.lvl = 1; saveLocal();
+  $("card").innerHTML = `
+    <div class="eyebrow"><span>New · Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${[1,2,3].map(() => '<span class="rung"></span>').join("")} Lesson</span></div>
+    <h2>${esc(s.title)}</h2>
+    <p class="lesson-tag">Learn it in 10 seconds</p>
+    <p class="task">${md(s.explain || "")}</p>
+    <div class="label">Example</div>
+    <pre class="code">${hl(s.predict.code)}</pre>
+    <div class="actions">
+      <button class="btn primary" id="gotIt">Got it</button>
+      <button class="btn" id="lessonSkip">I already know this</button>
+    </div>`;
+  const go = lvl => { const y = sk(current.k); y.lesson = true; y.lvl = lvl; current.lvl = lvl; current.lesson = false; persist(); renderCard(); };
+  $("gotIt").onclick = () => go(1);
+  $("lessonSkip").onclick = () => go(3);
+  $("gotIt").focus();
 }
 function renderCard(){
   const { lvl } = current; const s = V(current.s);
-  current.tries = 0;
+  current.tries = 0; current.hinted = false;
+  const shape = lvl === 3 ? shapeOf(s) : "";
   const ladder = [1,2,3].map(i => `<span class="rung ${i<=lvl?'on':''}"></span>`).join("");
   let body = "";
   if (lvl === 3) {
@@ -643,17 +955,25 @@ function renderCard(){
       <div class="answer-row"><input id="pred" autocomplete="off" spellcheck="false" placeholder="type what ghci would print" aria-label="Your answer"></div>`;
   }
   $("card").innerHTML = `
-    <div class="eyebrow"><span>Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${ladder} ${LEVELS[lvl]}</span></div>
+    <div class="eyebrow"><span>${current.warm ? "Warm-up · " : ""}Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${ladder} ${LEVELS[lvl]}</span></div>
     <h2>${esc(s.title)}</h2>
-    <div class="src">${s.gen ? "AI-generated question: its answer hasn't been checked by a compiler" : `${mode === "twin" ? "Variation of" : "From"}: ${esc(SRC[s.id] || "course material")}`}</div>
+    <div class="src">${s.gen ? "AI-generated question: its answer hasn't been checked by a compiler" : `${current.v === "t" ? "Variation of" : "From"}: ${esc(SRC[s.id] || "course material")}`}</div>
     ${body}
     <div class="actions">
       <button class="btn primary" id="check">Check</button>
-      <button class="btn" id="stuck">I give up, show the answer</button>
+      ${shape ? '<button class="btn" id="hint">Hint</button>' : ""}
+      <button class="btn" id="stuck">Show the answer</button>
     </div>
     <div id="res"></div>`;
   $("check").onclick = check;
-  $("stuck").onclick = () => finish(false, "Here's the answer. This skill steps down a level and comes back in a couple of cards.", $("code")?.value ?? null);
+  $("stuck").onclick = () => finish(false, "", $("code")?.value ?? null);
+  // one hint at Write it: the shape of the answer (signature and equation heads), not the answer
+  if (shape) $("hint").onclick = () => {
+    const t = $("card").querySelector(".task");
+    t.insertAdjacentHTML("afterend", `<div class="label">Hint: the shape</div><pre class="code" id="shape">${hl(shape)}</pre>`);
+    current.hinted = true; $("hint").remove();
+    const ta = $("code"); if (ta) ta.focus();
+  };
   const ta = $("code");
   if (ta) {
     ta.addEventListener("keydown", e => {
@@ -669,8 +989,20 @@ function renderCard(){
   document.querySelectorAll("#code, .blank").forEach(el => el.addEventListener("input", precompileSoon));
   precompileSoon();
 }
+// The hint for Write it: the signature and the left-hand side of each equation, with the bodies left out.
+function shapeOf(s){
+  const given = starterOf(s), out = [];
+  for (const l of String(s.sol || "").split("\n")) {
+    if (!l.trim() || /^(data|type|newtype|import|instance|class)\b/.test(l)) continue;
+    if (/^\s/.test(l)) { if (/^\s+\|/.test(l)) out.push("  | ... = ..."); continue; }
+    if (/^[a-z_][\w']*\s*::/.test(l)) { if (!given.split("\n").includes(l)) out.push(l); continue; }
+    if (/^[a-z_(]/.test(l)) out.push(/\s=\s|\s\|\s/.test(l) ? l.split(/\s(?:=|\|)\s/)[0].trimEnd() + " = ..." : l);
+  }
+  return out.filter((l, i) => l !== out[i - 1]).join("\n");
+}
 // what you've typed on the current card is saved as you type, and comes back if you close the page
-function draftKey(){ return `${current.s.id}:${current.lvl}:${mode}`; }
+// the same key format as before the sets, so older drafts still come back
+function draftKey(){ return `${current.s.id}:${current.lvl}:${current.v === "t" ? "twin" : "course"}`; }
 function readInputs(){
   if ($("code")) return { code: $("code").value };
   if ($("pred")) return { pred: $("pred").value };
@@ -708,10 +1040,10 @@ function predictOk(input, answer){
 function retry(msg){
   current.tries++;
   setBusy(false);
-  $("res").innerHTML = `<div class="result meh"><h3>Not yet. Try again</h3><p>${msg}</p>
-    <p class="hint">Fix it and press Check again. Attempt ${current.tries}. When you've had enough, press "I give up".</p>
+  $("res").innerHTML = `<div class="result meh"><h3>Not yet</h3><p>${msg}</p>
+    <p class="hint">Fix it and press Check.${current.lvl === 3 && !current.hinted && $("hint") ? " Stuck? Take a hint." : ""} Attempt ${current.tries}.</p>
     <div class="actions"><button class="btn" id="overrule">The checker is wrong, mine works</button></div></div>`;
-  $("overrule").onclick = () => finish(true, "Counted as correct.", $("code")?.value ?? null);
+  $("overrule").onclick = () => finish(true, "Counted as correct: you marked it yourself.", $("code")?.value ?? null);
   const f = $("code") || document.querySelector(".blank, #pred"); if (f) f.focus();
 }
 // ---------- running real code ----------
@@ -808,8 +1140,8 @@ let runTick = null;
 function running(){
   setBusy(true); runnerSlow = false; clearInterval(runTick);
   const t0 = Date.now();
-  $("res").innerHTML = `<div class="result meh"><h3>Running your code… <span id="runSecs">0s</span></h3><p class="hint">Compiling with GHC on Wandbox, a free service. Usually 5 to 20 seconds; it gives up after ${RUN_LIMIT}.</p>
-    <div class="actions"><button class="btn" id="trustMe">I'm sure it's right, move on</button></div></div>`;
+  $("res").innerHTML = `<div class="result meh"><h3>Compiling… <span id="runSecs">0s</span></h3><p class="hint" title="Compiled with GHC on Wandbox, a free service. Gives up after ${RUN_LIMIT} s.">Usually 5 to 20 s.</p>
+    <div class="actions"><button class="btn" id="trustMe">Skip, I'm sure it's right</button></div></div>`;
   // don't wait for the compiler: count it as correct straight away (the check keeps going in the background and is ignored)
   $("trustMe").onclick = () => { clearInterval(runTick); finish(true, "Counted as correct: you marked it yourself without waiting for the compiler.", $("code")?.value ?? null); };
   runTick = setInterval(() => { const el = $("runSecs"); if (!el) return clearInterval(runTick); el.textContent = Math.round((Date.now() - t0) / 1000) + "s"; }, 1000);
@@ -949,7 +1281,7 @@ async function check(){
   if (!sample) return selfGrade();
   return aiGrade(code, false);
 }
-function setBusy(b){ ["check","stuck"].forEach(id => { const el = $(id); if (el) el.disabled = b; }); }
+function setBusy(b){ ["check","stuck","hint"].forEach(id => { const el = $(id); if (el) el.disabled = b; }); }
 async function aiGrade(code, isFill){
   const s = V(current.s);
   setBusy(true);
@@ -1008,7 +1340,7 @@ function selfGrade(){
     </div></div>`;
   $("copyRun").onclick = copyForJdoodle;
   $("selfYes").onclick = () => finish(true, "Marked as correct.", $("code")?.value ?? null, true);
-  $("selfNo").onclick = () => finish(false, "Marked as not yet. It steps down a level and comes back soon.", $("code")?.value ?? null, true);
+  $("selfNo").onclick = () => finish(false, "You marked it as not yet.", $("code")?.value ?? null, true);
 }
 function copyForJdoodle(){
   const s = V(current.s);
@@ -1029,32 +1361,78 @@ function finish(ok, msg, attempt, retried){
   clearTimeout(draftTimer);
   if (state.drafts) delete state.drafts[draftKey()];
   if (state.current) state.current.done = true;
-  retried = retried || current.tries > 0;
+  retried = retried || current.tries > 0 || !!current.hinted;
+  const before = rewardSnap();
   grade(ok, ok && retried);
-  const x = state.skills[s.id];
+  const x = state.skills[current.k];
+  const mark = !ok ? "r" : retried ? "a" : "g";
+  sessMarks.push(mark);
+  combo = mark === "g" ? combo + 1 : mark === "r" ? 0 : combo;
+  renderStats();
+  const banner = ok ? rewardLine(before, rewardSnap()) : "";
   let next = "";
-  if (ok && retried) next = "You got there after a retry, so it stays at this level and comes back soon.";
-  else if (ok && lvl < 3) next = `Next time: <b>${LEVELS[x.lvl]}</b>.`;
-  else if (ok) next = x.box >= MASTER_BOX ? "Mastered. It still comes back now and then." : `It comes back in ${["10 minutes","1 day","3 days","7 days","16 days","35 days"][Math.max(0,x.box-1)]}.`;
-  else next = lvl > 1 ? `Stepping down to <b>${LEVELS[x.lvl]}</b> so you can build up to it.` : "It comes back in a couple of cards.";
-  setBusy(true);
-  $("res").innerHTML = `<div class="result ${ok?'good':'bad'}">
-    <h3>${ok ? "✓ Correct" : "✗ Not yet"}</h3>
-    <p>${msg}</p>
-    <p class="hint">${next}</p>
-    ${ok && attempt && norm(attempt) !== norm(s.sol) ? `<div class="label">Your code</div>
+  if (current.parked) next = "That's 3 goes today. It's parked until tomorrow.";
+  else if (ok && retried) next = "Back in a few cards, same level.";
+  else if (ok && lvl < 3) next = `Next time: ${LEVELS[x.lvl]}.`;
+  else if (ok) next = x.box >= MASTER_BOX ? "Mastered. It still comes back now and then." : `Back in ${["10 minutes","1 day","3 days","7 days","16 days","35 days"][Math.max(0,x.box-1)]}.`;
+  else next = x.lvl < lvl ? `Next time: ${LEVELS[x.lvl]}.` : "Back in a couple of cards.";
+  const self = ok && /yourself|Marked as correct/.test(msg);
+  const answer = `${ok && attempt && norm(attempt) !== norm(s.sol) ? `<div class="label">Your code</div>
     <pre class="code">${hl(attempt.trim())}</pre>
-    <div class="label">Model answer${sameAsModel(attempt, s) ? "" : " (yours is different, and both work)"}</div>` : `<div class="label">Answer</div>`}
+    <div class="label">Model answer${sameAsModel(attempt, s) ? "" : " (yours is different, and both work)"}</div>` : `<div class="label">${ok ? "Model answer" : "Answer"}</div>`}
     <pre class="code">${hl(s.sol)}</pre>
     <p>${md(s.explain)}</p>
     <div class="ai" id="aiExplain" hidden></div>
-    <div class="actions">
-      <button class="btn primary" id="next">Next</button>
-      ${sample ? '<button class="btn" id="explain">Explain step by step</button>' : ''}
-    </div></div>`;
+    ${sample ? '<div class="actions"><button class="btn" id="explain">Explain step by step</button></div>' : ''}`;
+  setBusy(true);
+  if (ok) {
+    $("res").innerHTML = `<div class="result good"><span class="confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <h3>${current.hinted ? "✓ Correct, with a hint" : current.tries > 0 ? "✓ Correct after a retry" : "✓ Correct"}</h3>
+      ${banner ? `<p class="banner">${banner}</p>` : ""}
+      <p class="hint">${next}</p>
+      ${self ? '<p class="hint">You marked this one yourself.</p>' : ""}
+      <div class="actions">
+        <button class="btn primary" id="next">Next</button>
+        <button class="btn" id="moreBtn" aria-expanded="false" aria-controls="more">Model answer</button>
+        <button class="btn" id="undoR">Undo</button>
+      </div>
+      <div id="more" hidden>${msg && !self ? `<p>${msg}</p>` : ""}${answer}</div></div>`;
+    $("moreBtn").onclick = () => { const m = $("more"); m.hidden = !m.hidden; $("moreBtn").textContent = m.hidden ? "Model answer" : "Hide answer"; $("moreBtn").setAttribute("aria-expanded", String(!m.hidden)); };
+    const card = $("card"); card.classList.remove("win"); void card.offsetWidth; card.classList.add("win");
+  } else {
+    $("res").innerHTML = `<div class="result bad">
+      <h3>✗ Here's the answer</h3>
+      ${msg ? `<p>${msg}</p>` : ""}
+      <p class="hint">${next}</p>
+      ${answer}
+      <div class="actions">
+        <button class="btn primary" id="next">Next</button>
+        <button class="btn" id="undoR">Undo</button>
+      </div></div>`;
+  }
   $("next").onclick = pickAndRender;
+  $("undoR").onclick = () => $("undo").onclick();
   $("next").focus();
   if ($("explain")) $("explain").onclick = () => explain(attempt);
+}
+// Honest surprises: a one-line banner when something real happens (a skill mastered,
+// a week of the set done, the daily goal reached, a new best streak). No points.
+function rewardSnap(){
+  const w = Number(current.s.week), list = setPool(qset, [w]).filter(s => !s.gen);
+  return {
+    mastered: (state.skills[current.k]?.box || 0) >= MASTER_BOX,
+    total: setPool().filter(isMastered).length,
+    w, inWeek: list.some(s => s.id === current.s.id), weekCan: list.filter(s => (stateOf(s)?.box || 0) >= 1).length, weekAll: list.length,
+    n: cardsToday(), t: target(), streak: streakInfo(),
+  };
+}
+function rewardLine(a, b){
+  const word = { core: "essentials", course: "course questions", twin: "variations" }[qset];
+  if (b.streak.run >= 2 && b.streak.run > a.streak.run && b.streak.run > a.streak.best) return `New streak record: ${b.streak.run} days`;
+  if (a.inWeek && a.weekCan < a.weekAll && b.weekCan === b.weekAll) return `Week ${b.w} ${word} done!`;
+  if (!a.mastered && b.mastered) return `Skill mastered! That's ${b.total} so far.`;
+  if (a.n < a.t && b.n >= a.t) return `Daily goal reached: ${a.t} cards.`;
+  return "";
 }
 async function explain(attempt){
   const s = V(current.s);
@@ -1075,11 +1453,24 @@ ${attempt ? "Student's attempt:\n" + attempt : ""}`;
 }
 
 // ---------- boot ----------
-document.querySelectorAll(".chip.mode").forEach(c => c.onclick = () => {
-  mode = c.dataset.mode;
-  document.querySelectorAll(".chip.mode").forEach(o => o.setAttribute("aria-pressed", String(o === c)));
-  try { localStorage.setItem(LS_KEY + "-mode", mode); } catch(e) {}
-  if (current && !checked) renderCard();
+// question sets: Essentials, All course questions, Variations (each keeps its own place)
+function markSet(){ document.querySelectorAll(".chip.set").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.set === qset))); }
+function setSet(v){
+  if (!SET_LABEL[v]) return;
+  qset = v; markSet(); newRun = 0;
+  try { localStorage.setItem(LS_KEY + "-set", v); } catch(e) {}
+  // keep an open card when it belongs to the new set with the same progress
+  if (current && !checked && !current.lesson && pk(current.s) === current.k && activePool().some(s => s.id === current.s.id)) renderStats();
+  else if (!current || !checked) pickAndRender();
+  else renderStats();
+}
+document.querySelectorAll(".chip.set").forEach(c => c.onclick = () => setSet(c.dataset.set));
+$("focusList").onclick = e => { const b = e.target.closest(".fbtn"); if (b) setFocus(b.dataset.topic, Number(b.dataset.f)); };
+$("focusReset").onclick = () => { state.focus = {}; persist(); afterFocus(); };
+// cards a day: 3, 5 or 10; the finish line moves at once
+document.querySelectorAll(".chip.goal").forEach(c => c.onclick = () => {
+  state.goal = Number(c.dataset.goal) || 5; persist(); renderStats();
+  if (!current && cardsToday() < target()) pickAndRender();
 });
 // ---------- mock test ----------
 let lastRun = null;
@@ -1282,11 +1673,16 @@ themeLabel();
 
 $("undo").onclick = () => {
   if (!lastUndo) return;
-  state.skills[lastUndo.id] = lastUndo.prev; state.today = lastUndo.today; state.todayKey = lastUndo.todayKey;
-  const id = lastUndo.id; lastUndo = null; $("undo").disabled = true;
+  const u = lastUndo, k = u.k || u.id;
+  state.skills[k] = u.prev; state.today = u.today; state.todayKey = u.todayKey;
+  if (u.dayKey) { state.days = state.days || {}; if (u.dayPrev === undefined) delete state.days[u.dayKey]; else state.days[u.dayKey] = u.dayPrev; }
+  if ("dayEnded" in u) state.dayEnded = u.dayEnded;
+  sessMarks.pop(); if (u.combo != null) combo = u.combo;
+  $("card").classList.remove("win");
+  lastUndo = null; $("undo").disabled = true;
   persist();
-  const s = allSkills().find(d => d.id === id);
-  current = { s, lvl: sk(id).lvl }; checked = false; renderCard(); renderStats();
+  const s = allSkills().find(d => d.id === u.id);
+  current = makeCurrent(s, k); checked = false; present(); renderStats();
 };
 // Moving progress to another device or browser, with no server: save a backup file, open it on the other one.
 $("backup").onclick = async () => {
@@ -1315,7 +1711,9 @@ $("restoreFile").onchange = async () => {
     const s = data && data.app === "recallr" ? data.state : null;
     if (!s || !s.skills) throw new Error("not a Recallr backup");
     if (data.module && data.module !== MODULE_ID) throw new Error("that backup is for another module");
-    state = Object.assign({ skills:{}, shown:0, todayKey:"", today:0, updated:0, tests:{} }, s);
+    const days = mergeDays(state.days, s.days);
+    state = Object.assign({ skills:{}, shown:0, todayKey:"", today:0, updated:0, tests:{}, days:{}, goal:5 }, s);
+    state.days = days;
     persist(); refreshAfterAdopt();
     $("backupNote").textContent = `Restored your progress from ${f.name}.`;
   } catch(e) { $("backupNote").textContent = `Couldn't restore: ${e.message}.`; }
@@ -1323,7 +1721,7 @@ $("restoreFile").onchange = async () => {
 };
 $("reset").onclick = () => { $("resetConfirm").hidden = false; $("resetYes").focus(); };
 $("resetNo").onclick = () => { $("resetConfirm").hidden = true; };
-$("resetYes").onclick = () => { state = { skills:{}, shown:0, todayKey:"", today:0, updated:0 }; lastUndo = null; $("undo").disabled = true; $("resetConfirm").hidden = true; persist(); pickAndRender(); };
+$("resetYes").onclick = () => { state = { skills:{}, shown:0, todayKey:"", today:0, updated:0, days: state.days, goal: state.goal, exams: state.exams, quickLog: state.quickLog, focus: state.focus, extra: state.extra, dayEnded: state.dayEnded }; lastUndo = null; combo = 0; newRun = 0; lastId = null; $("undo").disabled = true; $("resetConfirm").hidden = true; persist(); pickAndRender(); };
 function renderWeekTicks(){
   document.querySelectorAll(".tick input[data-week]").forEach(el => { el.checked = weeksSel.has(Number(el.dataset.week)); });
 }
@@ -1341,7 +1739,9 @@ $("weeksAll").onclick = () => {
 load();
 try { const ws = JSON.parse(localStorage.getItem(LS_KEY + "-weeks") || "null"); if (Array.isArray(ws)) { const keep = ws.map(Number).filter(w => ALL_WEEKS.includes(w)); if (keep.length) weeksSel = new Set(keep); } } catch(e) {}
 renderWeekTicks();
-try { const m = localStorage.getItem(LS_KEY + "-mode"); if (m) { mode = m; document.querySelectorAll(".chip.mode").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.mode === m))); } } catch(e) {}
+// the set: saved choice; else, for people who used the old chips, Variations or All course questions; else Essentials
+try { let m = localStorage.getItem(LS_KEY + "-set"); if (!SET_LABEL[m]) { const old = localStorage.getItem(LS_KEY + "-mode"); m = old ? (/^twins?$/.test(old) ? "twin" : "course") : "core"; } qset = m; } catch(e) {}
+markSet();
 resumeOrPick();
 try { const v = localStorage.getItem(LS_KEY + "-view"); if (v === "test" && T) setView("test"); } catch(e) {}
 // when the page is updated while open, hand the progress to the new version
