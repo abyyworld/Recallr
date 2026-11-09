@@ -684,33 +684,41 @@ function retry(msg){
   const f = $("code") || document.querySelector(".blank, #pred"); if (f) f.focus();
 }
 // ---------- running real code ----------
-// The free Piston service (emkc.org) compiles and runs the code with GHC. If it can't be reached
-// (blocked, offline, or inside Claude where the page can't call other sites), the app falls back to
+// The free Wandbox service (wandbox.org) compiles and runs the code with GHC. If it can't be reached
+// (offline, blocked, or inside Claude where the page can't call other sites), the app falls back to
 // the checker or self-marking.
-const RUNNER = "https://emkc.org/api/v2/piston/execute";
-let runnerOk = __RUNNER_LANG__ ? null : false;
+const RUNNER = "https://wandbox.org/api";
+let runnerOk = __RUNNER_LANG__ ? null : false, runnerCompiler = null;
+async function pickCompiler(){
+  if (runnerCompiler) return runnerCompiler;
+  const list = await (await fetch(RUNNER + "/list.json")).json();
+  const ghc = list.filter(c => String(c.language).toLowerCase() === __RUNNER_LANG__ && /^ghc-\d/.test(c.name))
+    .sort((a, b) => b.version.localeCompare(a.version, undefined, { numeric: true }));
+  if (!ghc.length) throw new Error("no compiler");
+  return (runnerCompiler = ghc[0].name);
+}
 async function runCode(source){
   if (runnerOk === false) throw { code: "runner_off" };
-  let res;
+  let j;
   try {
-    res = await fetch(RUNNER, { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ language: __RUNNER_LANG__, version: "*", files: [{ name: "Main.hs", content: source }], compile_timeout: 20000, run_timeout: 5000 }) });
-  } catch(e) { runnerOk = false; throw { code: "runner_off" }; }
-  if (res.status === 401 || res.status === 403 || res.status === 404) { runnerOk = false; throw { code: "runner_off" }; }
-  if (!res.ok) throw { code: "runner_busy" };
-  const j = await res.json();
-  if (!j.run && !j.compile) { runnerOk = false; throw { code: "runner_off" }; }
+    const compiler = await pickCompiler();
+    const res = await fetch(RUNNER + "/compile.json", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ compiler, code: source, options: "", save: false }) });
+    if (!res.ok) { if (res.status >= 400 && res.status < 500) runnerOk = false; throw new Error("http " + res.status); }
+    j = await res.json();
+  } catch(e) { if (runnerOk !== true) runnerOk = false; throw { code: "runner_off" }; }
   runnerOk = true;
-  const compileFailed = j.compile && j.compile.code !== 0;
+  const errText = String(j.compiler_error || "");
+  const compileFailed = /error:|error\]/.test(errText) && !j.program_output;
   return {
     compiled: !compileFailed,
-    error: cleanGhc(compileFailed ? (j.compile.stderr || j.compile.output || "") : ""),
-    out: (j.run && j.run.stdout || "").replace(/\s+$/, "").split("\n"),
-    crash: cleanGhc(j.run && j.run.code !== 0 ? (j.run.stderr || "") : ""),
+    error: cleanGhc(compileFailed ? errText : ""),
+    out: String(j.program_output || "").replace(/\s+$/, "").split("\n"),
+    crash: cleanGhc(String(j.status) !== "0" ? (j.program_error || j.signal || "") : ""),
   };
 }
 function cleanGhc(s){
-  return String(s).split("\n").filter(l => !/^\[\d+ of \d+\]|^Linking /.test(l)).join("\n").replace(/\/piston\/jobs\/[^/]+\//g, "").trim().split("\n").slice(0, 12).join("\n");
+  return String(s).split("\n").filter(l => !/^\[\d+ of \d+\]|^Linking /.test(l)).join("\n").replace(/\/home\/jail\/|prog\.hs:/g, m => m.endsWith(":") ? "line " : "").trim().split("\n").slice(0, 12).join("\n");
 }
 function withContext(code, s){
   // gap code can leave out type and import lines that the solution declares

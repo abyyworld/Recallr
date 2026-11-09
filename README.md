@@ -50,7 +50,7 @@ Pages are built into [`docs/`](docs) so they can be served with GitHub Pages.
 Marking and progress:
 
 - Inside a Claude artifact, smart features use the viewer's Claude account and progress is also saved to their account.
-- **Your code really runs**: "Check" compiles your answer with GHC and runs it against the tests through the free [Piston](https://github.com/engineer-man/piston) service (emkc.org), so you see real compiler errors and real outputs. The mock test's "Run checks" and marking work the same way. No jdoodle, nothing to install.
+- **Your code really runs**: "Check" compiles your answer with GHC and runs it against the tests through the free [Wandbox](https://wandbox.org) service, so you see real compiler errors and real outputs. The mock test's "Run checks" and marking work the same way. No jdoodle, nothing to install.
 - If the runner can't be reached, the page falls back to smart features (the viewer's Claude account inside Claude, or their own Anthropic API key through the official `@anthropic-ai/sdk`, pinned to 1.2.0), and then to self-marking. Progress is saved in the browser.
 - **Sync between phone and laptop without a server**: in "Sync between your phone and laptop", paste a GitHub token that can only use gists. Progress is kept in a private gist on your own GitHub account, every connected device reads and writes it, and the newest progress wins.
 - Progress stays on the viewer's device (browser storage, plus their account inside Claude). There is no server. "Back up progress" saves a file and "Restore from a backup" loads it on another device.
