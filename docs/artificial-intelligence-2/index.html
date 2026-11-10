@@ -28,7 +28,7 @@
   --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; --seg-empty:#5a6862; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-.trace{background:var(--codebg,#111);border-radius:12px;padding:12px 14px;margin:6px 0 12px;font-family:var(--mono,ui-monospace,monospace);font-size:14px;line-height:1.55;overflow-x:auto}
+.trace{background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:12px 14px;margin:6px 0 12px;font-family:var(--mono,ui-monospace,monospace);font-size:14px;line-height:1.55;overflow-x:auto}
 .tstep{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
 .tstep code{background:none;padding:0;white-space:pre}
 .tnote{color:var(--muted);font-size:13px;font-family:inherit}
@@ -232,7 +232,7 @@ textarea.work{min-height:90px;white-space:pre-wrap}
   <header>
     <div class="brand">
       <h1><span class="lam">∑</span> Recallr</h1>
-      <p class="sub">Artificial Intelligence 2 · weeks 1-5 · write it, or step down until you can</p>
+      <p class="sub">Artificial Intelligence 2 · weeks 1-5 · solve it, or step down until you can</p>
     </div>
     <div class="stats">
       <div class="stat" id="stDays" hidden><b id="sDays"></b><span>days to test</span></div>
@@ -841,7 +841,6 @@ async function connect(){
   } catch(e) {}
   try { claudeSample = await window.claude?.use?.("sample"); } catch(e) { claudeSample = null; }
   setupAI();
-  if (current && !checked) rerender();
 }
 
 // ---------- smart features ----------
@@ -903,7 +902,6 @@ function setupAI(){
     $("keyForm").hidden = false; $("apiKey").placeholder = "sk-ant-...";
   }
   $("genBtn").disabled = !sample;
-  if (current && !checked) rerender();
 }
 $("keySave").onclick = () => {
   const key = $("apiKey").value.trim(), old = keyInfo();
@@ -1363,7 +1361,7 @@ function renderDayEnd(kind, cool){
   let btns = "";
   const anyway = kind === "empty" ? cool || weakestOf(pool) : null;
   if (kind === "empty") btns = `${anyway ? '<button class="btn primary" id="anywayE">Practise the weakest one anyway</button>' : ""}${unticked != null ? `<button class="btn${anyway ? "" : " primary"}" id="addWeek">Add week ${unticked}</button>` : ""}`;
-  else btns = `${quick ? '<button class="btn primary" id="quickGo">Quick test (${QUICK_MIN} min)</button>' : ""}${mockGo ? `<button class="btn primary" id="mockGo">${esc(TESTS[0].title)} (${TESTS[0].minutes} min)</button>` : ""}${kind === "closed" ? "" : `<button class="btn${quick || mockGo ? "" : " primary"}" id="stopHere">Stop here</button>`}<button class="btn" id="more5">5 more</button>${kind === "closed" ? '<button class="btn" id="keepGo">Keep going</button>' : ""}`;
+  else btns = `${quick ? '<button class="btn primary" id="quickGo">Quick test (' + QUICK_MIN + ' min)</button>' : ""}${mockGo ? `<button class="btn primary" id="mockGo">${esc(TESTS[0].title)} (${TESTS[0].minutes} min)</button>` : ""}${kind === "closed" ? "" : `<button class="btn${quick || mockGo ? "" : " primary"}" id="stopHere">Stop here</button>`}<button class="btn" id="more5">5 more</button>${kind === "closed" ? '<button class="btn" id="keepGo">Keep going</button>' : ""}`;
   const remind = kind === "done" && !lsGet(LS_KEY + "-remind") ? `<div class="remind"><label class="note" for="remT">Remind me daily at</label><input type="time" id="remT" value="19:00"><button class="btn" id="remGo">Add to calendar</button></div>
     <p class="note" id="remNote">Adds a daily 10-minute event to your calendar. Recallr can't send notifications itself.</p>` : "";
   $("card").innerHTML = `<div class="done">
@@ -1830,7 +1828,8 @@ function newQuick(){
 // used by the end of the daily set
 function openQuick(){
   const q = state.quick;
-  if (!quickOk(q) || q.result) newQuick();
+  // a new one when there is none, the last one was marked, or its time ran out long ago
+  if (!quickOk(q) || q.result || (q.start && Date.now() - q.start > q.minutes * 60e3)) newQuick();
   setView("test");
 }
 // a quick test is suggested when you can solve a few skills and haven't done one lately
@@ -1900,6 +1899,8 @@ function markQuick(){
   const got = items.filter(it => it.ok).length;
   q.result = { items, got, total: items.length, at: Date.now(), late: !!q.start && Date.now() - q.start > q.minutes * 60e3 };
   feedQuick(q);
+  // a practice card still open on a skill the test just moved is shown again at its new level
+  if (current && !checked && q.result.items.some(it => it.tried && it.skill === current.k)) { current = makeCurrent(current.s, current.k); current.lesson = false; renderCard(); }
   persist(); renderStats(); renderTest();
   $("tMark").querySelector("h3")?.focus();
 }
@@ -1919,6 +1920,8 @@ function feedQuick(q){
   }
   state.quickLog = (state.quickLog || []).concat({ id: q.id, at: now, got: q.result.got, total: q.result.total, by: "page" });
   q.fed = true;
+  // the last practice mark can't be undone any more: undoing it would also undo the test's day and skills
+  lastUndo = null; $("undo").disabled = true;
 }
 function renderQuickMark(q){
   const r = q.result;
