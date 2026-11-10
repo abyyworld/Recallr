@@ -659,7 +659,7 @@ ${JSON.stringify(MATHS_EXAMPLE)}
 Rules: every "value" is a calculation in plain maths syntax that gives the exact answer, using only numbers, + - * / ^ ( ), ln, log2, log10, exp, sqrt, choose(n, k), e and pi (never a rounded result). "show" is how the answer is written, rounded as the task asks. "fill.code" is the worked solution with 1 to 3 short gaps written ___, "fill.blanks" lists the accepted ways to fill each gap and "fill.values" the true value of each gap as a calculation. For a word answer (yes or no, or which option) use "accept": [...] instead of "value" and "show", and null in "fill.values" for a word gap. "week" is one of ${weeks.join(", ")}. Say in the task how to give the answer (a fraction, or a number of decimal places). Plain words, short lines, no LaTeX, no dashes as punctuation.
 Reply with only a JSON array of 5 objects.`;
 }
-const plain = s => String(s).replace(/\s*[—–]\s*/g, ", ");
+const plain = s => String(s).replace(/\s*[\u2014\u2013]\s*/g, ", ");
 function genMaths(g, id){
   const str = v => typeof v === "string" && v.trim() ? plain(v) : null;
   const num = (calc, show) => {
