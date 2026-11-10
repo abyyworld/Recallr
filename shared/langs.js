@@ -59,11 +59,11 @@ function bodyOther(s, lvl){
   if (lvl === 3) {
     body += `<p class="task">${md(s.write.task)}</p>
       <label class="label" for="code">Your code</label>
-      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off">${esc(s.write.starter)}</textarea>
-      <p class="hint">${l.write} Ctrl+Enter to check.</p>`;
+      <textarea id="code" wrap="off" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off">${esc(s.write.starter)}</textarea>
+      <p class="hint">${l.write}<span class="kbd"> Ctrl+Enter to check.</span></p>`;
   } else if (lvl === 2) {
     let i = 0;
-    const parts = esc(s.fill.code).split("___").map((p, k, arr) => k < arr.length-1 ? hl(unesc(p)) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" spellcheck="false" size="10">` : hl(unesc(p)));
+    const parts = esc(s.fill.code).split("___").map((p, k, arr) => k < arr.length-1 ? hl(unesc(p)) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" size="10">` : hl(unesc(p)));
     body += `<p class="task">Fill the gap${s.fill.blanks.length>1?'s':''} so the code is correct.</p>
       <p class="task hint">${md(s.write.task)}</p>
       <pre class="code">${parts.join("")}</pre>`;
@@ -73,10 +73,43 @@ function bodyOther(s, lvl){
       : "Read the code. What does it return?";
     body += `<p class="task">${ask}</p>
       <pre class="code">${hl(s.predict.code)}</pre>
-      <div class="answer-row"><input id="pred" autocomplete="off" spellcheck="false" placeholder="${esc(l.predict)}" aria-label="Your answer"></div>
+      <div class="answer-row"><input id="pred" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${esc(l.predict)}" aria-label="Your answer"></div>
       ${l.rows && !s.predict.ask ? '<p class="hint">Columns separated by commas, rows by semicolons. Write <code>null</code> for NULL and <code>(no rows)</code> if nothing comes back.</p>' : ""}`;
   }
   return body;
+}
+
+// The hint at Write it: the outline of the answer (its clauses or annotations), not the answer.
+function shapeOther(s){
+  const out = [];
+  for (const raw of String(s.sol || "").split("\n")) {
+    const l = raw.trimEnd(), t = l.trim(), ind = l.slice(0, l.length - l.trimStart().length);
+    if (!t) { if (out.length && out[out.length - 1] !== "") out.push(""); continue; }
+    if (s.lang === "jpa") {
+      if (/^@/.test(t)) out.push(ind + t.replace(/\(.*$/, "(...)"));
+      else if (/\b(class|enum)\b/.test(t) || t === "}") out.push(l);
+      else if (/;\s*$/.test(t)) out.push(ind + t.replace(/^(private|public|protected)\s+.*$/, "$1 ... ;"));
+      continue;
+    }
+    if (s.lang === "jdl") {
+      if (/^(entity|enum|relationship)\b/.test(t)) out.push(t.replace(/^(\w+)\s+(\w+).*$/, (m, a, b) => a === "relationship" ? "relationship ... {" : `${a} ${b}${/\{/.test(t) ? " {" : ""}`));
+      else if (t === "}") out.push(t);
+      else out.push(ind + "...");
+      continue;
+    }
+    // SQL, JPQL and Cypher: keywords stay, everything between them becomes ...
+    const isKw = w => new RegExp(`^(${otherLang(s).kw})$`, "i").test(w);
+    const parts = [];
+    for (const w of t.replace(/;\s*$/, "").split(/\s+/)) {
+      if (isKw(w.replace(/[,;]$/, ""))) parts.push(w);
+      else if (parts[parts.length - 1] !== "...") parts.push("...");
+    }
+    if (parts.some(p => p !== "...")) out.push(ind + parts.join(" ") + (/;\s*$/.test(t) ? ";" : ""));
+    else if (/^\$\$|^\)/.test(t)) out.push(l);
+  }
+  const lines = out.filter((x, i) => x !== out[i - 1]);
+  while (lines.length && lines[lines.length - 1] === "") lines.pop();
+  return lines.join("\n");
 }
 
 // ---------- marking ----------

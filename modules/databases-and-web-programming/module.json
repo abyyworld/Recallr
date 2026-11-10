@@ -7,5 +7,6 @@
   "language": "SQL, Cypher, JPA, JDL",
   "lang": "sql",
   "compiler": "PostgreSQL",
-  "test": "databases"
+  "test": "databases",
+  "exams": [{ "name": "Class Test 3", "date": "2026-11-17", "weeks": [1, 4], "info": "5%, in class after the week 8 lecture. Covers week 7 and the web programming parts of weeks 1 to 5 (JDL, JPA), so not SQL or Cypher" }]
 }

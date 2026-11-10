@@ -655,4 +655,5 @@ w5union: { title: "players and coaches",
     ask: "What does it return? Write the rows in any order, separated by semicolons." },
   explain: "`UNION` joins the rows of both queries and drops exact duplicate rows: Bea coaches two teams but appears once. Both halves must use the same column names (`name`, `job`) in the same order. Use `UNION ALL` to keep duplicates." },
 };
+{ const { TWIN_LESSONS } = require("./lessons.js"); for (const id in TWINS) if (TWIN_LESSONS[id]) TWINS[id].lesson = TWIN_LESSONS[id]; }
 if (typeof module !== "undefined") module.exports = { SRC, TWINS };

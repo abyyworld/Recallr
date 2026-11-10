@@ -156,12 +156,36 @@ function test(kind, id, s) {
   }));
 }
 
+// Lessons: once the module has them, every exercise and variation needs one. The example runs
+// on the exercise's engine (sql, cypher, jpql: a query after setup; jpa, jdl: a check on the
+// solution), and the last step of the trace, after "= ", must be exactly what it gives.
+function lessonCheck(kind, id, s, lesson) {
+  const where = `${kind}/${id} lesson`;
+  if (!lesson) return fail(`LINT ${where}: missing`);
+  if (!lesson.what || !lesson.example || !Array.isArray(lesson.trace) || lesson.trace.length < 2) return fail(`LINT ${where}: needs what, example and a trace of 2 or more steps`);
+  if (lesson.trace.some(t => typeof t.line !== "string" || !t.line.trim())) return fail(`LINT ${where}: every step needs a line`);
+  const last = lesson.trace[lesson.trace.length - 1].line;
+  if (!/^= /.test(last)) return fail(`LINT ${where}: the last step must start with "= " and give the result`);
+  const want = last.slice(2).trim();
+  const job = ["jpa", "jdl"].includes(s.lang) ? run(s, s.sol, [lesson.example]) : run(s, lesson.example, ["@result"]);
+  pending.push(job.then(r => {
+    if (!r.ok) return fail(`FAIL ${where}: ${r.error}`);
+    const got = r.results[0];
+    if (typeof got !== "string") return fail(`FAIL ${where}: ${got && got.error}`);
+    if (!sameRows(got, want, ordered(lesson.example) || s.lang === "jdl")) fail(`MISMATCH ${where}: the example gives ${got}, but the last step says ${want}`);
+  }));
+}
+
 (async () => {
   for (const s of DECK) test("course", s.id, s);
   for (const [id, t] of Object.entries(TWINS)) {
     const base = DECK.find(s => s.id === id);
     if (!base) { fail(`LINT variation/${id}: no course exercise with this id`); continue; }
     test("variation", id, Object.assign({}, base, t));
+  }
+  if (DECK.some(s => s.lesson) || Object.values(TWINS).some(t => t.lesson)) for (const s of DECK) {
+    lessonCheck("course", s.id, s, s.lesson);
+    if (TWINS[s.id]) lessonCheck("variation", s.id, Object.assign({}, s, TWINS[s.id]), TWINS[s.id].lesson);
   }
   for (const s of DECK) {
     if (!TWINS[s.id]) fail(`LINT course/${s.id}: no variation`);

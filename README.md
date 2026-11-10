@@ -26,6 +26,8 @@ Coding modules also have a **mock test** mode in the vLab style: one file with e
 
 Artificial Intelligence 2 has the same daily flow on its own page, with maths levels (Plug in, Fill the gaps, Solve it), a lesson card with a worked example for every skill, and a quick test of 5 questions marked on the page.
 
+Databases and Web Programming has the same daily flow on its own page too, with a lesson card for every skill (its example runs on the real engine), a hint that shows the outline of the answer (`SELECT ... FROM ... GROUP BY ...`), and a countdown to Class Test 3. SQL answers are marked by running them on PostgreSQL in the page.
+
 Tick the weeks you want questions from. Everything you do, including half-typed answers, saves as you go, and the app opens on the card you left.
 
 **Smart features** (optional): automatic marking for code, hints for wrong maths answers, step-by-step explanations, and new questions when the built-in ones run out. Inside Claude they use your own Claude account; anywhere else, add your own Anthropic API key in the app. The key stays in your browser. AI-generated questions are labelled: no compiler has checked a coding question's answers, and a maths question's numbers are worked out on the page but the question itself isn't checked.

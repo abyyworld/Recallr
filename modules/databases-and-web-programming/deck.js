@@ -663,4 +663,17 @@ const DECK = [
   predict: { code: "MATCH (p:Person {name: 'Nia'})-[:WROTE]->(:Book)\nRETURN p.name AS person\nUNION ALL\nMATCH (p:Person {name: 'Nia'})-[:ILLUSTRATED]->(:Book)\nRETURN p.name AS person" },
   explain: "`UNION` stacks the rows of two queries and removes duplicate rows, so Nia is listed once as a writer even though she wrote two books. Both parts must return the same column names in the same order. `UNION ALL` keeps the duplicates." },
 ];
+
+// Essentials: the smallest set per week that still meets every idea the week teaches
+const CORE = [
+  "w1entityTypes", "w1validations", "w1oneToOne", "w1oneToMany", "w1manyToMany", "w1miniModel",
+  "w2createTable", "w2insert", "w2select", "w2update", "w2delete", "w2repeatingGroup", "w2transitive",
+  "w3copyCsv", "w3foreignKey", "w3countSum", "w3groupBy", "w3whereHaving", "w3join", "w3view", "w3prepare", "w3doBlock",
+  "w4leftJoin", "w4noMatch", "w4fullJoin", "w4entity", "w4column", "w4manyToOne", "w4manyToMany", "w4jpqlPath", "w4jpqlGroup",
+  "w5createGraph", "w5linkNodes", "w5match", "w5where", "w5orderSkip", "w5count", "w5merge", "w5optional", "w5setRemove", "w5delete", "w5friendsOfFriends",
+];
+for (const s of DECK) if (CORE.includes(s.id)) s.core = true;
+
+// beginner lesson cards (lessons.js)
+{ const { LESSONS } = require("./lessons.js"); for (const s of DECK) if (LESSONS[s.id]) s.lesson = LESSONS[s.id]; }
 if (typeof module !== "undefined") module.exports = DECK;
