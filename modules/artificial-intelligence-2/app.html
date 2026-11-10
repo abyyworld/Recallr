@@ -1,0 +1,1770 @@
+<title>Recallr: __MODULE_NAME__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one centred practice column: header stats, the card, then the skill ladder. Feels like a ghci session: terminal-green accent on paper. */
+:root{
+  --bg:#f6f7f3; --surface:#ffffff; --ink:#1d2421; --muted:#5f6b66; --line:#dfe4de;
+  --accent:#256b4b; --accent-ink:#ffffff; --accent-soft:#e3f1ea;
+  --good:#256b4b; --good-soft:#e3f1ea; --bad:#b4442c; --bad-soft:#f8e6e1; --warn:#865a0f; --warn-soft:#f6eedb;
+  --seg-empty:#7d8882;
+  --code-bg:#f0f2ed; --code-ink:#1d2421; --kw:#7b3fa0; --str:#2c6a8a;
+  --term-bg:#18201c; --term-ink:#d6e6dc; --term-ok:#7fd8a6; --term-bad:#ff9b85;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121614; --surface:#1a201d; --ink:#e7ece9; --muted:#9aa7a1; --line:#2c3531;
+  --accent:#5cc492; --accent-ink:#0d1210; --accent-soft:#1f3a2d;
+  --good:#5cc492; --good-soft:#1f3a2d; --bad:#ef8a72; --bad-soft:#3d2520; --warn:#e2b45a; --warn-soft:#3a3020;
+  --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; --seg-empty:#5a6862; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121614; --surface:#1a201d; --ink:#e7ece9; --muted:#9aa7a1; --line:#2c3531;
+  --accent:#5cc492; --accent-ink:#0d1210; --accent-soft:#1f3a2d;
+  --good:#5cc492; --good-soft:#1f3a2d; --bad:#ef8a72; --bad-soft:#3d2520; --warn:#e2b45a; --warn-soft:#3a3020;
+  --code-bg:#0f1311; --code-ink:#dfe7e2; --kw:#c99bea; --str:#8cc4e2; --seg-empty:#5a6862; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.trace{background:var(--codebg,#111);border-radius:12px;padding:12px 14px;margin:6px 0 12px;font-family:var(--mono,ui-monospace,monospace);font-size:14px;line-height:1.55;overflow-x:auto}
+.tstep{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
+.tstep code{background:none;padding:0;white-space:pre}
+.tnote{color:var(--muted);font-size:13px;font-family:inherit}
+.lesson-tip{margin-top:4px}
+@media (max-width:520px){.tstep{display:block}.tnote{display:block;padding:0 0 4px 1.2em}}
+.tick .wp{font-weight:400;opacity:.75;font-size:.9em}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,6vw,38px);line-height:1;margin:0;letter-spacing:-.02em}
+h1 .lam{color:var(--accent)}
+.sub{color:var(--muted);font-size:14px;margin:6px 0 0}
+.stats{display:flex;gap:16px;font-variant-numeric:tabular-nums}
+.stat{display:flex;flex-direction:column;align-items:flex-end}
+.stat b{font-family:var(--display);font-size:22px;line-height:1}
+.stat span{font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer;min-height:40px}
+.chip.goal{min-width:44px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#testPick .chip{font-size:13px}
+#testPick .chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.eyebrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.ladder{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--ink)}
+.rung{width:22px;height:6px;border-radius:3px;background:var(--line)}
+.rung.on{background:var(--accent)}
+.card h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0;letter-spacing:-.01em}
+.task{margin:0;max-width:65ch}
+code,.code,textarea,.blank,.answer-row input{font-family:var(--mono);font-size:14px;font-variant-ligatures:none;font-feature-settings:"calt" 0,"liga" 0}
+:not(pre)>code{background:var(--code-bg);padding:1px 5px;border-radius:4px}
+code.nw{white-space:nowrap}
+pre.code{background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:14px;margin:0;overflow-x:auto;line-height:1.6;white-space:pre}
+.kw{color:var(--kw);font-weight:600}.st{color:var(--str)}
+textarea{width:100%;min-height:170px;resize:vertical;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--line);border-radius:10px;padding:14px;line-height:1.6;tab-size:2}
+#code,#tfile{white-space:pre;overflow-wrap:normal;overflow-x:auto}
+.blank{display:inline-block;min-width:4ch;border:none;border-bottom:2px solid var(--accent);background:var(--surface);color:var(--ink);padding:6px 4px;min-height:34px;border-radius:3px 3px 0 0}
+pre.code.fill{line-height:2.2}
+.answer-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.answer-row input{flex:1 1 220px;min-width:0;font-family:var(--mono);font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);color:var(--ink)}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{font:600 15px var(--body);border-radius:10px;padding:10px 16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.55;cursor:default}
+.hint{font-size:13px;color:var(--muted)}
+.result{border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.result.good{background:var(--good-soft)}.result.bad{background:var(--bad-soft)}.result.meh{background:var(--warn-soft)}
+.result h3{margin:0;font-family:var(--display);font-size:18px}
+.result.good h3{color:var(--good)}.result.bad h3{color:var(--bad)}.result.meh h3{color:var(--warn)}
+.result p{margin:0}
+.ai{white-space:pre-wrap;max-width:65ch}
+.label{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 16px}
+summary{cursor:pointer;font-weight:600;padding:10px 0}
+.skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;padding-bottom:14px}
+.sk{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;padding:6px 10px;border-radius:8px;background:var(--code-bg);min-width:0}
+.sk code{background:none;padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{font-size:11px;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.pill.new{background:var(--surface);color:var(--muted)}.pill.learn{background:var(--warn-soft);color:var(--warn)}.pill.ok{background:var(--accent-soft);color:var(--accent)}
+.done{text-align:center;padding:14px 4px}
+.done p{margin:0 0 10px}
+.wrap>p.note{margin:0}
+.done h2{font-size:26px}
+.note{font-size:13px;color:var(--muted)}
+.src{font-size:12px;color:var(--muted)}
+.btn.theme{padding:6px 12px;font-size:13px;min-height:40px}
+.weeks{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font:600 14px var(--body);cursor:pointer;min-height:40px}
+.tick input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.tick:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.tick:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.settings{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 16px}
+.settings .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-bottom:12px}
+.settings input:not([type=checkbox]),.settings select{font:15px var(--body);padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);color:var(--ink);min-width:0;flex:1 1 220px}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+.term{background:var(--term-bg);color:var(--term-ink);font-family:var(--mono);font-size:13px;line-height:1.6;border-radius:10px;padding:14px;margin:0;overflow-x:auto;white-space:pre;font-variant-ligatures:none}
+.term .p{color:var(--term-ok)}.term .ok{color:var(--term-ok)}.term .no{color:var(--term-bad)}
+.timer{font-family:var(--mono);font-size:22px;font-variant-numeric:tabular-nums}
+.timer.over{color:var(--bad)}
+#tfile{min-height:520px}
+.marks{width:100%;border-collapse:collapse;font-size:14px}
+.marks th,.marks td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.marks td.n{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+.tablewrap{overflow-x:auto}
+.rules{margin:0;padding-left:20px;color:var(--muted);font-size:14px}
+.lesson-tag{margin:0;font-weight:600;color:var(--accent)}
+/* Focus: one compact row per topic, a 4-way switch on the right, grouped by week */
+#focusList{display:flex;flex-direction:column;gap:10px;padding-bottom:4px}
+.fweek{display:flex;flex-direction:column}
+.fweek .label{padding-bottom:2px}
+.frow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;font-size:14px;line-height:1.25;padding:5px 0;border-top:1px solid var(--line)}
+.ftopic{overflow-wrap:anywhere}
+.frow.f0 .ftopic{color:var(--muted);text-decoration:line-through}
+.frow.f3 .ftopic{font-weight:600}
+.seg4{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--code-bg)}
+.fbtn{border:0;border-left:1px solid var(--line);background:none;color:var(--muted);font:600 12px var(--body);padding:5px 9px;cursor:pointer;min-height:30px}
+.fbtn:first-child{border-left:0;border-radius:7px 0 0 7px}
+.fbtn:last-child{border-radius:0 7px 7px 0}
+.fbtn[aria-pressed="true"]{background:var(--line);color:var(--ink)}
+.fbtn[data-f="0"][aria-pressed="true"]{background:var(--bad-soft);color:var(--bad)}
+.fbtn[data-f="1"][aria-pressed="true"]{background:var(--warn-soft);color:var(--warn)}
+.fbtn[data-f="3"][aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.freset{margin:0 0 6px}
+#focusReset{padding:11px 0;min-height:40px}
+#focusBox>.note{margin:0 0 8px}
+@media (min-width:700px){.frows{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:600 14px var(--body);text-decoration:underline;cursor:pointer}
+/* one screen: header, test line, view chips, day bar, the card; settings fold away under it */
+header{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"brand stats theme";align-items:end;gap:12px 16px}
+.brand{grid-area:brand;min-width:0}.stats{grid-area:stats}#themeBtn{grid-area:theme;align-self:center}
+#chooser>summary,#moreBox>summary{display:flex;align-items:baseline;gap:10px}
+#chooserSum{font-size:15px}
+#chooserSum::after{content:"Change";margin-left:auto;padding-left:8px;color:var(--accent);font-size:14px;white-space:nowrap}
+#chooser[open] #chooserSum::after{content:"Close"}
+details>summary{list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"▸";display:inline-block;width:1em;color:var(--muted)}
+details[open]>summary::before{content:"▾"}
+#chooser>summary::before,#moreBox>summary::before{flex:none}
+#moreBox>summary{color:var(--muted);font-size:15px}
+.cbody{display:flex;flex-direction:column;gap:14px;padding:4px 0 6px}
+.crow{display:flex;flex-direction:column;gap:6px}
+.crow .note{margin:0}
+.goal + .note,.chips .note{align-self:center}
+details.sub-d{background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:0}
+details.sub-d>summary{font-size:15px}
+#chooser details.sub-d{margin-top:0}
+.more-actions{padding:14px 0 6px;border-top:1px solid var(--line)}
+#moreBox #backupNote:empty{display:none}
+#moreBox #resetConfirm{margin-bottom:14px}
+@media (max-width:520px){
+  .sub{display:none}
+  .stats{gap:12px}
+  .stat b{font-size:18px}
+  header{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand theme" "stats stats";gap:8px 12px}
+  .stats{justify-content:flex-start;gap:18px}
+  .stat{flex-direction:row;align-items:baseline;gap:5px}
+  .wrap{gap:14px;padding-top:14px}
+  .card{padding:16px}
+  .frow{font-size:13px;gap:8px}
+  .fbtn{padding:5px 5px;font-size:11.5px;min-height:40px;min-width:40px}
+  /* read-only code wraps with a hanging indent, so nothing hides off the right edge */
+  pre.code .ln{display:block;white-space:pre-wrap;overflow-wrap:anywhere;padding-left:2ch;text-indent:-2ch}
+  #stDays{display:none}
+}
+.fbtn:focus-visible,.linkbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fbtn:focus-visible{position:relative;z-index:1}
+.kbd{display:none}
+@media (hover:hover) and (pointer:fine){.kbd{display:inline}}
+.actions .linkbtn.undo{margin-left:auto;align-self:center;padding:10px 4px;min-height:40px}
+@media (prefers-reduced-motion:no-preference){.card{animation:in .18s ease-out}@keyframes in{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}}
+/* daily set: one segment per card, coloured by how it went */
+.daybar{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);min-width:0}
+.segs{flex:1;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;min-width:40px}
+.seg{height:8px;border-radius:4px;background:var(--seg-empty)}
+.seg.on{background:var(--accent)}.seg.g{background:var(--good)}.seg.a{background:var(--warn)}.seg.r{background:var(--bad)}
+#dayTxt{white-space:nowrap;font-variant-numeric:tabular-nums}
+.goalrow{align-items:center}
+.goalrow .note{margin-right:2px}
+.banner{margin:0;font-weight:600;color:var(--accent)}
+#examBox summary{overflow-wrap:anywhere}
+#examBody{display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
+#examBody p{margin:0}
+.result{position:relative}
+.remind{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+.remind input{font:15px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);color:var(--ink)}
+/* a quick reward on a correct answer (none when the device asks for less motion) */
+.confetti{display:none}
+@media (prefers-reduced-motion:no-preference){
+  .card.win{animation:win .45s ease-out}
+  @keyframes win{0%{transform:scale(1);box-shadow:0 0 0 0 var(--good)}35%{transform:scale(1.015);box-shadow:0 0 0 6px var(--good-soft)}100%{transform:scale(1);box-shadow:0 0 0 0 transparent}}
+  .confetti{display:block;position:absolute;left:24px;top:18px;width:0;height:0;pointer-events:none}
+  .confetti i{position:absolute;width:7px;height:7px;border-radius:2px;opacity:0;animation:pop .55s ease-out forwards}
+  .confetti i:nth-child(1){background:var(--good);--x:-26px;--y:-22px}
+  .confetti i:nth-child(2){background:var(--warn);--x:-8px;--y:-30px}
+  .confetti i:nth-child(3){background:var(--accent);--x:14px;--y:-28px}
+  .confetti i:nth-child(4){background:var(--str);--x:30px;--y:-14px}
+  .confetti i:nth-child(5){background:var(--kw);--x:24px;--y:8px}
+  .confetti i:nth-child(6){background:var(--warn);--x:-30px;--y:4px}
+  @keyframes pop{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--x),var(--y)) scale(1);opacity:0}}
+}
+/* maths: working wraps rather than scrolling sideways, a wrong gap is marked, and a box for rough working */
+.kind-maths pre.code{white-space:pre-wrap;overflow-wrap:anywhere}
+.kind-maths .tstep code{white-space:pre-wrap;overflow-wrap:anywhere}
+.blank.wrong{border-bottom-color:var(--bad)}
+textarea.work{min-height:90px;white-space:pre-wrap}
+.lesson-ex{margin:0 0 4px}
+.tq{border-top:1px solid var(--line);padding-top:14px;margin-top:4px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.tq .mk{font-weight:600}.tq .mk.ok{color:var(--good)}.tq .mk.no{color:var(--bad)}
+</style>
+
+<script>
+// dark by default; the toggle remembers your choice in this browser
+(function(){ var t = "dark"; try { t = localStorage.getItem("recallr-theme") || "dark"; } catch(e) {} document.documentElement.setAttribute("data-theme", t); })();
+</script>
+<div class="wrap kind-maths">
+  <header>
+    <div class="brand">
+      <h1><span class="lam">__MODULE_ICON__</span> Recallr</h1>
+      <p class="sub">__MODULE_NAME__ · __MODULE_SCOPE__ · write it, or step down until you can</p>
+    </div>
+    <div class="stats">
+      <div class="stat" id="stDays" hidden><b id="sDays"></b><span>days to test</span></div>
+      <div class="stat"><b id="sDone">0</b><span>today</span></div>
+      <div class="stat" id="stStreak" hidden><b id="sStreak"></b><span>day streak</span></div>
+    </div>
+    <button class="btn theme" id="themeBtn" aria-label="Switch between dark and light">Light mode</button>
+  </header>
+
+  <details class="settings" id="examBox">
+    <summary id="examSum">No test date set</summary>
+    <div id="examBody"></div>
+  </details>
+
+  <div class="chips" role="group" aria-label="Mode">
+    <button class="chip view" data-view="practice" aria-pressed="true">Practice</button>
+    <button class="chip view" data-view="test" aria-pressed="false">Quick test</button>
+  </div>
+
+  <div id="practiceView" class="stack">
+  <div id="dayBar" class="daybar"><div class="segs" id="segs"></div><span id="dayTxt">Today 0 / 5</span></div>
+  <main id="card" class="card" aria-live="polite"></main>
+
+  <details class="settings" id="chooser">
+    <summary id="chooserSum">Weeks · Essentials</summary>
+    <div class="cbody">
+      <div class="crow">
+        <span class="label">Weeks</span>
+        <div class="weeks" role="group" aria-label="Weeks to practise">
+__WEEK_CHIPS__
+          <button class="chip" id="weeksAll">All weeks</button>
+        </div>
+      </div>
+      <div class="crow">
+        <span class="label">Questions</span>
+        <div class="chips" role="group" aria-label="Which questions">
+          <button class="chip set" data-set="core" aria-pressed="true">Essentials</button>
+          <button class="chip set" data-set="course" aria-pressed="false">All course questions</button>
+          <button class="chip set" data-set="twin" aria-pressed="false">Variations</button>
+        </div>
+        <p class="note">Best order: Essentials week by week, then Variations, then a test.</p>
+      </div>
+      <div class="crow">
+        <span class="label">Daily goal</span>
+        <div class="chips" role="group" aria-label="Daily goal">
+          <button class="chip goal" data-goal="3" aria-pressed="false">3</button>
+          <button class="chip goal" data-goal="5" aria-pressed="true">5</button>
+          <button class="chip goal" data-goal="10" aria-pressed="false">10</button>
+          <span class="note">cards a day</span>
+        </div>
+      </div>
+      <details id="focusBox" class="sub-d">
+        <summary id="focusSum">Focus</summary>
+        <p class="note">How often each topic comes up. Off hides it.</p>
+        <div id="focusList"></div>
+        <p class="freset"><button class="linkbtn" id="focusReset">Reset focus</button></p>
+      </details>
+    </div>
+  </details>
+
+  <details id="moreBox">
+    <summary>More: all skills, sync, backup, smart features</summary>
+  <details id="ladderBox" class="sub-d">
+    <summary>All skills and where you are</summary>
+    <p class="note">A new skill starts with a 10-second lesson, then <b>Plug in</b> (the numbers are in place: work out the value), <b>Fill the gaps</b> in a worked answer, and <b>Solve it</b> from scratch. Not right? Try again as often as you like; the answer only appears when you give up, and the skill steps down a level. Right first time and it climbs up. After 3 goes in a day it waits until tomorrow. Essentials and All course questions share progress; Variations keep their own. A skill you can solve comes back after 10 minutes, then 1, 3, 7, 16 and 35 days. "Mastered" means you solved it correctly three times in a row, spread over days. A day counts toward your streak with at least 3 cards. Every 7 days earns a rest day (up to 2).</p>
+    <div class="skills" id="skills"></div>
+  </details>
+
+  <details class="settings sub-d" id="syncBox">
+    <summary>Sync between your phone and laptop</summary>
+    <p class="note" id="syncStatus">Off. Progress stays in this browser only.</p>
+    <div id="syncForm">
+      <p class="note">Recallr has no server, so it syncs through your own GitHub account: your progress is kept in a private gist (a hidden file only you can see), and every device you connect reads and writes it.</p>
+      <ol class="note">
+        <li><a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=Recallr%20sync" target="_blank" rel="noopener">Create a GitHub token</a> with only the <b>gist</b> box ticked, set "Expiration" to what you like, and copy it.</li>
+        <li>Paste it here and press Connect. Do the same on your other device with the same token.</li>
+      </ol>
+      <div class="row">
+        <input id="syncToken" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_..." aria-label="GitHub token">
+        <button class="btn primary" id="syncConnect">Connect</button>
+      </div>
+    </div>
+    <div class="row" id="syncConnected" hidden>
+      <button class="btn" id="syncNow">Sync now</button>
+      <button class="btn" id="syncOff">Disconnect this device</button>
+    </div>
+  </details>
+
+  <details class="settings sub-d" id="aiBox">
+    <summary>Smart features: hints, explanations, new questions</summary>
+    <p class="note" id="aiStatus">Checking what's available…</p>
+    <div id="keyForm">
+      <p class="note">Use your own Anthropic API key (from console.anthropic.com). It stays in this browser and is only sent to Anthropic. Usage is charged to your key.</p>
+      <div class="row">
+        <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..." aria-label="Anthropic API key">
+        <select id="apiModel" aria-label="Model">
+          <option value="claude-opus-5-5">Claude Opus 5.5 (best)</option>
+          <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (cheaper)</option>
+          <option value="claude-haiku-5-5">Claude Haiku 5.5 (cheapest)</option>
+        </select>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="keySave">Save key</button>
+        <button class="btn" id="keyRemove">Remove key</button>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn" id="genBtn">Generate 5 new questions for the ticked weeks</button>
+    </div>
+    <p class="note" id="genStatus"></p>
+  </details>
+  <div class="actions more-actions">
+    <button class="btn" id="undo" disabled>Undo last mark</button>
+    <button class="btn" id="reset">Reset all progress</button>
+    <button class="btn" id="backup">Back up progress</button>
+    <button class="btn" id="restoreBtn">Restore from a backup</button>
+    <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+  </div>
+  <p class="note" id="backupNote"></p>
+  <div id="resetConfirm" hidden class="result bad"><p>Reset every skill back to new? Your streak is kept. This can't be undone.</p><div class="actions"><button class="btn primary" id="resetYes">Yes, reset</button><button class="btn" id="resetNo">Cancel</button></div></div>
+  </details>
+  </div>
+
+  <section id="testView" class="stack" hidden>
+    <div class="card">
+      <div class="eyebrow"><span id="tScope"></span><span class="timer" id="tTimer">20:00</span></div>
+      <h2 id="tTitle">Quick test</h2>
+      <ul class="rules">
+        <li>A new mix each time: mostly skills you've met, weakest first, and one you haven't.</li>
+        <li>Work it out on paper and type each final answer, as the task asks (a fraction, or so many decimal places).</li>
+        <li>Closed book, like the class test: no notes, and no Explain button.</li>
+        <li>Submit when you're done. Each answer is marked here, and the skills feed your practice: right ones move up, missed ones come back today.</li>
+      </ul>
+      <div class="actions">
+        <button class="btn primary" id="tStart">Start the timer</button>
+        <button class="btn" id="tNew">New quick test</button>
+      </div>
+      <div id="tNewConfirm" hidden class="result bad"><p>Throw away this quick test and make a new one?</p><div class="actions"><button class="btn primary" id="tNewYes">Yes, new test</button><button class="btn" id="tNewNo">Cancel</button></div></div>
+      <div id="tQs"></div>
+      <div class="actions" id="tSubmitRow">
+        <button class="btn primary" id="tSubmit">Submit for marking</button>
+      </div>
+      <div id="tSubmitConfirm" hidden class="result meh"><p id="tSubmitMsg">Submit for marking?</p><div class="actions"><button class="btn primary" id="tSubmitYes">Submit</button><button class="btn" id="tSubmitNo">Not yet</button></div></div>
+      <div id="tMark"></div>
+    </div>
+  </section>
+
+
+  <p class="note" id="saveNote">Progress is saved in this browser.</p>
+  <p class="note">Recallr has no server and never sees your progress.</p>
+  __SUPPORT__
+</div>
+
+<script>
+const DECK = __DECK__;
+const TWINS = __TWINS__;
+const SRC = __SRC__;
+const TESTS = __TESTS__;
+const EXAMS = __EXAMS__;
+const LEVELS = {3:"Solve it", 2:"Fill the gaps", 1:"Plug in"};
+// marks typed maths answers, exactly as scripts/test-maths.js does
+__MATHS_LIB__
+const INTERVALS = [10*60e3, 864e5, 3*864e5, 7*864e5, 16*864e5, 35*864e5];
+const MASTER_BOX = 3;
+const MODULE_ID = "__MODULE_ID__";
+const LS_KEY = "recallr-" + MODULE_ID;
+
+let state = { skills:{}, shown:0, todayKey:"", today:0, updated:0 };
+const ALL_WEEKS = [...new Set(DECK.map(s => Number(s.week)))].sort((a,b)=>a-b);
+let weeksSel = new Set(ALL_WEEKS);
+let qset = "core";       // which questions: "core" (Essentials), "course" (all course questions), "twin" (Variations)
+const SET_LABEL = { core: "Essentials", course: "All course questions", twin: "Variations" };
+const FOCUS = ["Off", "Light", "Normal", "Extreme"], FOCUS_W = [0, 0.4, 1, 3];
+let pickKind = "", newRun = 0, lastId = null, lastTopic = null;
+let lastUndo = null;
+let current = null;     // {s, lvl}
+let checked = false;
+let sample = null, db = null, uid = null, saving = false, saveAgain = false;
+
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+// maths is shown as it is written: no colouring
+function hl(src){ return esc(String(src)); }
+// read-only code, one span per line, so on a phone a long line wraps with a hanging indent
+function hlLines(src){ return hl(src).split("\n").map((l, i, a) => `<span class="ln">${l}${i < a.length - 1 ? "\n" : ""}</span>`).join(""); }
+// short inline code stays on one line, so "Int -> Int" never breaks at the arrow
+function md(s){ return esc(s).replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, a, b) => { const c = a ?? b; return `<code${unesc(c).length <= 22 ? ' class="nw"' : ""}>${c}</code>`; }); }
+
+// ---------- persistence ----------
+// Progress lives in three places, and the newest copy always wins:
+//   1. the page's own memory, handed to the next version when the page is updated (hot snapshot)
+//   2. this browser (localStorage)
+//   3. the viewer's account (db), so it follows them across devices
+// Storage names never change between versions; OLD_* are names used by earlier versions, read once to bring progress across.
+const OLD_LS_KEYS = MODULE_ID === "functional-programming" ? ["haskell-reps-v1"] : [];
+const OLD_DOCS = MODULE_ID === "functional-programming" ? ["reps"] : [];
+function parse(raw){ try { const s = JSON.parse(raw); return s && typeof s === "object" && s.skills ? s : null; } catch(e) { return null; } }
+// cards per day from two copies: the larger count wins, so practising on two devices never loses a day
+function mergeDays(a, b){
+  const out = Object.assign({}, a || {});
+  for (const k in (b || {})) { const n = Number(b[k]) || 0; if (!(k in out) || n > (Number(out[k]) || 0)) out[k] = n; }
+  return out;
+}
+function sameDays(a, b){ a = a || {}; b = b || {}; const ka = Object.keys(a); return ka.length === Object.keys(b).length && ka.every(k => a[k] === b[k]); }
+function adopt(s){
+  // take another copy of the progress if it's newer than what we have
+  const merged = mergeDays(state.days, s && s.days);
+  if (!s || (s.updated || 0) <= (state.updated || 0)) {
+    // older copy: keep ours, but take any day it counted higher (without marking ours as newer)
+    if (!sameDays(merged, state.days || {})) { state.days = merged; if (state.updated) saveLocal(); }
+    return false;
+  }
+  state = Object.assign({ skills:{}, shown:0, todayKey:"", today:0, updated:0, tests:{}, days:{}, goal:5 }, s);
+  state.days = merged;
+  return true;
+}
+function load(){
+  try {
+    for (const key of [LS_KEY, ...OLD_LS_KEYS]) adopt(parse(localStorage.getItem(key)));
+  } catch(e) {}
+  adopt(window.claude?.hot?.data?.state);
+  seedDays();
+}
+// older versions only kept a count for today (today, todayKey): bring it into days once, so it counts
+function seedDays(){
+  if (state.days && Object.keys(state.days).length) return;
+  if (state.todayKey === new Date().toDateString() && state.today > 0) { state.days = { [dayKey()]: state.today }; saveLocal(); }
+}
+function saveLocal(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {} }
+function persist(){
+  state.updated = Date.now();
+  saveLocal();
+  if (db && uid) saveRemote();
+  syncPushSoon();
+}
+
+// ---------- sync through the viewer's own GitHub gist (no server) ----------
+const SYNC_STORE = "recallr-sync";
+const GIST_FILE = "recallr-progress.json";
+const GIST_DESC = "Recallr progress (synced between your devices)";
+let syncTimer = null, syncBusy = false, syncAgain = false, remoteAll = null;
+function syncInfo(){ try { const s = JSON.parse(localStorage.getItem(SYNC_STORE) || "null"); return s && s.token ? s : null; } catch(e) { return null; } }
+async function gh(path, info, opts){
+  const res = await fetch("https://api.github.com" + path, Object.assign({ cache: "no-store" }, opts || {}, {
+    headers: Object.assign({ "Authorization": "Bearer " + info.token, "Accept": "application/vnd.github+json" }, (opts && opts.body) ? { "Content-Type": "application/json" } : {})
+  }));
+  if (res.status === 401 || res.status === 403) throw { code: "bad_token" };
+  if (!res.ok) throw { code: "http_" + res.status };
+  return res.json();
+}
+async function findOrMakeGist(info){
+  for (let page = 1; page <= 5; page++) {
+    const list = await gh(`/gists?per_page=100&page=${page}`, info);
+    const g = list.find(x => x.files && x.files[GIST_FILE]);
+    if (g) return g.id;
+    if (list.length < 100) break;
+  }
+  const made = await gh("/gists", info, { method: "POST", body: JSON.stringify({ description: GIST_DESC, public: false, files: { [GIST_FILE]: { content: JSON.stringify({ app: "recallr", modules: {} }) } } }) });
+  return made.id;
+}
+async function syncPull(info){
+  const g = await gh(`/gists/${info.gist}`, info);
+  const f = g.files && g.files[GIST_FILE];
+  let content = f && f.content;
+  if (f && f.truncated && f.raw_url) content = await (await fetch(f.raw_url, { cache: "no-store" })).text();
+  remoteAll = content ? JSON.parse(content) : { app: "recallr", modules: {} };
+  remoteAll.modules = remoteAll.modules || {};
+  if (adopt(remoteAll.modules[MODULE_ID])) refreshAfterAdopt(); else renderStats();
+}
+async function syncPush(){
+  const info = syncInfo(); if (!info || !info.gist) return;
+  if (syncBusy) { syncAgain = true; return; }
+  syncBusy = true;
+  try {
+    if (!remoteAll) await syncPull(info);
+    remoteAll.modules[MODULE_ID] = state;
+    await gh(`/gists/${info.gist}`, info, { method: "PATCH", body: JSON.stringify({ files: { [GIST_FILE]: { content: JSON.stringify(remoteAll) } } }) });
+    syncNote(`On. Last synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`);
+  } catch(e) { syncNote(e && e.code === "bad_token" ? "Your GitHub token stopped working (expired or deleted). Make a new one and connect again." : "Couldn't reach GitHub just now. Your progress is safe in this browser and will sync next time."); }
+  syncBusy = false;
+  if (syncAgain) { syncAgain = false; syncPush(); }
+}
+function syncPushSoon(){ if (!syncInfo()) return; clearTimeout(syncTimer); syncTimer = setTimeout(syncPush, 2500); }
+function syncNote(text){ const el = $("syncStatus"); if (el) el.textContent = text; }
+function renderSync(){
+  const info = syncInfo();
+  $("syncForm").hidden = !!info; $("syncConnected").hidden = !info;
+  if (!info) syncNote("Off. Progress stays in this browser only.");
+}
+async function syncStart(){
+  const info = syncInfo(); renderSync(); if (!info) return;
+  syncNote("Syncing…");
+  try {
+    if (!info.gist) { info.gist = await findOrMakeGist(info); try { localStorage.setItem(SYNC_STORE, JSON.stringify(info)); } catch(e) {} }
+    await syncPull(info);
+    await syncPush();
+  } catch(e) { syncNote(e && e.code === "bad_token" ? "GitHub didn't accept that token. Check it has the gist box ticked." : "Couldn't reach GitHub just now. Try Sync now in a moment."); }
+}
+function note(text){ $("saveNote").textContent = text; }
+async function saveRemote(){
+  if (saving) { saveAgain = true; return; }
+  saving = true;
+  try {
+    await db.doc(`data/users/${uid}/recallr-${MODULE_ID}`).set({ json: JSON.stringify(state), updated: state.updated || 0 });
+    note("Progress saved to your account, so it follows you across devices and updates.");
+  } catch(e) {
+    note(`Progress saved in this browser only: your account didn't accept it (${(e && e.code) || "error"}). It'll try again after your next answer.`);
+  }
+  saving = false;
+  if (saveAgain) { saveAgain = false; saveRemote(); }
+}
+function refreshAfterAdopt(){
+  saveLocal();
+  if (!checked) pickAndRender(); else renderStats();
+  if (view === "test") renderTest();
+}
+async function connect(){
+  try {
+    const [d, u] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
+    if (!d || !u) note(window.claude ? "Progress saved in this browser. Sign in to Claude to keep it across devices." : "Progress saved in this browser. To use another device, back it up (under More) and restore it there.");
+    const id = d && u ? await u.id() : null;
+    if (d && u && !id) note("Progress saved in this browser. Sign in to Claude to keep it across devices.");
+    if (id) {
+      db = d; uid = id;
+      let changed = false;
+      for (const name of [`recallr-${MODULE_ID}`, ...OLD_DOCS]) {
+        try {
+          const snap = await db.doc(`data/users/${uid}/${name}`).get();
+          if (snap.exists) changed = adopt(parse(snap.data().json)) || changed;
+        } catch(e) {}
+      }
+      if (changed) refreshAfterAdopt();
+      if (state.updated) await saveRemote(); else note("Progress will be saved to your account after your first answer.");
+    }
+  } catch(e) {}
+  try { claudeSample = await window.claude?.use?.("sample"); } catch(e) { claudeSample = null; }
+  setupAI();
+  if (current && !checked) rerender();
+}
+
+// ---------- smart features ----------
+// Inside Claude, the page asks Claude on the viewer's own account. Anywhere else, it can use the
+// viewer's own Anthropic API key, kept in this browser. Without either, everything still works
+// with self-marking and the built-in explanations.
+let claudeSample = null;
+const KEY_STORE = "recallr-api";
+const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.2.0/+esm";
+function keyInfo(){ try { const k = JSON.parse(localStorage.getItem(KEY_STORE) || "null"); return k && k.key ? k : null; } catch(e) { return null; } }
+function parseJsonLoose(text){
+  try { return JSON.parse(text); } catch(e) {}
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/); if (fence) { try { return JSON.parse(fence[1]); } catch(e) {} }
+  const a = Math.min(...["{", "["].map(c => text.indexOf(c)).filter(i => i >= 0)), b = Math.max(text.lastIndexOf("}"), text.lastIndexOf("]"));
+  if (isFinite(a) && b > a) { try { return JSON.parse(text.slice(a, b + 1)); } catch(e) {} }
+  throw { code: "invalid_json", message: "no JSON in the reply", text };
+}
+let sdkPromise = null;
+function keySample(info){
+  async function call(prompt, opts){
+    opts = opts || {};
+    let Anthropic;
+    try { sdkPromise = sdkPromise || import(SDK_URL); const m = await sdkPromise; Anthropic = m.default || m.Anthropic; }
+    catch(e) { sdkPromise = null; throw { code: "upstream_error", message: "couldn't load the Anthropic SDK" }; }
+    const client = new Anthropic({ apiKey: info.key, dangerouslyAllowBrowser: true });
+    const params = { model: info.model, max_tokens: 16000, messages: [{ role: "user", content: prompt }], output_config: { effort: opts.effort || "low" } };
+    let msg;
+    try {
+      // Opus and Sonnet: if a safety check declines, the API retries on a fallback model by itself
+      msg = info.model === "claude-haiku-5-5"
+        ? await client.messages.create(params)
+        : await client.beta.messages.create({ ...params, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" });
+    } catch(e) {
+      const s = e && e.status;
+      throw { code: s === 401 || s === 403 ? "bad_key" : s === 429 ? "rate_limited" : "upstream_error", message: String((e && e.message) || e) };
+    }
+    if (msg.stop_reason === "refusal") throw { code: "refused", message: "declined" };
+    const text = msg.content.filter(b => b.type === "text").map(b => b.text).join("");
+    if (!text.trim()) throw { code: "empty_completion", message: "empty reply" };
+    if (opts.onText) opts.onText({ text, delta: text });
+    return { text, truncated: msg.stop_reason === "max_tokens" };
+  }
+  const f = (prompt, opts) => call(prompt, opts);
+  f.json = async (prompt, opts) => parseJsonLoose((await call(prompt + "\n\nReply with only the JSON value, no other text.", opts)).text);
+  return f;
+}
+function setupAI(){
+  const info = keyInfo();
+  sample = claudeSample || (info ? keySample(info) : null);
+  const status = $("aiStatus");
+  if (claudeSample) {
+    status.textContent = "On: you're using Recallr inside Claude, so hints for wrong answers, explanations and new questions use your own Claude account. No key needed.";
+    $("keyForm").hidden = true;
+  } else if (info) {
+    status.textContent = `On: using your own API key with ${$("apiModel").querySelector(`option[value="${info.model}"]`)?.textContent || info.model}.`;
+    $("keyForm").hidden = false; $("apiModel").value = info.model; $("apiKey").value = ""; $("apiKey").placeholder = "Key saved (enter a new one to replace it)";
+  } else {
+    status.textContent = "Off: your answers are still marked here, with the built-in explanations. Add your own Anthropic API key below to turn on hints for wrong answers, step-by-step explanations and new questions.";
+    $("keyForm").hidden = false; $("apiKey").placeholder = "sk-ant-...";
+  }
+  $("genBtn").disabled = !sample;
+  if (current && !checked) rerender();
+}
+$("keySave").onclick = () => {
+  const key = $("apiKey").value.trim(), old = keyInfo();
+  if (!key && !old) { $("apiKey").focus(); return; }
+  try { localStorage.setItem(KEY_STORE, JSON.stringify({ key: key || old.key, model: $("apiModel").value })); } catch(e) {}
+  setupAI();
+};
+$("keyRemove").onclick = () => { try { localStorage.removeItem(KEY_STORE); } catch(e) {} setupAI(); };
+
+// When the built-in questions run out (or on request), ask for new ones in the same format.
+// The model gives every number as a calculation, which the page works out itself, so the marked
+// answers have no arithmetic slips. A question whose shown answers don't match is dropped.
+const MATHS_EXAMPLE = {
+  week: 1, topic: "Conditional probability", title: "Rain on a cloudy day",
+  write: { task: "On a random day, P(rain and cloudy) = 0.12 and P(cloudy) = 0.4. What is P(rain | cloudy), the chance of rain given that it is cloudy? Give a decimal." },
+  answer: { value: "0.12 / 0.4", show: "0.3" },
+  fill: { code: "P(R | C) = P(R and C) / P(C)\n         = ___ / 0.4\n         = ___", blanks: [["0.12"], ["0.3", "3/10"]], values: ["0.12", "0.12 / 0.4"] },
+  predict: { code: "P(R | C) = 0.12 / 0.4", ask: "Work out P(R | C).", value: "0.12 / 0.4" },
+  sol: "P(R | C) = P(R and C) / P(C)\n         = 0.12 / 0.4\n         = 0.3",
+  explain: "Knowing it is cloudy shrinks the world to cloudy days, so divide by P(cloudy).",
+};
+function mathsPrompt(weeks, topics, pool){
+  return `Write 5 NEW maths practice questions for a university __MODULE_NAME__ module, for a student who finds maths symbols hard.
+Weeks: ${weeks.join(", ")}. Topics covered in those weeks: ${topics}.
+They must be different from these existing ones: ${pool.map(s => s.title).join(", ")}.
+Use the exact JSON shape of this example (one object per question):
+${JSON.stringify(MATHS_EXAMPLE)}
+Rules: every "value" is a calculation in plain maths syntax that gives the exact answer, using only numbers, + - * / ^ ( ), ln, log2, log10, exp, sqrt, choose(n, k), e and pi (never a rounded result). "show" is how the answer is written, rounded as the task asks. "fill.code" is the worked solution with 1 to 3 short gaps written ___, "fill.blanks" lists the accepted ways to fill each gap and "fill.values" the true value of each gap as a calculation. For a word answer (yes or no, or which option) use "accept": [...] instead of "value" and "show", and null in "fill.values" for a word gap. "week" is one of ${weeks.join(", ")}. Say in the task how to give the answer (a fraction, or a number of decimal places). Plain words, short lines, no LaTeX, no dashes as punctuation.
+Reply with only a JSON array of 5 objects.`;
+}
+const plain = s => String(s).replace(/\s*[—–]\s*/g, ", ");
+function genMaths(g, id){
+  const str = v => typeof v === "string" && v.trim() ? plain(v) : null;
+  const num = (calc, show) => {
+    const value = MATHS.evaluate(String(calc));
+    if (!Number.isFinite(value)) throw new Error("not a number");
+    const spec = { type: "number", value, show: String(show ?? MATHS.format(value)) };
+    if (MATHS.check(spec.show, spec) !== "ok") throw new Error("shown answer doesn't match");
+    return spec;
+  };
+  const words = list => ({ type: "text", accept: list.map(String), show: String(list[0]) });
+  try {
+    const task = str(g.write && g.write.task), code = str(g.fill && g.fill.code), sol = str(g.sol);
+    if (!task || !code || !sol || !g.answer || !g.predict) return null;
+    const blanks = (g.fill.blanks || []).map(b => (Array.isArray(b) ? b : [b]).map(String)), values = g.fill.values || [];
+    const gaps = code.split("___").length - 1;
+    if (!gaps || gaps !== blanks.length || gaps !== values.length) return null;
+    const answer = Array.isArray(g.answer.accept) && g.answer.accept.length ? words(g.answer.accept) : num(g.answer.value, g.answer.show);
+    const fillAnswers = values.map((v, i) => v === null ? words(blanks[i]) : num(v, blanks[i][0]));
+    if (blanks.some((acc, i) => acc.some(a => MATHS.check(a, fillAnswers[i]) !== "ok"))) return null;
+    const predAnswer = Array.isArray(g.predict.accept) && g.predict.accept.length ? words(g.predict.accept)
+      : g.predict.value != null ? num(g.predict.value) : answer.type === "number" ? answer : null;
+    if (!predAnswer || !str(g.predict.code)) return null;
+    return { id, gen: true, week: Number(g.week), topic: String(g.topic || "Practice"), title: String(g.title || "New question"),
+      write: { task, answer }, fill: { code, blanks, answers: fillAnswers },
+      predict: { code: str(g.predict.code), ask: str(g.predict.ask) || "Work out the value.", answer: predAnswer },
+      sol, explain: str(g.explain) || "" };
+  } catch(e) { return null; }
+}
+async function generate(){
+  if (!sample) return;
+  const weeks = [...weeksSel].sort();
+  const pool = allSkills().filter(inWeek);
+  const topics = [...new Set(pool.map(s => `week ${s.week}: ${s.topic}`))].join("; ");
+  $("genBtn").disabled = true; $("genStatus").textContent = "Writing new questions… this can take a minute.";
+  try {
+    const arr = await sample.json(mathsPrompt(weeks, topics, pool), { modelTier: "default", effort: "medium" });
+    const stamp = Date.now();
+    const made = (Array.isArray(arr) ? arr : []).filter(g => g && weeksSel.has(Number(g.week))).map((g, i) => genMaths(g, `gen-${stamp}-${i}`)).filter(Boolean);
+    state.generated = (state.generated || []).concat(made);
+    persist(); renderStats();
+    $("genStatus").textContent = made.length ? `Added ${made.length} new question${made.length > 1 ? "s" : ""}. They're marked "AI-generated": their numbers are worked out here, but the questions haven't been checked like the built-in ones.` : "That didn't produce usable questions. Try again.";
+    if (made.length && (!current || checked)) pickAndRender();
+  } catch(e) {
+    $("genStatus").textContent = e && e.code === "bad_key" ? "Your API key was rejected. Check it and save it again." : e && e.code === "rate_limited" ? "Too many requests just now. Try again in a minute." : "Couldn't generate questions just now. Try again.";
+  }
+  $("genBtn").disabled = !sample;
+}
+$("genBtn").onclick = generate;
+
+// sync controls (the website only: inside Claude, your Claude account already syncs your devices)
+if (window.claude) $("syncBox").hidden = true;
+$("syncConnect").onclick = () => {
+  const token = $("syncToken").value.trim(); if (!token) { $("syncToken").focus(); return; }
+  try { localStorage.setItem(SYNC_STORE, JSON.stringify({ token })); } catch(e) {}
+  $("syncToken").value = ""; syncStart();
+};
+$("syncNow").onclick = syncStart;
+$("syncOff").onclick = () => { try { localStorage.removeItem(SYNC_STORE); } catch(e) {} remoteAll = null; renderSync(); };
+// coming back to the tab (say, after practising on your phone) picks up the newest progress
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && syncInfo() && syncInfo().gist) syncPull(syncInfo()).catch(() => {}); });
+
+// ---------- scheduling ----------
+// Course questions and Variations keep separate progress: a variation's progress key ends in "~t".
+// Essentials share the course keys. pk(s, "course") always gives the course key.
+function pk(s, set){ const id = typeof s === "string" ? s : s.id; return (set || qset) === "twin" && TWINS[id] ? id + "~t" : id; }
+function V(s){
+  const t = (current && current.s.id === s.id ? current.v === "t" : qset === "twin") && TWINS[s.id];
+  return t ? Object.assign({}, s, TWINS[s.id], { id: s.id, week: s.week, topic: s.topic }) : s;
+}
+// sk takes a progress key (pk). New skills start at Plug in, after a short lesson.
+function sk(k){ return state.skills[k] || (state.skills[k] = { lvl:1, box:0, due:0, notBefore:0, streak:0, seen:false }); }
+function stateOf(s, set){ return state.skills[pk(s, set)]; }
+function allSkills(){ return DECK.concat(state.generated || []); }
+function inWeek(s){ return weeksSel.has(Number(s.week)); }
+// The questions of a set in the given weeks (the ticked weeks by default). Essentials are the entries
+// marked core; a week with no core entries uses all its course questions.
+function setPool(set, weeks){
+  set = set || qset;
+  const inW = s => weeks ? weeks.includes(Number(s.week)) : inWeek(s);
+  let deck = DECK.filter(inW);
+  if (set === "core") { const coreWeeks = new Set(deck.filter(s => s.core).map(s => Number(s.week))); deck = deck.filter(s => s.core || !coreWeeks.has(Number(s.week))); }
+  return deck.concat((state.generated || []).filter(inW));
+}
+// Focus: 0 Off, 1 Light, 2 Normal (default), 3 Extreme, per topic name
+function focusOf(topic){ const f = (state.focus || {})[topic]; return f === 0 || f === 1 || f === 3 ? f : 2; }
+function weight(s){ return FOCUS_W[focusOf(s.topic)]; }
+function activePool(){ return setPool().filter(s => weight(s) > 0); }
+function isMastered(s){ const x = stateOf(s); return x && x.box >= MASTER_BOX; }
+function dueList(){
+  const now = Date.now();
+  return activePool().filter(s => { const x = stateOf(s); return x && x.seen && x.due <= now; });
+}
+// a "day" runs from 4am to 4am, so a session at 1am still counts for the evening before
+function dayKey(t){ const d = new Date((t || Date.now()) - 4*3600e3); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function nextDayStart(){ const now = new Date(), d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4); if (d <= now) d.setDate(d.getDate() + 1); return d.getTime(); }
+// ---------- the daily set ----------
+// today's finish line: the daily goal, plus any "5 more" added today
+function target(){ const e = state.extra; return (state.goal || 5) + (e && e.key === dayKey() ? e.n || 0 : 0); }
+function cardsToday(){ return (state.days || {})[dayKey()] || 0; }
+// ---------- test countdown and the 80% tracker ----------
+// The next test: from the module (EXAMS) or added by the user (state.exams). Nothing else is stored.
+const ymdOk = d => typeof d === "string" && /^\d{4}-\d\d-\d\d$/.test(d);
+function nextExam(){
+  const today = dayKey();
+  return EXAMS.concat(state.exams || []).filter(e => e && ymdOk(e.date) && e.date >= today).sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0)[0] || null;
+}
+function examDate(e){ const [y, m, d] = e.date.split("-").map(Number); return new Date(y, m - 1, d); }
+function daysTo(e){ const n = new Date(); return Math.round((examDate(e) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5); }
+function examWeeks(e){ const ws = e && Array.isArray(e.weeks) ? e.weeks.map(Number).filter(w => ALL_WEEKS.includes(w)) : []; return ws.length ? ws : ALL_WEEKS; }
+// course questions (never generated ones) in the next test's weeks: they count toward "can write from memory"
+function trackerPool(){ const ws = examWeeks(nextExam()); return DECK.filter(s => ws.includes(Number(s.week))); }
+function tracker(){
+  const exam = nextExam(), pool = trackerPool(), now = Date.now();
+  const can = canCount(pool), target = Math.ceil(0.8 * pool.length);
+  const daysLeft = exam ? daysTo(exam) : null;
+  const seen = pool.map(s => state.skills[s.id]).filter(x => x && x.seen);
+  const fading = seen.filter(x => x.lvl === 3 && x.box >= 1 && now - x.due >= 2*864e5).length;
+  const finalWeek = daysLeft != null && daysLeft >= 1 && daysLeft <= 7;
+  const dt = Math.max(1, (daysLeft || 0) - 3), need = Math.max(0, target - can);
+  const reviews = seen.filter(x => x.due < now + 7*864e5).length / 7;
+  const perDay = Math.min(20, Math.max(3, Math.ceil(need * 3 / dt + reviews)));
+  return { exam, pool, can, target, daysLeft, fading, finalWeek, dt, need, perDay };
+}
+const fmtDay = d => d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+let examHtml = "";
+function renderExam(){
+  const t = tracker(), e = t.exam, goal = state.goal || 5;
+  $("stDays").hidden = !e;
+  if (e) $("sDays").textContent = t.daysLeft;
+  let sum, body = [];
+  if (!e) {
+    sum = "No test date set";
+    body.push(`<p class="note">Add your next test or exam to see a countdown and how much you can solve.</p>
+      <div class="row"><input id="exName" value="Final exam" aria-label="Name"><input type="date" id="exDate" aria-label="Date"><button class="btn" id="exSave">Save date</button></div>`);
+  } else if (t.daysLeft === 0) {
+    sum = `${e.name} today.${/open book/i.test(e.info || "") ? " Open book: keep your notes open." : " Good luck."}`;
+  } else {
+    sum = `${e.name} ${t.daysLeft === 1 ? "tomorrow" : `in ${t.daysLeft} days`} · can solve ${t.can} of ${t.pool.length} · aim ${t.target}`;
+    if (t.can >= t.target) sum += " · on the 80% line";
+    if (t.finalWeek) sum += " · final week";
+    const mock = TESTS[0];
+    if (t.finalWeek) body.push(`<p>Final week: a quick test a day${mock ? `, and ${esc(mock.title)} once (${mock.minutes} min)` : ""}.</p>`);
+    else if (t.can >= t.target) body.push("<p>On the 80% line. Your daily set keeps it there.</p>");
+    else if (t.perDay <= goal) body.push(`<p>Pace: ${t.need} to go in ${t.dt} days. About ${t.perDay} cards a day, so your daily ${goal} is enough.</p>`);
+    else body.push(`<p>Pace: about ${t.perDay} cards a day. Your goal is ${goal}.</p><div class="actions"><button class="btn" id="exGoal" data-n="${t.perDay}">Set daily goal to ${t.perDay}</button></div>`);
+  }
+  if (e && t.fading) body.push(`<p>${t.fading} skill${t.fading === 1 ? " is" : "s are"} fading (over 2 days overdue). ${qset === "twin" ? "Switch to Essentials or All course questions to review them." : "Your next cards pick them first."}</p>`);
+  const last = (state.quickLog || []).slice(-1)[0];
+  if (last && last.total) body.push(`<p>Last quick test: ${last.got} / ${last.total} (${Math.round(last.got / last.total * 100)}%), marked here on ${new Date(last.at).toLocaleDateString("en-GB", { weekday: "long" })}.</p>`);
+  if (e) {
+    const by = examDate(e); by.setDate(by.getDate() - 3);
+    body.push(`<p class="note">How this works: a skill counts when you last solved it from memory and it's at most 2 days overdue. Answers you counted as right yourself count too. 80% of ${t.pool.length} is ${t.target}. Pace assumes about 3 cards to learn a new skill and aims to finish by ${fmtDay(by)}. It's a guide to how much you can solve, not a predicted mark. Recallr covers __MODULE_SCOPE__; the test may include later weeks.</p>`);
+    body.push(`<p class="note">${esc(String(e.name))}: ${fmtDay(examDate(e))}${e.info ? ", " + esc(String(e.info)) : ""}.</p>`);
+  }
+  $("examSum").textContent = sum;
+  const html = body.join("");
+  // only redraw when something changed, so typing in the date form isn't wiped
+  if (html !== examHtml) { examHtml = html; $("examBody").innerHTML = html; }
+}
+$("examBody").onclick = ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  if (b.id === "exGoal") { state.goal = Number(b.dataset.n) || state.goal || 5; persist(); renderStats(); if (!current && cardsToday() < target()) pickAndRender(); }
+  if (b.id === "exSave") {
+    const date = $("exDate").value, name = $("exName").value.trim() || "Exam";
+    if (!ymdOk(date) || date < dayKey()) { $("exDate").focus(); return; }
+    state.exams = (state.exams || []).concat({ name, date, weeks: ALL_WEEKS.slice() });
+    persist(); renderStats();
+  }
+};
+function canCount(pool){ const now = Date.now(); return pool.filter(s => { const x = state.skills[s.id]; return x && x.seen && x.lvl === 3 && x.box >= 1 && now - x.due < 2*864e5; }).length; }
+// how today's cards went, for the colours in the day bar: g right first time, a right after a retry or hint, r not right
+let sessMarks = [], combo = 0;
+// A streak counts days with at least 3 cards. Every 7 counted days earns a rest day (up to 2),
+// which a missed day uses up automatically. Worked out from state.days, so nothing extra is stored.
+function streakInfo(){
+  const days = state.days || {}, today = dayKey();
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const [ty, tm, td] = today.split("-").map(Number);
+  const keys = Object.keys(days).filter(k => /^\d{4}-\d\d-\d\d$/.test(k) && k < today).sort();
+  let run = 0, rest = 0, counted = 0, best = 0;
+  if (keys.length) {
+    const [y, m, d] = keys[0].split("-").map(Number);
+    const d0 = new Date(y, m - 1, d, 12), floor = new Date(ty, tm - 1, td - 120, 12);
+    for (let t = d0 < floor ? floor : d0; fmt(t) < today; t = new Date(t.getFullYear(), t.getMonth(), t.getDate() + 1, 12)) {
+      if ((days[fmt(t)] || 0) >= 3) { run++; counted++; if (counted % 7 === 0) rest = Math.min(2, rest + 1); }
+      else if (run > 0 && rest > 0) rest--;
+      else run = 0;
+      best = Math.max(best, run);
+    }
+  }
+  const past = run;
+  if ((days[today] || 0) >= 3) run++;
+  // a day not done yet today never breaks the streak
+  return { run, rest, best, hadHistory: counted > past };
+}
+function streakLine(){
+  const { run, rest, hadHistory } = streakInfo();
+  if (run >= 2) return `Day ${run} in a row · ${rest} rest day${rest === 1 ? "" : "s"} saved.`;
+  if (run === 1) return hadHistory ? "Day 1 of a new streak. Your skills are still here." : "Day 1 of your streak.";
+  return "Do 3 cards on a day to keep a streak.";
+}
+// New skills in course order: the lowest week first, Extreme topics first and Light ones last,
+// deck order otherwise, and not the same topic as the last card when another is just as wanted.
+function freshOrder(unseen){
+  if (!unseen.length) return [];
+  const w = Math.min(...unseen.map(s => Number(s.week)));
+  const low = unseen.filter(s => Number(s.week) === w).sort((a,b) => weight(b) - weight(a));
+  const top = weight(low[0]), i = low.findIndex(s => weight(s) === top && s.topic !== lastTopic);
+  if (i > 0) low.unshift(low.splice(i, 1)[0]);
+  return low.concat(unseen.filter(s => Number(s.week) !== w));
+}
+function pick(){
+  const now = Date.now(), pool = activePool(), X = s => stateOf(s);
+  const seen = s => !!(X(s) && X(s).seen);
+  const ready = pool.filter(s => seen(s) && X(s).due <= now && X(s).notBefore <= state.shown);
+  const learning = ready.filter(s => X(s).lvl < 3).sort((a,b) => X(a).due - X(b).due);
+  // reviews: most overdue first, times the topic's focus weight (ties keep deck order)
+  const score = s => (now - X(s).due + 60e3) * weight(s);
+  const reviews = ready.filter(s => X(s).lvl >= 3).sort((a,b) => score(b) - score(a));
+  const fresh = freshOrder(pool.filter(s => !seen(s)));
+  const cooling = pool.filter(s => seen(s) && X(s).due <= now && X(s).notBefore > state.shown).sort((a,b) => X(a).notBefore - X(b).notBefore);
+  // warm-up: the day's first card is one you can already write
+  const warm = ((state.days || {})[dayKey()] || 0) === 0 ? ready.filter(s => X(s).lvl === 3 && X(s).box >= 2).sort((a,b) => X(b).box - X(a).box) : [];
+  // fading: skills you could write that are over 2 days overdue come back before anything new
+  const fading = reviews.filter(s => now - X(s).due >= 2*864e5);
+  const order = [["warm", warm], ["learning", learning], ["ready", fading]];
+  // after every 2 new skills in a row, a review if one is ready
+  if (newRun >= 2 && reviews.length) order.push(["ready", reviews]);
+  // new exercises come before repeating ones that are still cooling down
+  order.push(["fresh", fresh], ["ready", reviews], ["cooling", cooling]);
+  // never the same skill twice in a row while anything else is available
+  for (const [kind, list] of order) { const s = list.find(s => s.id !== lastId); if (s) { pickKind = kind; return s; } }
+  for (const [kind, list] of order) if (list.length) { pickKind = kind; return list[0]; }
+  pickKind = ""; return null;
+}
+function grade(ok, retried){
+  const x = sk(current.k);
+  const dk = dayKey();
+  // what you could write before the day's first card, for the end-of-day line
+  if (!state.dayStart || state.dayStart.key !== dk) state.dayStart = { key: dk, can: canCount(trackerPool()) };
+  lastUndo = { id: current.s.id, k: current.k, v: current.v, prev: JSON.parse(JSON.stringify(x)), today: state.today, todayKey: state.todayKey, dayKey: dk, dayPrev: (state.days || {})[dk], dayEnded: state.dayEnded, combo };
+  $("undo").disabled = false;
+  const first = !x.seen;
+  x.seen = true;
+  const now = Date.now();
+  if (ok && retried) {
+    x.due = now; x.notBefore = state.shown + 5;
+  } else if (ok && first && x.lvl === 3) {
+    // written right the very first time: you already know it, so it skips the 10-minute repeat
+    x.box = 2; x.due = now + INTERVALS[1]; x.notBefore = 0;
+  } else if (ok) {
+    if (x.lvl < 3) { x.lvl++; x.due = now; x.notBefore = state.shown + 3; }
+    else { x.box = Math.min(x.box + 1, INTERVALS.length - 1); x.due = now + INTERVALS[x.box - 1 < 0 ? 0 : x.box - 1]; x.notBefore = 0; }
+  } else {
+    x.lvl = Math.max(1, x.lvl - 1); x.box = 0; x.due = now; x.notBefore = state.shown + 2;
+  }
+  // no loops: after 3 goes in a day without a clean first-try answer, it waits until tomorrow
+  if (x.dayKey !== dk) { x.dayKey = dk; x.dayN = 0; }
+  x.dayN++;
+  if (x.dayN >= 3 && !(ok && !retried)) { x.due = nextDayStart(); x.notBefore = 0; current.parked = true; }
+  const key = new Date().toDateString();
+  if (state.todayKey !== key) { state.todayKey = key; state.today = 0; }
+  state.today++;
+  state.days = state.days || {}; state.days[dk] = (state.days[dk] || 0) + 1;
+  persist();
+  renderStats();
+}
+
+// ---------- rendering ----------
+// each week's tick box shows how many of its exercises in the current set you can already write from memory
+function renderWeekProgress(){
+  document.querySelectorAll(".tick input[data-week]").forEach(el => {
+    const w = Number(el.dataset.week), list = setPool(qset, [w]).filter(s => !s.gen);
+    if (!list.length) return;
+    const can = list.filter(s => (stateOf(s)?.box || 0) >= 1).length;
+    let span = el.parentNode.querySelector(".wp");
+    if (!span) { span = document.createElement("span"); span.className = "wp"; el.parentNode.appendChild(span); }
+    span.textContent = can === list.length ? " ✓ done" : ` ${can}/${list.length}`;
+    span.title = `${SET_LABEL[qset]}: ${can} of ${list.length} solved from memory at least once`;
+  });
+}
+// Focus panel: every topic in the ticked weeks, grouped by week
+function focusTopics(){
+  return [...weeksSel].sort((a,b) => a-b).map(w => ({ w, ts: [...new Set(setPool("course", [w]).map(s => s.topic))] })).filter(g => g.ts.length);
+}
+function focusSummary(){
+  const n = [0,0,0,0];
+  new Set(focusTopics().flatMap(g => g.ts)).forEach(t => n[focusOf(t)]++);
+  const parts = [[3,"extreme"],[1,"light"],[0,"off"]].filter(([f]) => n[f]).map(([f, w]) => `${n[f]} ${w}`);
+  return parts.length ? "Focus: " + parts.join(", ") : "";
+}
+const attr = s => esc(String(s)).replace(/"/g, "&quot;");
+function renderFocus(){
+  const box = $("focusList"); if (!box) return;
+  const a = document.activeElement, back = a && a.classList && a.classList.contains("fbtn") ? [a.dataset.topic, a.dataset.f] : null;
+  box.innerHTML = focusTopics().map(g => `<div class="fweek"><div class="label">Week ${g.w}</div><div class="frows">${g.ts.map(t =>
+    `<div class="frow f${focusOf(t)}"><span class="ftopic">${esc(t)}</span><span class="seg4" role="group" aria-label="Focus for ${attr(t)}">${FOCUS.map((name, f) =>
+      `<button class="fbtn" data-topic="${attr(t)}" data-f="${f}" aria-pressed="${focusOf(t) === f}" tabindex="${focusOf(t) === f ? 0 : -1}">${name}</button>`).join("")}</span></div>`).join("")}</div></div>`).join("");
+  $("focusSum").textContent = focusSummary() || "Focus: all topics normal";
+  if (back) { const b = [...box.querySelectorAll(".fbtn")].find(el => el.dataset.topic === back[0] && el.dataset.f === back[1]); if (b) b.focus(); }
+}
+function setFocus(topic, f){
+  state.focus = Object.assign({}, state.focus || {});
+  state.focus[topic] = f;
+  persist(); afterFocus();
+}
+// on today's end screen, changing the weeks, set or focus never pulls another card
+function onDayEnd(){ return !current && checked && cardsToday() >= target(); }
+function afterFocus(){
+  renderStats();
+  if (onDayEnd()) return;
+  if (!current || (!checked && weight(current.s) === 0)) pickAndRender();
+}
+// "Weeks 1-5" for a run, "Week 2" for one week, "Weeks 2, 4" otherwise
+function weeksLabel(ws){
+  ws = ws.slice().sort((a,b) => a-b);
+  if (ws.length === 1) return `Week ${ws[0]}`;
+  const run = ws.every((w, i) => !i || w === ws[i-1] + 1);
+  return run ? `Weeks ${ws[0]}-${ws[ws.length-1]}` : `Weeks ${ws.join(", ")}`;
+}
+// the chooser's one-line summary: what you're practising, what's due, the goal and any focus
+function renderChooser(){
+  const parts = [weeksLabel([...weeksSel]), SET_LABEL[qset], `${dueList().length} due`, `goal ${state.goal || 5}`];
+  const f = focusSummary(); if (f) parts.push(f);
+  $("chooserSum").textContent = parts.join(" · ");
+}
+function renderStats(){
+  renderExam();
+  renderWeekProgress();
+  renderFocus();
+  const pool = setPool();
+  renderDay();
+  renderChooser();
+  $("skills").innerHTML = pool.map(s => {
+    const x = stateOf(s);
+    let pill = '<span class="pill new">new</span>';
+    if (x && x.seen) pill = x.box >= MASTER_BOX ? '<span class="pill ok">mastered</span>' : x.lvl < 3 ? `<span class="pill learn">${LEVELS[x.lvl]}</span>` : `<span class="pill ok">can solve · ${x.box}</span>`;
+    return `<div class="sk"><code>${esc(s.title)}</code>${pill}</div>`;
+  }).join("");
+}
+// the day bar: one segment per card up to today's target, the count, and a combo from 3 right in a row
+function renderDay(){
+  const n = cardsToday(), t = target(), goal = state.goal || 5, drawn = Math.min(t, 10), filled = Math.min(n, drawn);
+  let segs = "";
+  for (let i = 0; i < drawn; i++) {
+    const m = i < filled ? (sessMarks[sessMarks.length - filled + i] || "on") : "";
+    segs += `<span class="seg${m ? " " + m : ""}"></span>`;
+  }
+  $("segs").innerHTML = segs;
+  let txt = n > t ? `Today ${n} · done` : n === t ? `Today ${n} / ${t} · done` : `Today ${n} / ${t}`;
+  if (combo >= 3) txt += ` · 🔥 ${combo} in a row`;
+  $("dayTxt").textContent = txt;
+  $("dayBar").setAttribute("aria-label", `${n} of ${t} cards today`);
+  $("sDone").textContent = `${n}/${t}`;
+  const st = streakInfo();
+  $("stStreak").hidden = st.run === 0;
+  $("sStreak").textContent = st.run;
+  $("stStreak").title = `${st.rest} rest day${st.rest === 1 ? "" : "s"} saved. A missed day uses one automatically.`;
+  document.querySelectorAll(".chip.goal").forEach(c => c.setAttribute("aria-pressed", String(Number(c.dataset.goal) === goal)));
+}
+// the card being shown: the skill, its progress key in the current set, the version ('c' or 't') and level
+function makeCurrent(s, k){
+  k = k || pk(s);
+  return { s, k, v: k.endsWith("~t") ? "t" : "c", lvl: sk(k).lvl };
+}
+// a skill never seen before starts with a short lesson
+function present(){
+  const x = sk(current.k);
+  lastId = current.s.id; lastTopic = current.s.topic;
+  // an unfinished "Write it" draft from an older version opens straight at Write it
+  if (!x.seen && !x.lesson && state.drafts && state.drafts[`${current.s.id}:3:${current.v === "t" ? "twin" : "course"}`]) { x.lesson = true; x.lvl = 3; current.lvl = 3; }
+  if (!x.seen && !x.lesson) current.lesson = true;
+  rerender();
+}
+function rerender(){ if (current.lesson) renderLesson(); else renderCard(); }
+function pickAndRender(){
+  // the daily set: once today's target is reached, say so (once per target) instead of serving another card
+  const dk = dayKey(), n = cardsToday(), t = target();
+  if (n >= t && state.dayEnded !== dk + ":" + t) { state.dayEnded = dk + ":" + t; saveLocal(); return renderDayEnd("done"); }
+  const s = pick();
+  if (!s) {
+    if (n >= 1 && activePool().length) return renderDayEnd("empty");
+    current = null; state.current = null; renderDone(); renderStats(); return;
+  }
+  // only repeats that are still cooling down are left: stop rather than loop
+  if (pickKind === "cooling" && n >= 1) return renderDayEnd("empty", s);
+  if (pickKind === "fresh") newRun++; else if (pickKind === "ready" || pickKind === "warm") newRun = 0;
+  current = makeCurrent(s);
+  current.warm = pickKind === "warm";
+  state.shown++;
+  state.current = { id: s.id, done: false, k: current.k, v: current.v };
+  saveLocal();
+  checked = false;
+  present(); renderStats();
+}
+// open on the card you were on last time, if you hadn't finished it
+function resumeOrPick(){
+  const c = state.current;
+  const s = c && !c.done && allSkills().find(x => x.id === c.id);
+  // a saved card from an older version has no k: the set read from its old mode picks the version
+  if (s && (c.k ? c.k === pk(s) : true) && weight(s) > 0 && setPool().some(p => p.id === s.id)) { current = makeCurrent(s); checked = false; present(); renderStats(); }
+  else if (cardsToday() >= target()) { state.dayEnded = dayKey() + ":" + target(); saveLocal(); renderDayEnd("closed"); }
+  else pickAndRender();
+}
+// the end of today's set: what you did, the streak, what's next, and a clear place to stop
+// parked: 3 goes today, waiting until tomorrow
+function parked(x){ return !!(x && x.dayKey === dayKey() && x.dayN >= 3 && x.due > Date.now()); }
+// "practise anyway": the weakest skill that isn't parked and wasn't just shown (any skill only when asked)
+function weakestOf(pool, any){
+  const box = s => stateOf(s)?.box ?? 0;
+  const ok = pool.filter(s => s.id !== lastId && !parked(stateOf(s)));
+  return (ok.length ? ok : any ? pool : []).slice().sort((a,b) => box(a) - box(b))[0] || null;
+}
+function renderDayEnd(kind, cool){
+  current = null; checked = true; state.current = null;
+  const k = dayKey(), n = cardsToday(), now = canCount(trackerPool());
+  const ds = state.dayStart && state.dayStart.key === k ? state.dayStart.can : now;
+  const pool = activePool(), X = s => stateOf(s);
+  const r = pool.filter(s => X(s) && X(s).seen && X(s).due < nextDayStart() + 864e5).length;
+  const nextNew = freshOrder(pool.filter(s => !(X(s) && X(s).seen)))[0];
+  const unticked = ALL_WEEKS.find(w => !weeksSel.has(w));
+  const quick = quickSuggested();
+  // in the final week before a test, the one-off practice test (once, until it has a mark)
+  const mockGo = !quick && TESTS.length && tracker().finalWeek && !(state.tests && state.tests[TESTS[0].id] && state.tests[TESTS[0].id].result);
+  const first = kind === "done" ? `${n} card${n === 1 ? "" : "s"}. That's enough for today.` : kind === "closed" ? "Come back tomorrow, or keep going if you like." : "Nothing new or due in the ticked weeks.";
+  let btns = "";
+  const anyway = kind === "empty" ? cool || weakestOf(pool) : null;
+  if (kind === "empty") btns = `${anyway ? '<button class="btn primary" id="anywayE">Practise the weakest one anyway</button>' : ""}${unticked != null ? `<button class="btn${anyway ? "" : " primary"}" id="addWeek">Add week ${unticked}</button>` : ""}`;
+  else btns = `${quick ? '<button class="btn primary" id="quickGo">Quick test (${QUICK_MIN} min)</button>' : ""}${mockGo ? `<button class="btn primary" id="mockGo">${esc(TESTS[0].title)} (${TESTS[0].minutes} min)</button>` : ""}${kind === "closed" ? "" : `<button class="btn${quick || mockGo ? "" : " primary"}" id="stopHere">Stop here</button>`}<button class="btn" id="more5">5 more</button>${kind === "closed" ? '<button class="btn" id="keepGo">Keep going</button>' : ""}`;
+  const remind = kind === "done" && !lsGet(LS_KEY + "-remind") ? `<div class="remind"><label class="note" for="remT">Remind me daily at</label><input type="time" id="remT" value="19:00"><button class="btn" id="remGo">Add to calendar</button></div>
+    <p class="note" id="remNote">Adds a daily 10-minute event to your calendar. Recallr can't send notifications itself.</p>` : "";
+  $("card").innerHTML = `<div class="done">
+    <h2 tabindex="-1">${kind === "empty" ? "That's everything for now" : "Done for today"}</h2>
+    <p>${first}</p>
+    <p>Can solve from memory: ${ds !== now ? `${ds} → ${now}` : now}</p>
+    <p>${streakLine()}</p>
+    <p class="hint">Tomorrow: ${r} review${r === 1 ? "" : "s"} due.${nextNew ? ` Next new one: ${esc(nextNew.title)} (week ${nextNew.week}).` : ""}</p>
+    <div class="actions" style="justify-content:center">${btns}</div>
+    ${remind}
+  </div>`;
+  const on = (id, f) => { const el = $(id); if (el) el.onclick = f; };
+  on("more5", () => { state.extra = { key: k, n: (state.extra && state.extra.key === k ? state.extra.n || 0 : 0) + 5 }; persist(); pickAndRender(); });
+  on("stopHere", () => { $("card").innerHTML = `<div class="done"><h2 tabindex="-1">See you tomorrow</h2><p>Progress saved.</p><button class="btn" id="anyway2">Practise anyway</button></div>`; $("anyway2").onclick = pickAndRender; $("card").querySelector("h2").focus(); });
+  on("keepGo", pickAndRender);
+  on("quickGo", () => openQuick());
+  on("mockGo", () => { setTestChoice("mock"); setView("test"); });
+  on("anywayE", () => { if (!anyway) return; current = makeCurrent(anyway); state.shown++; checked = false; present(); });
+  on("addWeek", () => { weeksSel.add(unticked); renderWeekTicks(); lsSet(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); pickAndRender(); });
+  on("remGo", saveReminder);
+  // focus the heading, not a button: Enter here never pulls more cards
+  $("card").querySelector("h2").focus();
+  renderStats();
+}
+function lsGet(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }
+function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(e) {} }
+// a daily calendar event, since a web page can't send notifications by itself
+async function saveReminder(){
+  const tm = ($("remT").value || "19:00").split(":").map(Number), pad = n => String(n).padStart(2, "0");
+  const ymd = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+  const now = new Date(), start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, tm[0] || 0, tm[1] || 0);
+  const ex = nextExam(), until = ex ? examDate(ex) : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 60);
+  const utc = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Recallr//EN", "BEGIN:VEVENT",
+    `UID:recallr-daily-${Date.now()}@recallr`, `DTSTAMP:${utc}`,
+    `DTSTART:${ymd(start)}T${pad(start.getHours())}${pad(start.getMinutes())}00`, "DURATION:PT10M",
+    `RRULE:FREQ=DAILY;UNTIL=${ymd(until)}T235959`, `SUMMARY:Recallr: today's ${state.goal || 5}`,
+    `URL:${location.href}`, `DESCRIPTION:${location.href}`,
+    "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:Recallr", "TRIGGER:PT0M", "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR"].join("\r\n") + "\r\n";
+  const name = "recallr-daily.ics";
+  const dl = await (window.claude?.use?.("downloads") ?? null);
+  try {
+    if (dl) await dl.save({ filename: name, data: ics });
+    else {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+      a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    }
+    lsSet(LS_KEY + "-remind", $("remT").value || "19:00");
+    $("remNote").textContent = `Saved ${name}. Open it to add it to your calendar.`;
+  } catch(e) { $("remNote").textContent = "The calendar file wasn't saved."; }
+}
+function renderDone(){
+  const pool = activePool();
+  const next = pool.map(s => stateOf(s)).filter(Boolean).map(x=>x.due).sort((a,b)=>a-b)[0];
+  const when = next ? new Date(next).toLocaleString(undefined,{weekday:"short",hour:"2-digit",minute:"2-digit"}) : "not scheduled";
+  if (!pool.length) { $("card").innerHTML = `<div class="done"><h2>Nothing to practise</h2><p>Every topic in the ticked weeks is set to Off. Change it in Focus, under the card.</p></div>`; return; }
+  const unticked = ALL_WEEKS.find(w => !weeksSel.has(w));
+  $("card").innerHTML = `<div class="done"><h2>All caught up</h2><p>Nothing is due in this set right now. Next review: <b>${when}</b>.</p><div class="actions" style="justify-content:center">${unticked != null ? `<button class="btn primary" id="addWeekD">Add week ${unticked}</button>` : sample ? '<button class="btn primary" id="genMore">Generate new questions</button>' : ''}<button class="btn${sample || unticked != null ? '' : ' primary'}" id="anyway">Practise the weakest one anyway</button></div>${sample ? '' : '<p class="note">Want fresh questions? Open "More" below, then Smart features.</p>'}</div>`;
+  if ($("genMore")) $("genMore").onclick = () => { $("moreBox").open = true; $("aiBox").open = true; generate(); };
+  if ($("addWeekD")) $("addWeekD").onclick = () => { weeksSel.add(unticked); renderWeekTicks(); lsSet(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); pickAndRender(); };
+  $("anyway").onclick = () => {
+    const weakest = weakestOf(pool, true);
+    current = makeCurrent(weakest); state.shown++; checked = false; present();
+  };
+}
+// a lesson card: what it works out, then one example of its own worked through step by step
+function lessonHtml(L){
+  const steps = (L.trace || []).map(st => {
+    const note = st.note ? `<span class="tnote">${esc(st.note)}</span>` : "";
+    return `<div class="tstep"><code>${esc(st.line)}</code>${note}</div>`;
+  }).join("");
+  return `<p class="task">${esc(L.what)}</p>
+    <div class="label">Example</div>
+    <p class="task lesson-ex">${esc(L.example)}</p>
+    <div class="trace">${steps}</div>`;
+}
+function renderLesson(){
+  const s = V(current.s), x = sk(current.k);
+  x.lesson = true; x.lvl = 1; current.lvl = 1; saveLocal();
+  $("card").innerHTML = `
+    <div class="eyebrow"><span>New · Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${[1,2,3].map(() => '<span class="rung"></span>').join("")} Lesson</span></div>
+    <h2>${esc(s.title)}</h2>
+    <p class="lesson-tag">Learn it in 10 seconds</p>
+    ${s.lesson ? lessonHtml(s.lesson) : `<p class="task">${md(s.explain || "")}</p>`}
+    <div class="actions">
+      <button class="btn primary" id="gotIt">Got it</button>
+      <button class="btn" id="lessonSkip">I already know this</button>
+    </div>
+    ${s.lesson ? "" : `<div class="label">Example</div><pre class="code">${hlLines(s.predict.code)}</pre>`}
+    ${s.lesson && s.lesson.tip ? `<p class="hint lesson-tip">${esc(s.lesson.tip)}</p>` : ""}`;
+  const go = lvl => { const y = sk(current.k); y.lesson = true; y.lvl = lvl; current.lvl = lvl; current.lesson = false; persist(); renderCard(); };
+  $("gotIt").onclick = () => go(1);
+  $("lessonSkip").onclick = () => go(3);
+  $("gotIt").focus({ preventScroll: true });
+}
+// busy: a hint is being fetched; renderId: which card a running check belongs to, so a late reply
+// never lands on the next card
+let busy = false, renderId = 0;
+function renderCard(){
+  const { lvl } = current; const s = V(current.s);
+  current.tries = 0; current.hinted = false;
+  renderId++; busy = false;
+  const ladder = [1,2,3].map(i => `<span class="rung ${i<=lvl?'on':''}"></span>`).join("");
+  const field = (id, spec) => `<div class="answer-row"><input id="${id}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${answerPlaceholder(spec)}" aria-label="Your answer"></div>`;
+  let body = "";
+  if (lvl === 3) {
+    body = `<p class="task">${md(s.write.task)}</p>
+      <label class="label" for="work">Working (optional, not marked)</label>
+      <textarea id="work" class="work" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Rough working, if it helps"></textarea>
+      <label class="label" for="ans">Your answer</label>
+      ${field("ans", s.write.answer)}
+      <p class="hint">${answerHint(s.write.answer)}<span class="kbd"> Enter to check.</span></p>`;
+  } else if (lvl === 2) {
+    let i = 0;
+    const parts = s.fill.code.split("___").map((p, k, arr) => k < arr.length-1 ? esc(p) + `<input class="blank" id="b${i++}" aria-label="gap ${k+1}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" size="${gapSize(s, i - 1)}">` : esc(p));
+    body = `<p class="task">Fill the gap${s.fill.blanks.length>1?'s':''} so the working is correct.</p>
+      <p class="task hint">${md(s.write.task)}</p>
+      <pre class="code fill">${parts.join("")}</pre>`;
+  } else {
+    body = `<p class="task">${md(s.predict.ask)}</p>
+      <pre class="code">${hlLines(s.predict.code)}</pre>
+      ${field("pred", s.predict.answer)}
+      <p class="hint">${answerHint(s.predict.answer)}</p>`;
+  }
+  const src = s.gen ? "AI-generated question: its numbers are worked out here, but the question itself hasn't been checked"
+    : `${current.v === "t" ? "Variation of" : "From"}: ${esc(SRC[s.id] || "course material")}`;
+  $("card").innerHTML = `
+    <div class="eyebrow"><span>${current.warm ? "Warm-up · " : ""}Week ${s.week} · ${esc(s.topic)}</span><span class="ladder">${ladder} ${LEVELS[lvl]}</span></div>
+    <h2>${esc(s.title)}</h2>
+    <div class="src">${src}</div>
+    ${body}
+    <div class="actions">
+      <button class="btn primary" id="check">Check</button>
+      ${lvl === 3 ? '<button class="btn" id="hint">Hint</button>' : ""}
+      <button class="btn" id="stuck">I give up, show the answer</button>
+    </div>
+    <div id="res"></div>`;
+  $("check").onclick = check;
+  $("stuck").onclick = () => finish(false, "", attemptText());
+  // one hint at Solve it: the steps of the working with the numbers left out, not the answer
+  if ($("hint")) $("hint").onclick = () => {
+    const t = $("card").querySelector(".task");
+    t.insertAdjacentHTML("afterend", `<div class="label">Hint: the steps</div><pre class="code" id="shape">${hlLines(s.fill.code)}</pre>`);
+    current.hinted = true; $("hint").remove();
+    $("ans").focus();
+  };
+  const ta = $("work");
+  if (ta) ta.addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); check(); } });
+  document.querySelectorAll(".blank, #pred, #ans").forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } }));
+  document.querySelectorAll(".blank").forEach(el => el.addEventListener("input", () => el.classList.remove("wrong")));
+  const first = document.querySelector(".blank, #pred, #ans"); if (first) first.focus({ preventScroll: true });
+  restoreDraft();
+  document.querySelectorAll(".blank, #pred, #work, #ans").forEach(el => el.addEventListener("input", saveDraftSoon));
+}
+// what you've typed on the current card is saved as you type, and comes back if you close the page
+// the same key format as before the sets, so older drafts still come back
+function draftKey(){ return `${current.s.id}:${current.lvl}:${current.v === "t" ? "twin" : "course"}`; }
+function readInputs(){
+  if ($("ans")) return { work: $("work") ? $("work").value : "", ans: $("ans").value };
+  if ($("pred")) return { pred: $("pred").value };
+  return { blanks: [...document.querySelectorAll(".blank")].map(el => el.value) };
+}
+function restoreDraft(){
+  const d = state.drafts && state.drafts[draftKey()];
+  if (!d) return;
+  if (d.pred != null && $("pred")) $("pred").value = d.pred;
+  if (d.work != null && $("work")) $("work").value = d.work;
+  if (d.ans != null && $("ans")) $("ans").value = d.ans;
+  if (d.blanks) document.querySelectorAll(".blank").forEach((el, i) => { if (d.blanks[i] != null) el.value = d.blanks[i]; });
+}
+let draftTimer = null;
+function saveDraftSoon(){
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => { state.drafts = state.drafts || {}; state.drafts[draftKey()] = readInputs(); persist(); }, 800);
+}
+function unesc(s){ return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&"); }
+
+// ---------- checking ----------
+const norm = s => s.replace(/\s+/g, "");
+function retry(msg){
+  current.tries++;
+  setBusy(false);
+  $("res").innerHTML = `<div class="result meh"><h3>Not yet</h3><p>${msg}</p>
+    <p class="hint">Fix it and press Check.${current.lvl === 3 && !current.hinted && $("hint") ? " Stuck? Take a hint." : ""} Attempt ${current.tries}.</p>
+    <div class="actions"><button class="btn" id="overrule">The checker is wrong, mine is right</button></div></div>`;
+  $("overrule").onclick = () => finish(true, "Counted as correct: you marked it yourself.", attemptText());
+  const f = document.querySelector(".blank.wrong") || document.querySelector(".blank, #pred, #ans"); if (f) f.focus();
+}
+// ---------- checking maths answers ----------
+// Every answer is marked here, against the values scripts/test-maths.js worked out (shared/maths.js).
+function setBusy(b){ busy = b; ["check","stuck","hint"].forEach(id => { const el = $(id); if (el) el.disabled = b; }); }
+function fallbackCopy(text){
+  const ta = document.createElement("textarea"); ta.value = text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); } catch(e) {}
+  ta.remove();
+}
+// maths gaps are sized to their answer, so the working still fits on a phone
+function gapSize(s, i){ return Math.min(12, Math.max(4, ...s.fill.blanks[i].map(a => a.length + 1))); }
+// what the learner typed, for the explanation and the hint
+function attemptText(){
+  const work = $("work")?.value.trim(), ans = $("ans")?.value.trim();
+  if (!work && !ans) return null;
+  return (work ? work + "\n" : "") + (ans ? "Answer: " + ans : "");
+}
+function answerPlaceholder(spec){
+  if (spec && spec.type === "expr") return "a formula, e.g. " + Object.keys(spec.vars).join(" * ");
+  if (spec && spec.type === "text") return "a word or short phrase";
+  if (spec && spec.whole) return "a whole number";
+  return "a number, e.g. 0.27 or 3/8";
+}
+function answerHint(spec){
+  if (spec && spec.type === "expr") return `Use the letters ${Object.keys(spec.vars).map(v => `<code>${esc(v)}</code>`).join(", ")}, with <code>*</code> for times, <code>/</code> for divide and <code>^</code> for powers.`;
+  if (spec && spec.type === "text") return "One word or a short phrase.";
+  if (spec && spec.whole) return "A whole number, exactly.";
+  return "A decimal (2 or more significant figures), a fraction like <code>3/8</code>, or a sum like <code>1 - 11/36</code>.";
+}
+const READ_HELP = "Type a number like <code>0.27</code>, a fraction like <code>3/8</code>, or a sum like <code>1 - 11/36</code>.";
+function unreadable(input, spec){
+  if (spec && spec.type === "expr") {
+    let why = "";
+    try { MATHS.evaluate(input, Object.fromEntries(Object.keys(spec.vars).map(v => [v, 1]))); } catch(e) { why = e.message + ". "; }
+    return `I can't read that formula. ${esc(why)}Use only ${Object.keys(spec.vars).map(v => `<code>${esc(v)}</code>`).join(", ")}, numbers, <code>* / + - ^</code> and brackets.`;
+  }
+  if (spec && spec.type === "text") return "Type a word or a short phrase.";
+  return "I can't read that as a number. " + READ_HELP;
+}
+const MORE_DIGITS = "Right idea, but give more digits: at least 2 significant figures, like 0.27 rather than 0.3.";
+async function check(){
+  if (checked || busy || !current || current.lesson) return;
+  const { lvl } = current; const s = V(current.s);
+  if (lvl === 1) {
+    const v = $("pred").value;
+    if (!v.trim()) return $("pred").focus();
+    const r = MATHS.check(v, s.predict.answer);
+    if (r === "ok") return finish(true, "", null);
+    if (r === "precision") return retry(MORE_DIGITS);
+    if (r === "invalid") return retry(unreadable(v, s.predict.answer));
+    return retry("That's not the value. Work through it one step at a time: brackets first, then powers and logs, then multiply and divide, then add and subtract.");
+  }
+  if (lvl === 2) {
+    const inputs = s.fill.answers.map((_, i) => $("b"+i));
+    const empty = inputs.find(el => !el.value.trim());
+    if (empty) return empty.focus();
+    const res = s.fill.answers.map((spec, i) => MATHS.check(inputs[i].value, spec));
+    inputs.forEach((el, i) => el.classList.toggle("wrong", res[i] !== "ok"));
+    if (res.every(r => r === "ok")) return finish(true, "", null);
+    const bad = res.map((r, i) => r === "ok" ? null : i + 1).filter(Boolean);
+    const gaps = bad.length === 1 ? `Gap ${bad[0]} isn't right yet.` : `Gaps ${bad.slice(0, -1).join(", ")} and ${bad[bad.length-1]} aren't right yet.`;
+    const first = res.findIndex(r => r !== "ok");
+    const extra = res[first] === "precision" ? " For that gap, give more digits (at least 2 significant figures)."
+      : res[first] === "invalid" ? " " + unreadable(inputs[first].value, s.fill.answers[first]) : "";
+    return retry(gaps + extra);
+  }
+  const v = $("ans").value;
+  if (!v.trim()) return $("ans").focus();
+  const r = MATHS.check(v, s.write.answer);
+  if (r === "ok") return finish(true, "", attemptText());
+  if (r === "precision") return retry(MORE_DIGITS);
+  if (r === "invalid") return retry(unreadable(v, s.write.answer));
+  if (sample) return aiHint();
+  return retry("That's not the answer. Check each step of your working, or step down by pressing \"I give up\".");
+}
+// a wrong Solve it answer, with smart features on: one hint about the likely slip, never the answer
+async function aiHint(){
+  const s = V(current.s);
+  setBusy(true);
+  $("res").innerHTML = `<div class="result meh"><h3>Checking…</h3><p class="hint">Looking at your working for the slip. This takes a few seconds.</p></div>`;
+  const prompt = `A university student is practising a maths question from the __MODULE_NAME__ module and their final answer is wrong.
+
+QUESTION: ${s.write.task}
+WORKED SOLUTION (for you only, do not reveal it):
+${s.sol}
+CORRECT FINAL ANSWER (for you only, do not reveal it): ${s.write.answer.show}
+STUDENT'S WORKING:
+${$("work").value.trim() || "(none written)"}
+STUDENT'S FINAL ANSWER: ${$("ans").value.trim()}
+
+Give ONE short hint, 1 or 2 sentences in plain words, that points at the most likely slip: a wrong formula, the wrong log base, a missing term, a wrong count, or an arithmetic slip. Do not give the correct final answer or any number that gives it away. No LaTeX and no dashes as punctuation.
+
+Reply with only JSON: {"hint": "..."}`;
+  const id = renderId;
+  try {
+    const r = await sample.json(prompt, { modelTier: "default" });
+    if (id !== renderId || checked) return;
+    const hint = r && typeof r.hint === "string" ? md(plain(r.hint)) : "";
+    retry("That's not the answer. " + hint);
+  } catch(e) {
+    if (id !== renderId || checked) return;
+    setBusy(false);
+    if (e && (e.code === "not_granted" || e.code === "sampling_disabled" || e.code === "capability_disabled" || e.code === "not_declared")) sample = null;
+    retry("That's not the answer. Check each step of your working, or step down by pressing \"I give up\"." + (e && e.code === "bad_key" ? ' <span class="hint">(No hint: your API key was rejected. Check it in "Smart features".)</span>' : ""));
+  }
+}
+function finish(ok, msg, attempt, retried){
+  if (checked) return;
+  checked = true;
+  const { lvl } = current; const s = V(current.s);
+  clearTimeout(draftTimer);
+  if (state.drafts) delete state.drafts[draftKey()];
+  if (state.current) state.current.done = true;
+  retried = retried || current.tries > 0 || !!current.hinted;
+  const before = rewardSnap();
+  grade(ok, ok && retried);
+  const x = state.skills[current.k];
+  const mark = !ok ? "r" : retried ? "a" : "g";
+  sessMarks.push(mark);
+  combo = mark === "g" ? combo + 1 : mark === "r" ? 0 : combo;
+  renderStats();
+  const banner = ok ? rewardLine(before, rewardSnap()) : "";
+  let next = "";
+  if (current.parked) next = "That's 3 goes today. It's parked until tomorrow.";
+  else if (ok && retried) next = "Back in a few cards, same level.";
+  else if (ok && lvl < 3) next = `Next time: ${LEVELS[x.lvl]}.`;
+  else if (ok) next = x.box >= MASTER_BOX ? "Mastered. It still comes back now and then." : `Back in ${["10 minutes","1 day","3 days","7 days","16 days","35 days"][Math.max(0,x.box-1)]}.`;
+  else next = x.lvl < lvl ? `Next time: ${LEVELS[x.lvl]}.` : "Back in a couple of cards.";
+  const self = ok && /yourself/.test(msg);
+  const shown = spec => spec ? esc(String(spec.show)) : "";
+  const gives = lvl === 1 && s.predict.answer ? `<div class="label">The value</div><pre class="code">${shown(s.predict.answer)}</pre>` : "";
+  const answer = `${gives}<div class="label">${ok ? "Worked answer" : "Answer"}</div>
+    <pre class="code">${hlLines(s.sol)}</pre>
+    <p>${md(s.explain || "")}</p>
+    <div class="ai" id="aiExplain" hidden></div>
+    ${sample ? '<div class="actions"><button class="btn" id="explain">Explain step by step</button></div>' : ''}`;
+  setBusy(true);
+  const row = $("check") && $("check").closest(".actions"); if (row) row.hidden = true;
+  if (ok) {
+    $("res").innerHTML = `<div class="result good"><span class="confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <h3>${current.hinted ? "✓ Correct, with a hint" : current.tries > 0 ? "✓ Correct after a retry" : "✓ Correct"}</h3>
+      ${banner ? `<p class="banner">${banner}</p>` : ""}
+      <p class="hint">${next}</p>
+      ${self ? '<p class="hint">You marked this one yourself.</p>' : ""}
+      <div class="actions">
+        <button class="btn primary" id="next">Next</button>
+        <button class="btn" id="moreBtn" aria-expanded="false" aria-controls="more">Worked answer</button>
+        <button class="linkbtn undo" id="undoR">Undo</button>
+      </div>
+      <div id="more" hidden>${msg && !self ? `<p>${msg}</p>` : ""}${answer}</div></div>`;
+    $("moreBtn").onclick = () => { const m = $("more"); m.hidden = !m.hidden; $("moreBtn").textContent = m.hidden ? "Worked answer" : "Hide answer"; $("moreBtn").setAttribute("aria-expanded", String(!m.hidden)); };
+    const card = $("card"); card.classList.remove("win"); void card.offsetWidth; card.classList.add("win");
+  } else {
+    $("res").innerHTML = `<div class="result bad">
+      <h3>✗ Here's the answer</h3>
+      ${msg ? `<p>${msg}</p>` : ""}
+      <p class="hint">${next}</p>
+      ${answer}
+      <div class="actions">
+        <button class="btn primary" id="next">Next</button>
+        <button class="linkbtn undo" id="undoR">Undo</button>
+      </div></div>`;
+  }
+  $("next").onclick = pickAndRender;
+  $("undoR").onclick = () => $("undo").onclick();
+  $("next").focus();
+  if ($("explain")) $("explain").onclick = () => explain(attempt);
+}
+// Honest surprises: a one-line banner when something real happens (a skill mastered,
+// a week of the set done, the daily goal reached, a new best streak). No points.
+function rewardSnap(){
+  const w = Number(current.s.week), list = setPool(qset, [w]).filter(s => !s.gen);
+  return {
+    mastered: (state.skills[current.k]?.box || 0) >= MASTER_BOX,
+    total: setPool().filter(isMastered).length,
+    w, inWeek: list.some(s => s.id === current.s.id), weekCan: list.filter(s => (stateOf(s)?.box || 0) >= 1).length, weekAll: list.length,
+    n: cardsToday(), t: target(), streak: streakInfo(),
+  };
+}
+function rewardLine(a, b){
+  const word = { core: "essentials", course: "course questions", twin: "variations" }[qset];
+  if (b.streak.run >= 2 && b.streak.run > a.streak.run && b.streak.run > a.streak.best) return `New streak record: ${b.streak.run} days`;
+  if (a.inWeek && a.weekCan < a.weekAll && b.weekCan === b.weekAll) return `Week ${b.w} ${word} done!`;
+  if (!a.mastered && b.mastered) return `Skill mastered! That's ${b.total} so far.`;
+  if (a.n < a.t && b.n >= a.t) return `Daily goal reached: ${a.t} cards.`;
+  return "";
+}
+async function explain(attempt){
+  const s = V(current.s);
+  const out = $("aiExplain"), btn = $("explain"), card = current;
+  btn.disabled = true; out.hidden = false; out.textContent = "Thinking…";
+  const prompt = `Explain this maths question from a university __MODULE_NAME__ module to a student who finds maths symbols hard. Be short and concrete: under 170 words, plain words, no headings, no LaTeX (write any formula in plain text, like P(A|B) = P(A and B) / P(B)), and no dashes as punctuation. Go through the worked solution one step at a time, saying what each number stands for and why that step is done. ${attempt ? "Then say kindly, in 1 or 2 sentences, what was different or wrong in the student's attempt." : ""}
+
+Question: ${s.write.task}
+Worked solution:
+${s.sol}
+${attempt ? "Student's attempt:\n" + attempt : ""}`;
+  try {
+    await sample(prompt, { modelTier: "default", onText: ({ text }) => { if (current === card) out.textContent = text; } });
+  } catch(e) {
+    if (current !== card) return;
+    out.textContent = e && e.text ? e.text : (e && e.code === "rate_limited" ? "Too many requests just now. Try again in a minute." : "Couldn't get an explanation right now.");
+  }
+  btn.disabled = false; btn.textContent = "Explain again";
+}
+
+// ---------- boot ----------
+// question sets: Essentials, All course questions, Variations (each keeps its own place)
+function markSet(){ document.querySelectorAll(".chip.set").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.set === qset))); }
+function setSet(v){
+  if (!SET_LABEL[v]) return;
+  qset = v; markSet(); newRun = 0;
+  try { localStorage.setItem(LS_KEY + "-set", v); } catch(e) {}
+  // keep an open card when it belongs to the new set with the same progress
+  if (onDayEnd() || (current && !checked && !current.lesson && pk(current.s) === current.k && activePool().some(s => s.id === current.s.id))) renderStats();
+  else if (!current || !checked) pickAndRender();
+  else renderStats();
+}
+document.querySelectorAll(".chip.set").forEach(c => c.onclick = () => setSet(c.dataset.set));
+$("focusList").onclick = e => { const b = e.target.closest(".fbtn"); if (b) setFocus(b.dataset.topic, Number(b.dataset.f)); };
+$("focusList").onkeydown = e => {
+  const b = e.target.closest(".fbtn"), d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+  if (!b || !d) return;
+  e.preventDefault();
+  const all = [...b.parentNode.querySelectorAll(".fbtn")], nb = all[(all.indexOf(b) + d + all.length) % all.length];
+  nb.focus(); setFocus(nb.dataset.topic, Number(nb.dataset.f));
+};
+$("focusReset").onclick = () => { state.focus = {}; persist(); afterFocus(); };
+// cards a day: 3, 5 or 10; the finish line moves at once
+document.querySelectorAll(".chip.goal").forEach(c => c.onclick = () => {
+  state.goal = Number(c.dataset.goal) || 5; persist(); renderStats();
+  if (!current && cardsToday() < target()) pickAndRender();
+});
+// ---------- the quick test: Solve it questions, new each time, marked here ----------
+let view = "practice", tickTimer = null, qSaveTimer = null;
+const QUICK_ON = true, QUICK_N = 5, QUICK_MIN = 20;
+function setTestChoice(){}   // a maths module has only the quick test
+// From the next test's weeks: up to 3 skills you've met (weakest first, at most 2 per topic), one new
+// skill from the next few in course order, then more to make 5. A skill you've met comes as its
+// variation, so its numbers are new to you.
+function makeQuick(prev){
+  const weeks = examWeeks(nextExam());
+  const pool = DECK.filter(s => weeks.includes(Number(s.week)));
+  if (!pool.length) return null;
+  const X = s => state.skills[s.id], was = new Set(prev && Array.isArray(prev.skillIds) ? prev.skillIds : []);
+  const rnd = new Map(pool.map(s => [s.id, Math.random()]));
+  const lastly = list => list.filter(s => !was.has(s.id)).concat(list.filter(s => was.has(s.id)));
+  const weak = s => X(s).lvl < 3 ? 0 : X(s).box;
+  const seen = lastly(pool.filter(s => X(s) && X(s).seen).sort((a,b) => weak(a) - weak(b) || rnd.get(a.id) - rnd.get(b.id)));
+  const unseen = lastly(pool.filter(s => !(X(s) && X(s).seen)));
+  const chosen = [], perTopic = t => chosen.filter(s => s.topic === t).length;
+  for (const s of seen) { if (chosen.length >= 3) break; if (perTopic(s.topic) < 2) chosen.push(s); }
+  const near = unseen.slice(0, 6).sort((a,b) => rnd.get(a.id) - rnd.get(b.id));
+  const nu = near.find(s => !perTopic(s.topic)) || near[0];
+  if (nu) chosen.push(nu);
+  const rest = seen.concat(lastly(unseen.slice().sort((a,b) => rnd.get(a.id) - rnd.get(b.id))));
+  for (const strict of [true, false]) for (const s of rest) { if (chosen.length >= QUICK_N) break; if (!chosen.includes(s) && (!strict || perTopic(s.topic) < 2)) chosen.push(s); }
+  chosen.sort((a,b) => DECK.indexOf(a) - DECK.indexOf(b));
+  const lo = Math.min(...weeks), hi = Math.max(...weeks);
+  return { id: "quick-" + Date.now(), scope: lo === hi ? `Week ${lo}` : `Weeks ${lo}-${hi}`, minutes: QUICK_MIN,
+    questions: chosen.map(s => ({ skill: s.id, v: X(s) && X(s).seen && TWINS[s.id] ? "t" : "c" })),
+    skillIds: chosen.map(s => s.id), start: 0, answers: {}, result: null, fed: false };
+}
+function qOf(q){
+  const s = DECK.find(d => d.id === q.skill);
+  return s && q.v === "t" && TWINS[q.skill] ? Object.assign({}, s, TWINS[q.skill], { id: s.id, week: s.week, topic: s.topic }) : s;
+}
+function quickOk(q){ return q && Array.isArray(q.questions) && q.questions.every(qOf) && q.answers && typeof q.answers === "object"; }
+function newQuick(){
+  const q = makeQuick(state.quick);
+  if (!q) return null;
+  state.quick = q; persist();
+  return q;
+}
+// used by the end of the daily set
+function openQuick(){
+  const q = state.quick;
+  if (!quickOk(q) || q.result) newQuick();
+  setView("test");
+}
+// a quick test is suggested when you can solve a few skills and haven't done one lately
+// (every 2 days, or daily in the final week before a test)
+function quickSuggested(){
+  const t = tracker();
+  if (t.can < 4 || t.daysLeft === 0) return false;
+  const now = Date.now(), d = new Date();
+  let since = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 4).getTime(); if (since > now) since -= 864e5;
+  const from = t.finalWeek ? since : now - 2*864e5;
+  return !(state.quickLog || []).some(e => e && e.at > from);
+}
+function setView(v){
+  view = v;
+  document.querySelectorAll(".chip.view").forEach(o => o.setAttribute("aria-pressed", String(o.dataset.view === v)));
+  $("practiceView").hidden = v !== "practice";
+  $("testView").hidden = v !== "test";
+  try { localStorage.setItem(LS_KEY + "-view", v); } catch(e) {}
+  if (v === "test") renderTest();
+}
+function renderTest(){
+  let q = state.quick;
+  if (!quickOk(q)) q = newQuick();
+  if (!q) { $("tQs").innerHTML = '<p>No questions in the test weeks.</p>'; return; }
+  $("tScope").textContent = `${q.scope} · ${q.questions.length} questions · ${q.minutes} minutes`;
+  $("tStart").hidden = !!q.start || !!q.result;
+  $("tSubmitRow").hidden = !!q.result;
+  ["tNewConfirm", "tSubmitConfirm"].forEach(id => { $(id).hidden = true; });
+  $("tQs").innerHTML = q.questions.map((qq, i) => {
+    const s = qOf(qq), it = q.result && q.result.items[i];
+    const mark = it ? `<span class="mk ${it.ok ? "ok" : "no"}">${it.ok ? "✓ Right" : it.status === "precision" ? "✗ Not enough digits" : it.tried ? "✗ Not right" : "✗ Blank"}</span>` : "";
+    return `<div class="tq"><div class="eyebrow"><span>Question ${i + 1} · Week ${s.week} · ${esc(s.topic)}</span>${mark}</div>
+      <p class="task">${md(s.write.task)}</p>
+      <div class="answer-row"><input id="tq${i}" data-i="${i}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${answerPlaceholder(s.write.answer)}" aria-label="Answer to question ${i + 1}" value="${attr(q.answers[i] ?? "")}"${q.result ? " disabled" : ""}></div>
+      ${it ? `<details><summary>Answer: ${esc(String(s.write.answer.show))}</summary><pre class="code">${hlLines(s.sol)}</pre><p>${md(s.explain || "")}</p></details>` : ""}
+    </div>`;
+  }).join("");
+  document.querySelectorAll("#tQs input").forEach(el => {
+    el.oninput = () => { q.answers[el.dataset.i] = el.value; clearTimeout(qSaveTimer); qSaveTimer = setTimeout(persist, 800); };
+    el.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); const nx = $("tq" + (Number(el.dataset.i) + 1)); if (nx) nx.focus(); else $("tSubmit").click(); } };
+  });
+  renderQuickMark(q);
+  tick(); clearInterval(tickTimer); tickTimer = setInterval(tick, 1000);
+}
+function tick(){
+  const q = state.quick, el = $("tTimer");
+  if (!quickOk(q)) return;
+  if (q.result) { el.textContent = `${q.result.got} / ${q.result.total}`; el.classList.remove("over"); return; }
+  if (!q.start) { el.textContent = `${String(q.minutes).padStart(2,"0")}:00`; el.classList.remove("over"); return; }
+  const left = q.minutes * 60e3 - (Date.now() - q.start);
+  if (left <= 0) { el.textContent = "Time's up"; el.classList.add("over"); return; }
+  const m = Math.floor(left / 60e3), sec = Math.floor(left % 60e3 / 1000);
+  el.textContent = `${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+  el.classList.remove("over");
+}
+function markQuick(){
+  const q = state.quick;
+  $("tSubmitConfirm").hidden = true;
+  if (!quickOk(q) || q.result) return;
+  clearTimeout(qSaveTimer);
+  document.querySelectorAll("#tQs input").forEach(el => { q.answers[el.dataset.i] = el.value; });
+  const items = q.questions.map((qq, i) => {
+    const s = qOf(qq), given = String(q.answers[i] ?? "").trim();
+    const status = given ? MATHS.check(given, s.write.answer) : "blank";
+    return { skill: qq.skill, ok: status === "ok", status, tried: !!given };
+  });
+  const got = items.filter(it => it.ok).length;
+  q.result = { items, got, total: items.length, at: Date.now(), late: !!q.start && Date.now() - q.start > q.minutes * 60e3 };
+  feedQuick(q);
+  persist(); renderStats(); renderTest();
+  $("tMark").querySelector("h3")?.focus();
+}
+// A marked quick test feeds the cards: a right answer moves the skill up, a missed one is back in
+// today's practice. It counts as the day's set. Each quick test feeds once.
+function feedQuick(q){
+  const dk = dayKey(), now = Date.now();
+  if (!state.dayStart || state.dayStart.key !== dk) state.dayStart = { key: dk, can: canCount(trackerPool()) };
+  state.days = state.days || {}; state.days[dk] = Math.max(state.days[dk] || 0, target());
+  if (q.fed) return;
+  for (const it of q.result.items) {
+    if (!it.tried) continue;
+    const x = sk(it.skill);
+    x.seen = true; x.lesson = true; x.notBefore = 0;
+    if (it.ok) { x.lvl = 3; x.box = Math.min(Math.max(x.box || 0, 1) + 1, 5); x.due = now + INTERVALS[x.box - 1]; }
+    else { x.box = 0; x.due = now; }
+  }
+  state.quickLog = (state.quickLog || []).concat({ id: q.id, at: now, got: q.result.got, total: q.result.total, by: "page" });
+  q.fed = true;
+}
+function renderQuickMark(q){
+  const r = q.result;
+  if (!r) { $("tMark").innerHTML = ""; return; }
+  const pct = Math.round(r.got / r.total * 100);
+  $("tMark").innerHTML = `<div class="result ${pct >= 60 ? "good" : "bad"}">
+    <h3 tabindex="-1">${r.got} / ${r.total} (${pct}%)</h3>
+    <p class="hint">Right answers moved those skills up; missed ones are back in today's practice.${r.late ? " You went over the time." : ""} Open each answer above for the working.</p>
+    <div class="actions"><button class="btn primary" id="tBack">Back to practice</button><button class="btn" id="tAgain">New quick test</button></div></div>`;
+  $("tBack").onclick = () => { setView("practice"); if (!current) pickAndRender(); };
+  $("tAgain").onclick = () => { newQuick(); renderTest(); };
+}
+$("tStart").onclick = () => { const q = state.quick; if (!quickOk(q)) return; q.start = Date.now(); persist(); renderTest(); const f = $("tq0"); if (f) f.focus(); };
+$("tNew").onclick = () => {
+  const q = state.quick;
+  if (quickOk(q) && !q.result && Object.values(q.answers).some(v => String(v).trim())) { $("tNewConfirm").hidden = false; $("tNewYes").focus(); return; }
+  newQuick(); renderTest();
+};
+$("tNewYes").onclick = () => { newQuick(); renderTest(); };
+$("tNewNo").onclick = () => { $("tNewConfirm").hidden = true; };
+$("tSubmit").onclick = () => {
+  const q = state.quick; if (!quickOk(q)) return;
+  document.querySelectorAll("#tQs input").forEach(el => { q.answers[el.dataset.i] = el.value; });
+  const blank = q.questions.filter((_, i) => !String(q.answers[i] ?? "").trim()).length;
+  $("tSubmitMsg").textContent = blank ? `Submit for marking? ${blank} question${blank > 1 ? "s are" : " is"} still blank.` : "Submit for marking?";
+  $("tSubmitConfirm").hidden = false; $("tSubmitYes").focus();
+};
+$("tSubmitYes").onclick = markQuick;
+$("tSubmitNo").onclick = () => { $("tSubmitConfirm").hidden = true; };
+document.querySelectorAll(".chip.view").forEach(c => c.onclick = () => setView(c.dataset.view));
+function themeLabel(){ $("themeBtn").textContent = document.documentElement.getAttribute("data-theme") === "light" ? "Dark mode" : "Light mode"; }
+$("themeBtn").onclick = () => {
+  const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("recallr-theme", next); } catch(e) {}
+  themeLabel();
+};
+themeLabel();
+
+$("undo").onclick = () => {
+  if (!lastUndo) return;
+  const u = lastUndo, k = u.k || u.id;
+  state.skills[k] = u.prev; state.today = u.today; state.todayKey = u.todayKey;
+  if (u.dayKey) { state.days = state.days || {}; if (u.dayPrev === undefined) delete state.days[u.dayKey]; else state.days[u.dayKey] = u.dayPrev; }
+  if ("dayEnded" in u) state.dayEnded = u.dayEnded;
+  sessMarks.pop(); if (u.combo != null) combo = u.combo;
+  $("card").classList.remove("win");
+  lastUndo = null; $("undo").disabled = true;
+  if (current && current.lesson) { const y = state.skills[current.k]; if (y && !y.seen) delete y.lesson; }
+  const s = allSkills().find(d => d.id === u.id);
+  state.current = { id: s.id, done: false, k, v: k.endsWith("~t") ? "t" : "c" };
+  persist();
+  current = makeCurrent(s, k); checked = false; present(); renderStats();
+};
+// Moving progress to another device or browser, with no server: save a backup file, open it on the other one.
+$("backup").onclick = async () => {
+  const text = JSON.stringify({ app: "recallr", module: MODULE_ID, saved: new Date().toISOString(), state });
+  const name = `recallr-${MODULE_ID}-${new Date().toISOString().slice(0,10)}.json`;
+  const dl = await (window.claude?.use?.("downloads") ?? null);
+  if (dl) {
+    try { await dl.save({ filename: name, data: text }); $("backupNote").textContent = `Saved ${name}. On your other device, open Recallr and press "Restore from a backup".`; }
+    catch(e) { $("backupNote").textContent = "The backup wasn't saved."; }
+    return;
+  }
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    $("backupNote").textContent = `Saved ${name}. On your other device, open Recallr and press "Restore from a backup".`;
+  } catch(e) {
+    try { navigator.clipboard.writeText(text).then(() => { $("backupNote").textContent = "Copied your progress. Paste it into a file ending in .json to keep it."; }); } catch(e2) {}
+  }
+};
+$("restoreBtn").onclick = () => $("restoreFile").click();
+$("restoreFile").onchange = async () => {
+  const f = $("restoreFile").files[0]; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    const s = data && data.app === "recallr" ? data.state : null;
+    if (!s || !s.skills) throw new Error("not a Recallr backup");
+    if (data.module && data.module !== MODULE_ID) throw new Error("that backup is for another module");
+    const days = mergeDays(state.days, s.days);
+    state = Object.assign({ skills:{}, shown:0, todayKey:"", today:0, updated:0, tests:{}, days:{}, goal:5 }, s);
+    state.days = days;
+    seedDays();
+    persist(); refreshAfterAdopt();
+    $("backupNote").textContent = `Restored your progress from ${f.name}.`;
+  } catch(e) { $("backupNote").textContent = `Couldn't restore: ${e.message}.`; }
+  $("restoreFile").value = "";
+};
+$("reset").onclick = () => { $("resetConfirm").hidden = false; $("resetYes").focus(); };
+$("resetNo").onclick = () => { $("resetConfirm").hidden = true; };
+$("resetYes").onclick = () => { state = { skills:{}, shown:0, todayKey:"", today:0, updated:0, days: state.days, goal: state.goal, exams: state.exams, quickLog: state.quickLog, focus: state.focus, extra: state.extra, dayEnded: state.dayEnded }; lastUndo = null; combo = 0; newRun = 0; lastId = null; $("undo").disabled = true; $("resetConfirm").hidden = true; persist(); pickAndRender(); };
+function renderWeekTicks(){
+  document.querySelectorAll(".tick input[data-week]").forEach(el => { el.checked = weeksSel.has(Number(el.dataset.week)); });
+}
+document.querySelectorAll(".tick input[data-week]").forEach(el => el.onchange = () => {
+  const w = Number(el.dataset.week);
+  if (el.checked) weeksSel.add(w); else if (weeksSel.size > 1) weeksSel.delete(w); else el.checked = true;
+  try { localStorage.setItem(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); } catch(e) {}
+  if (!onDayEnd() && (!checked || !current)) pickAndRender(); else renderStats();
+});
+$("weeksAll").onclick = () => {
+  weeksSel = new Set(ALL_WEEKS); renderWeekTicks();
+  try { localStorage.setItem(LS_KEY + "-weeks", JSON.stringify([...weeksSel])); } catch(e) {}
+  if (onDayEnd() || (current && checked)) renderStats(); else pickAndRender();
+};
+load();
+try { const ws = JSON.parse(localStorage.getItem(LS_KEY + "-weeks") || "null"); if (Array.isArray(ws)) { const keep = ws.map(Number).filter(w => ALL_WEEKS.includes(w)); if (keep.length) weeksSel = new Set(keep); } } catch(e) {}
+renderWeekTicks();
+// the set: saved choice; else, for people who used the old chips, Variations or All course questions; else Essentials
+try { let m = localStorage.getItem(LS_KEY + "-set"); if (!SET_LABEL[m]) { const old = localStorage.getItem(LS_KEY + "-mode"); m = old ? (/^twins?$/.test(old) ? "twin" : "course") : "core"; } qset = m; } catch(e) {}
+markSet();
+resumeOrPick();
+try { const v = localStorage.getItem(LS_KEY + "-view"); if (v === "test" && (TESTS.length || QUICK_ON)) setView("test"); } catch(e) {}
+// when the page is updated while open, hand the progress to the new version
+window.claude?.hot?.snapshot?.(() => ({ state }));
+if (window.claude?.hot?.ready) window.claude.hot.ready(data => { if (adopt(data && data.state)) refreshAfterAdopt(); });
+// last chance to keep the newest progress in this browser before the page goes away
+window.addEventListener("pagehide", saveLocal);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveLocal(); });
+connect();
+if (!window.claude) syncStart();
+</script>

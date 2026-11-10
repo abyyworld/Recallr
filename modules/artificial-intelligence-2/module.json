@@ -6,5 +6,6 @@
   "weeks": [1, 2, 3, 4, 5],
   "language": "Maths",
   "kind": "maths",
-  "test": "maths"
+  "test": "maths",
+  "exams": [{ "name": "Class test", "date": "2026-11-23", "weeks": [1, 2, 3, 4, 5], "info": "20%, Mon 11am-12pm in TLB LG-18, closed book; it also covers weeks 7-8" }]
 }

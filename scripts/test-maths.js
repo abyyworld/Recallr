@@ -6,7 +6,9 @@
 //     listed typical mistake ("wrong") must be marked wrong;
 //   - every accepted answer for every gap must be marked right against the gap's true value;
 //   - the "plug in" value is computed;
-//   - no text has a leftover ___ gap, an em dash or an en dash.
+//   - no text has a leftover ___ gap, an em dash or an en dash;
+//   - each lesson card (if the module has them) shows its own worked value and gives no answer away,
+//     and the Essentials (core) cover every topic of their week.
 // The marking itself is shared/maths.js, the same code the page uses.
 // Writes <module>/answers.json. Needs only Node.
 const fs = require("fs"), path = require("path");
@@ -108,6 +110,28 @@ function answerSpec(where, a) {
 
 const answers = { course: {}, variation: {}, write: { course: {}, variation: {} }, fill: { course: {}, variation: {} } };
 
+// A lesson card (shown before a new skill): { what, example, trace: [{ line, note }], value, result, tip }.
+// value is the example's final number as JS (null for a word or formula); result is how the last line
+// writes it. The example must not give away the answer of either version of the exercise.
+function lessonCheck(where, L, mine, other){
+  for (const f of ["what", "example", "tip"]) if (typeof L[f] !== "string" || !L[f].trim()) problem(where, `lesson has no ${f}`);
+  if (!Array.isArray(L.trace) || L.trace.length < 2) return problem(where, "lesson needs at least 2 steps");
+  for (const st of L.trace) {
+    if (!st || typeof st.line !== "string") { problem(where, "a lesson step has no line"); continue; }
+    if (st.line.length > 44) problem(where, `lesson line over 44 characters: "${st.line}"`);
+  }
+  if (typeof L.result !== "string" || !L.result.trim()) return problem(where, "lesson has no result");
+  const last = L.trace[L.trace.length - 1].line || "";
+  if (!last.replace(/\s/g, "").includes(L.result.replace(/\s/g, ""))) problem(where, `the lesson's last step "${last}" doesn't show its result "${L.result}"`);
+  if (L.value == null) return;
+  let v;
+  try { v = calc(L.value); } catch (e) { return problem(where, `lesson value fails: ${e.message}`); }
+  if (!Number.isFinite(v)) return problem(where, `lesson value gives ${v}`);
+  const r = MATHS.check(L.result, { type: "number", value: v });
+  if (r !== "ok") problem(where, `lesson result "${L.result}" would be marked ${r} (true value ${MATHS.format(v)})`);
+  for (const a of [mine, other]) if (a && a.type === "number" && Math.abs(v - a.value) <= 1e-6 * Math.max(1, Math.abs(a.value))) problem(where, `the lesson's example gives away an answer (${a.show})`);
+}
+
 function test(side, id, s) {
   const where = `${side}/${id}`;
   for (const f of ["title", "sol", "explain"]) if (typeof s[f] !== "string" || !s[f].trim()) problem(where, `missing ${f}`);
@@ -185,6 +209,18 @@ for (const id of Object.keys(TWINS)) {
   if (!seen.has(id)) { problem(id, "variation without a course exercise"); continue; }
   test("variation", id, TWINS[id]);
 }
+// lessons: optional, but once a module has them, every exercise and variation needs one
+const withLessons = DECK.some(s => s.lesson) || Object.values(TWINS).some(t => t.lesson);
+if (withLessons) for (const s of DECK) {
+  for (const [side, x, other] of [["course", s, "variation"], ["variation", TWINS[s.id], "course"]]) {
+    if (!x) continue;
+    if (!x.lesson) { problem(`${side}/${s.id}`, "no lesson"); continue; }
+    lessonCheck(`${side}/${s.id} lesson`, x.lesson, answers.write[side][s.id], answers.write[other][s.id]);
+  }
+}
+// Essentials (core: true) must cover every topic of every week
+const coreWeeks = new Set(DECK.filter(s => s.core).map(s => s.week));
+for (const s of DECK) if (coreWeeks.has(s.week) && !DECK.some(c => c.core && c.week === s.week && c.topic === s.topic)) problem(s.id, `Essentials miss the topic "${s.topic}" in week ${s.week}`);
 for (const id of Object.keys(SRC)) {
   if (!seen.has(id)) problem(id, "SRC entry without an exercise");
   if (/[\u2014\u2013]/.test(SRC[id])) problem(id, "SRC has an em or en dash");
