@@ -563,4 +563,6 @@ cptFromCounts: { title: "A CPT entry with two parents",
   sol: "G has two parents, so count only the\nplants that match both: W = 1, S = 0.\n(# means 'number of plants with'.)\n#(W = 1, S = 0) = 9 + 6 = 15\n#(G = 1, W = 1, S = 0) = 9\nP̂(G = 1 | W = 1, S = 0) = 9 / 15\n  = 0.6",
   explain: "Each row of G's CPT is learned from its own group of plants: the ones with that combination of parent values. G's full CPT needs 4 such groups, one for each pair of values of W and S." },
 };
+// lesson cards for the variations (lessons.js)
+{ const { TWIN_LESSONS } = require("./lessons.js"); for (const id in TWINS) if (TWIN_LESSONS[id]) TWINS[id].lesson = TWIN_LESSONS[id]; }
 if (typeof module !== "undefined") module.exports = { SRC, TWINS };

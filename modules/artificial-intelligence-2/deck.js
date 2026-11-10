@@ -580,4 +580,21 @@ const DECK = [
   sol: "MLE by counting: of the mornings with\nB = 1, the fraction that have L = 1.\n(# means 'number of mornings with'.)\n#(B = 1) = 9 + 3 = 12\n#(L = 1, B = 1) = 9\nP̂(L = 1 | B = 1) = 9 / 12 = 0.75\nSo P̂(L = 0 | B = 1) = 0.25",
   explain: "A CPT entry is a conditional probability, so you only look at the mornings that match the parent's value (B = 1) and divide by how many there are, not by all 40. The hat on P̂ means an estimate from data." },
 ];
+
+// Essentials: the smallest set per week that still meets every idea the week teaches
+// (a skill whose working is a step of another one, like jointEntropy inside mutualInformation,
+// is left to "All course questions"; plain entropy and the MAP estimate stay as the basics)
+const CORE = ["eventSpace", "additionRule", "productRule", "bayesRule", "independence", "jointTable",
+  "pmfCount", "cdfValue", "binomial", "geometric", "uniformPdf", "variance", "conditionalPmf",
+  "mleCoinFormula", "mlePoisson", "logisticPredict", "logOddsCoefficient", "sigmoidDerivative", "logisticGradient",
+  "naiveBayesPosterior", "laplaceSmoothing", "nbTrainCounts",
+  "selfInformation", "entropyDistribution", "klDivergence", "mutualInformation",
+  "giniIndex", "bestSplit", "mrmrScore",
+  "binomialTail", "testSetBound", "unionBound", "occamBound",
+  "mapBeta", "mapFormula", "posteriorMean", "priorPenalty", "biasOfEstimator", "mseDecomposition",
+  "bnParameters", "dSeparation", "markovBlanket", "bnInference", "cptFromCounts"];
+for (const s of DECK) if (CORE.includes(s.id)) s.core = true;
+
+// lesson cards (lessons.js)
+{ const { LESSONS } = require("./lessons.js"); for (const s of DECK) if (LESSONS[s.id]) s.lesson = LESSONS[s.id]; }
 if (typeof module !== "undefined") module.exports = DECK;
